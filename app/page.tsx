@@ -1,4 +1,4 @@
-import { Building2, BriefcaseBusiness, Megaphone, Search, ShieldCheck, ShoppingBag, Store, Truck, UserSearch } from "lucide-react";
+import { Building2, BriefcaseBusiness, Megaphone, ShieldCheck, ShoppingBag, Store, Truck, UserSearch } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/listing/category-icon";
 import { ListingGrid } from "@/components/listing/listing-card";
@@ -21,12 +21,7 @@ export default async function Home() {
           </p>
           <h1 id="hero-biz" className="mt-2 text-3xl font-extrabold leading-tight md:text-4xl">{t("brand.tagline")}</h1>
           <p className="mt-3 text-base text-white/90 md:text-lg">{t("brand.hook")}</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-            <div className="flex flex-col rounded-2xl bg-white p-4 text-foreground shadow-sm">
-              <h3 className="flex items-center gap-2 font-bold text-brand-dark"><Search size={18} aria-hidden /> {t("home.browse_title")}</h3>
-              <p className="mb-4 mt-2 text-sm text-muted-foreground">{t("home.browse_body")}</p>
-              <Link href="/search" className={buttonClass("primary", "md", "mt-auto w-full")}>{t("home.cta_browse")}</Link>
-            </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col rounded-2xl bg-white p-4 text-foreground shadow-sm">
               <h3 className="flex items-center gap-2 font-bold text-brand-dark"><ShoppingBag size={18} aria-hidden /> {t("home.buy_title")}</h3>
               <p className="mb-4 mt-2 text-sm text-muted-foreground">{t("home.buy_body")}</p>
