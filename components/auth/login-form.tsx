@@ -11,13 +11,17 @@ import { cn } from "@/lib/utils";
 
 type Mode = "phone" | "email";
 
+// Phone OTP and Google need provider setup in Supabase first, so they stay hidden until these flags are "true".
+const PHONE_LOGIN = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
+const GOOGLE_LOGIN = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "true";
+
 export function LoginForm() {
   const { t } = useT();
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const supabase = createClient();
 
-  const [mode, setMode] = useState<Mode>("phone");
+  const [mode, setMode] = useState<Mode>(PHONE_LOGIN ? "phone" : "email");
   const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [code, setCode] = useState("");
@@ -85,6 +89,7 @@ export function LoginForm() {
         <p className="text-sm text-muted-foreground">{t("auth.subtitle")}</p>
       </div>
 
+      {PHONE_LOGIN && (
       <div role="tablist" className="grid grid-cols-2 rounded-xl bg-muted p-1 text-sm font-semibold">
         {(["phone", "email"] as const).map((m) => (
           <button
@@ -103,6 +108,7 @@ export function LoginForm() {
           </button>
         ))}
       </div>
+      )}
 
       {mode === "phone" ? (
         <form
@@ -188,12 +194,16 @@ export function LoginForm() {
         </p>
       )}
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
-      </div>
-      <Button type="button" variant="outline" className="w-full" onClick={google} disabled={pending}>
-        {t("auth.google")}
-      </Button>
+      {GOOGLE_LOGIN && (
+        <>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
+          </div>
+          <Button type="button" variant="outline" className="w-full" onClick={google} disabled={pending}>
+            {t("auth.google")}
+          </Button>
+        </>
+      )}
       <p className="text-xs text-muted-foreground">{t("auth.privacy")}</p>
     </div>
   );
