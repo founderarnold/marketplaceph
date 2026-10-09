@@ -1,6 +1,6 @@
 // Minimal service worker: makes the app installable and keeps brand/placeholder images available offline.
 // Pages are always network-first (marketplace data must be fresh); we only cache static brand assets.
-const CACHE = "mph-static-v1";
+const CACHE = "mph-static-v2";
 const PRECACHE = ["/brand/logo-wordmark.webp", "/brand/logo-mark.webp", "/seed/placeholder.svg", "/offline.html"];
 
 self.addEventListener("install", (e) => {
