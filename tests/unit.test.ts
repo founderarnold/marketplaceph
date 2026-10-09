@@ -13,6 +13,7 @@ import { DISPUTE_REASONS, FLOW, PAYMENT_KINDS, whoseTurn, friendlyDbError } from
 import { parseRange, safeCell, toCsv } from "@/lib/export";
 import { tablesToCsv, tablesToPdf, tablesToXlsx } from "@/lib/export-files";
 import { APPLICATION_STATUSES, CIVIL_STATUSES, DOC_KINDS, EDUCATION_LEVELS, EMPLOYMENT_TYPES, JOB_CATEGORIES, POST_STATUSES, POSTER_TYPES, SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, ageFrom, salaryLabel, splitList } from "@/lib/jobs";
+import { CATEGORY_TABS, LISTING_CONDITIONS, buildTree, categoryIdsFor, filterTree, nameOf, pathTo, type Cat } from "@/lib/categories";
 import { FEATURE_MIN_RANK, TIERS, TIER_KEYS, canUse, featuresAddedAt, isProError, tierByKey, tierByRank, yearlySaving, type Feature } from "@/lib/plans";
 
 describe("phone + redirects", () => {
@@ -83,11 +84,12 @@ describe("search params", () => {
     } as unknown as FilterBuilder<unknown>;
     applyFilters(
       builder as FilterBuilder<never>,
-      parseSearchParams({ q: "mango", region: "R7", verified: "1", in_stock: "1", min: "10" }),
-      "cat-id",
+      parseSearchParams({ q: "mango", region: "R7", verified: "1", in_stock: "1", min: "10", condition: "used" }),
+      ["cat-id", "sub-id"],
     );
     expect(calls).toContain('or("title.ilike.%mango%,description.ilike.%mango%")');
-    expect(calls).toContain('eq("category_id","cat-id")');
+    expect(calls).toContain('in("category_id",["cat-id","sub-id"])');
+    expect(calls).toContain('eq("condition","used")');
     expect(calls).toContain('eq("region_code","R7")');
     expect(calls).toContain('gte("stores.verification_level",2)');
     expect(calls).toContain('in("stock_status",["in_stock","made_to_order","pre_order"])');
@@ -149,6 +151,8 @@ describe("i18n", () => {
   for (const k of POSTER_TYPES) { used.add(`job.poster.${k}`); used.add(`job.poster.${k}_hint`); }
   for (const k of ["job_application_received", "job_application_status", "job_message", "new_message"]) used.add(`notif.${k}`);
   used.add("admin.tab.jobs");
+  for (const k of CATEGORY_TABS) { used.add(`cat.tab.${k}`); used.add(`cat.tab_hint.${k}`); }
+  for (const k of LISTING_CONDITIONS) used.add(`cond.${k}`);
   for (const k of TIER_KEYS) used.add(`plan.tier.${k}`);
   for (const k of ["monthly", "yearly"]) used.add(`plan.billing.${k}`);
   for (const k of ["pending", "approved", "rejected", "revoked"]) used.add(`aff.status.${k}`);
@@ -300,6 +304,35 @@ describe("exports", () => {
     expect(pdf.length).toBeGreaterThan(1000);
     expect(tablesToCsv(tables).includes("'=evil()")).toBe(true);
     expect(tablesToCsv([...tables, ...tables]).split("Sales").length).toBeGreaterThan(2);
+  });
+});
+
+describe("category tree", () => {
+  const mk = (id: string, slug: string, parent: string | null, sort: number, en = slug, fil = slug): Cat => ({ id, slug, name_en: en, name_fil: fil, icon: null, parent_id: parent, tab: "products", sort_order: sort });
+  const cats = [mk("b", "beauty", null, 2, "Beauty", "Kagandahan"), mk("f", "food", null, 1, "Food"), mk("f2", "food--coffee", "f", 2, "Coffee"), mk("f1", "food--rice", "f", 1, "Rice"), mk("b1", "beauty--skincare", "b", 1, "Skincare"), mk("x", "orphan--x", "missing", 1)];
+  it("builds majors and children in display order and drops orphans", () => {
+    const tree = buildTree(cats);
+    expect(tree.map((m) => m.slug)).toEqual(["food", "beauty"]);
+    expect(tree[0].children.map((c) => c.slug)).toEqual(["food--rice", "food--coffee"]);
+  });
+  it("includes sub-categories when searching a major, but not siblings", () => {
+    expect(categoryIdsFor(cats, "food")).toEqual(["f", "f2", "f1"].sort((a, b) => (a === "f" ? -1 : b === "f" ? 1 : 0)));
+    expect(categoryIdsFor(cats, "food--coffee")).toEqual(["f2"]);
+    expect(categoryIdsFor(cats, "nope")).toBeNull();
+  });
+  it("gives breadcrumbs, names and search matches in both languages", () => {
+    expect(pathTo(cats, "food--rice").map((c) => c.slug)).toEqual(["food", "food--rice"]);
+    expect(pathTo(cats, "beauty").map((c) => c.slug)).toEqual(["beauty"]);
+    expect(pathTo(cats, "nope")).toEqual([]);
+    expect(nameOf(cats[0], "fil")).toBe("Kagandahan");
+    const tree = buildTree(cats);
+    expect(filterTree(tree, "kagand", "en").map((m) => m.slug)).toEqual(["beauty"]);
+    expect(filterTree(tree, "coff", "en").map((m) => [m.slug, m.children.length])).toEqual([["food", 1]]);
+    expect(filterTree(tree, "", "en")).toHaveLength(2);
+  });
+  it("has the four discovery tabs and the four conditions", () => {
+    expect(CATEGORY_TABS).toEqual(["products", "suppliers", "services", "negosyo"]);
+    expect(LISTING_CONDITIONS).toEqual(["new", "used", "refurbished", "surplus"]);
   });
 });
 

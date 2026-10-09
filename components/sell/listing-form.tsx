@@ -1,6 +1,8 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { CategoryOptions } from "@/components/listing/category-options";
+import { LISTING_CONDITIONS } from "@/lib/categories";
 import { useState, useTransition } from "react";
 import { createListing, type ListingInput } from "@/app/actions/sell";
 import { LocationSelect } from "@/components/listing/location-select";
@@ -48,6 +50,7 @@ export function ListingForm({
       unit: String(fd.get("unit") ?? "pc"),
       moq: Number(fd.get("moq") || 1),
       stock_status: stock as ListingInput["stock_status"],
+      condition: String(fd.get("condition") ?? "new") as ListingInput["condition"],
       quantity_on_hand: stock === "in_stock" ? num(String(fd.get("quantity_on_hand") ?? "")) : null,
       region_code: String(fd.get("region") ?? ""),
       province_code: String(fd.get("province") ?? "") || null,
@@ -93,11 +96,13 @@ export function ListingForm({
           <option value="" disabled>
             —
           </option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {locale === "fil" ? c.name_fil : c.name_en}
-            </option>
-          ))}
+          <CategoryOptions categories={categories} locale={locale} valueOf="id" majorLabel={(n) => t("cat.general_in", { name: n })} />
+        </Select>
+      </Field>
+
+      <Field label={t("cond.label")} hint={t("cond.hint")}>
+        <Select name="condition" defaultValue="new">
+          {LISTING_CONDITIONS.map((c) => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
         </Select>
       </Field>
 

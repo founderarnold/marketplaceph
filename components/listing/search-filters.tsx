@@ -3,6 +3,8 @@
 import { SlidersHorizontal } from "lucide-react";
 import { LocationSelect } from "@/components/listing/location-select";
 import { Button } from "@/components/ui/button";
+import { CategoryOptions } from "@/components/listing/category-options";
+import { LISTING_CONDITIONS } from "@/lib/categories";
 import { Field, Input, Select } from "@/components/ui/field";
 import type { Category, Locations } from "@/lib/data";
 import { SELLER_TYPES } from "@/lib/domain";
@@ -19,7 +21,7 @@ export function SearchFiltersForm({
   locations: Locations;
 }) {
   const { t, locale } = useT();
-  const active = [filters.category, filters.region, filters.minPrice, filters.maxPrice, filters.sellerType, filters.verifiedOnly, filters.inStockOnly].filter(
+  const active = [filters.category, filters.region, filters.minPrice, filters.maxPrice, filters.sellerType, filters.verifiedOnly, filters.inStockOnly, filters.condition].filter(
     (v) => v !== null && v !== false,
   ).length;
 
@@ -35,11 +37,7 @@ export function SearchFiltersForm({
           <Field label={t("filters.category")}>
             <Select name="category" defaultValue={filters.category ?? ""}>
               <option value="">{t("filters.all")}</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.slug}>
-                  {locale === "fil" ? c.name_fil : c.name_en}
-                </option>
-              ))}
+              <CategoryOptions categories={categories} locale={locale} valueOf="slug" majorLabel={(n) => t("cat.all_of", { name: n })} />
             </Select>
           </Field>
           <Field label={t("filters.seller_type")}>
@@ -50,6 +48,12 @@ export function SearchFiltersForm({
                   {t(`seller.${s}`)}
                 </option>
               ))}
+            </Select>
+          </Field>
+          <Field label={t("cond.label")}>
+            <Select name="condition" defaultValue={filters.condition ?? ""}>
+              <option value="">{t("filters.all")}</option>
+              {LISTING_CONDITIONS.map((c) => <option key={c} value={c}>{t(`cond.${c}`)}</option>)}
             </Select>
           </Field>
           <Field label={t("filters.min_price")}>

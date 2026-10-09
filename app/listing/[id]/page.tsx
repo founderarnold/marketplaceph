@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { startConversation } from "@/app/actions/engage";
+import { Badge } from "@/components/ui/badge";
 import { SellerTypeBadge, StockBadge, VerificationBadge } from "@/components/listing/badges";
 import { EarnedBadges, FlagBanner, Stars } from "@/components/trust/trust-ui";
 import { loadStoreTrust } from "@/lib/trust";
@@ -64,7 +65,7 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
   const { data: l } = await supabase
     .from("listings")
     .select(
-      `id, title, description, kind, price_type, price_min, price_max, unit, moq, stock_status, quantity_on_hand, status, created_at, view_count,
+      `id, title, description, kind, price_type, price_min, price_max, unit, moq, stock_status, condition, quantity_on_hand, status, created_at, view_count,
        stores!inner ( id, slug, name, logo_url, seller_type, verification_level, year_started, created_at, owner_id ),
        listing_images ( path, position ),
        listing_price_tiers ( min_qty, unit_price ),
@@ -141,6 +142,7 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
 
         <div className="flex flex-wrap gap-2">
           <StockBadge status={l.stock_status} qty={l.quantity_on_hand} t={t} />
+          {l.condition !== "new" && <Badge tone="accent">{t(`cond.${l.condition}`)}</Badge>}
           {l.kind === "service" && <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">{t("listing.service")}</span>}
         </div>
 

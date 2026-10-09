@@ -1,8 +1,9 @@
 import { cacheLife, cacheTag } from "next/cache";
+import type { Cat } from "@/lib/categories";
 import { createPublicClient } from "@/lib/supabase/server";
 import { LISTING_CARD_SELECT, type ListingCardData } from "@/lib/domain";
 
-export type Category = { id: string; slug: string; name_en: string; name_fil: string; icon: string | null };
+export type Category = Cat;
 export type Locations = {
   regions: { code: string; name: string; short_name: string }[];
   provinces: { code: string; region_code: string; name: string }[];
@@ -17,10 +18,10 @@ export async function getCategories(): Promise<Category[]> {
   cacheTag("categories");
   const { data } = await createPublicClient()
     .from("categories")
-    .select("id, slug, name_en, name_fil, icon")
+    .select("id, slug, name_en, name_fil, icon, parent_id, tab, sort_order")
     .eq("is_active", true)
     .order("sort_order");
-  return data ?? [];
+  return (data ?? []) as Cat[];
 }
 
 export async function getLocations(): Promise<Locations> {

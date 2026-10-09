@@ -73,20 +73,7 @@ insert into public.psgc_cities (code, region_code, province_code, name) values
   ('BUTUAN', 'R13', 'AGUSANNORTE', 'Butuan City'),
   ('COTABATO', 'BARMM', 'MAGUINDANAO', 'Cotabato City');
 
--- ───────── Categories ─────────
-insert into public.categories (slug, name_en, name_fil, icon, sort_order) values
-  ('food-beverage', 'Food & Beverage', 'Pagkain at Inumin', 'utensils', 1),
-  ('agriculture', 'Agriculture & Farm Supplies', 'Agrikultura', 'sprout', 2),
-  ('fashion-apparel', 'Fashion & Apparel', 'Damit at Fashion', 'shirt', 3),
-  ('health-beauty', 'Health & Beauty', 'Kalusugan at Pampaganda', 'heart-pulse', 4),
-  ('home-living', 'Home & Living', 'Gamit sa Bahay', 'sofa', 5),
-  ('electronics', 'Electronics & Gadgets', 'Elektroniks at Gadgets', 'smartphone', 6),
-  ('construction-hardware', 'Construction & Hardware', 'Konstruksyon at Hardware', 'hammer', 7),
-  ('packaging-printing', 'Packaging & Printing', 'Packaging at Pag-print', 'package', 8),
-  ('auto-motor', 'Auto & Motorcycle', 'Sasakyan at Motor', 'car', 9),
-  ('crafts-gifts', 'Crafts & Gifts', 'Crafts at Regalo', 'gift', 10),
-  ('school-office', 'School & Office', 'Eskwela at Opisina', 'briefcase', 11),
-  ('services', 'Services', 'Serbisyo', 'wrench', 12);
+-- (Categories come from the category_taxonomy migration; the demo listings below use its slugs.)
 
 -- ───────── Banned / prohibited items ─────────
 insert into public.banned_keywords (keyword, reason) values
@@ -152,33 +139,33 @@ from (values
 -- ───────── Demo listings ─────────
 -- (store_n, category, title, description, price_type, min, max, unit, moq, stock, qty, kind)
 with src(store_n, cat, title, descr, pt, pmin, pmax, unit, moq, stock, qty, kind) as (values
-  (1, 'food-beverage', 'Spicy Garlic Chili Oil 250ml (bottle)', 'Crunchy chili oil, no preservatives. Best sold by the dozen to resellers.', 'fixed', 135, null, 'bottle', 6, 'in_stock', 240, 'product'),
-  (1, 'food-beverage', 'Homemade Ube Halaya 500g', 'Made to order, fresh batch every Friday. Good for 2 weeks refrigerated.', 'fixed', 220, null, 'tub', 1, 'made_to_order', null, 'product'),
-  (1, 'food-beverage', 'Party Tray Pancit Bihon (10 pax)', 'Catering tray with 2-day advance notice. Metro Manila delivery.', 'range', 850, 1200, 'tray', 1, 'pre_order', null, 'product'),
-  (2, 'food-beverage', 'Dried Mango 100g Pack (wholesale)', 'Cebu 7D-style dried mango, resealable pack. Bulk pricing for resellers.', 'fixed', 95, null, 'pack', 20, 'in_stock', 1500, 'product'),
-  (2, 'food-beverage', 'Dried Mango 1kg Bulk Bag', 'Food-grade bag, ideal for repacking. Nationwide shipping via courier.', 'fixed', 780, null, 'bag', 5, 'in_stock', 320, 'product'),
-  (2, 'crafts-gifts', 'Pasalubong Gift Box Set (Cebu)', 'Assorted dried mango, otap and peanut brittle in a gift box.', 'fixed', 450, null, 'box', 10, 'in_stock', 90, 'product'),
-  (3, 'food-beverage', 'Tablea de Cacao 500g (Davao)', 'Pure cacao tablea, no sugar. For sikwate and baking.', 'fixed', 260, null, 'pack', 10, 'in_stock', 400, 'product'),
-  (3, 'food-beverage', 'Roasted Cacao Nibs 1kg', 'Bulk cacao nibs for chocolatiers and smoothie bars.', 'fixed', 640, null, 'bag', 3, 'in_stock', 60, 'product'),
-  (3, 'food-beverage', 'Green Coffee Beans (Arabica) per kg', 'Direct from partner farmers. Message for current harvest price.', 'message', null, null, 'kg', 25, 'pre_order', null, 'product'),
-  (4, 'agriculture', 'Fresh Carrots (per kg, 20kg min)', 'Packed in sacks, delivered to Metro Manila daily.', 'fixed', 55, null, 'kg', 20, 'in_stock', 800, 'product'),
-  (4, 'agriculture', 'Cabbage (per kg)', 'Highland cabbage, grade A. Truck load available.', 'fixed', 38, null, 'kg', 50, 'in_stock', 2000, 'product'),
-  (4, 'agriculture', 'Strawberries 250g Box', 'La Trinidad strawberries, sold by the crate of 24.', 'range', 90, 130, 'box', 24, 'out_of_stock', 0, 'product'),
-  (5, 'packaging-printing', 'Kraft Paper Food Box 6x6 (100 pcs)', 'Grease-resistant, good for pastries and rice meals.', 'fixed', 480, null, 'bundle', 1, 'in_stock', 350, 'product'),
-  (5, 'packaging-printing', 'Amber Glass Bottle 100ml w/ dropper', 'For serums, oils and tinctures. Sold per 12 pcs.', 'fixed', 360, null, 'dozen', 1, 'in_stock', 120, 'product'),
-  (5, 'packaging-printing', 'Custom Roll Stickers (waterproof)', 'Label stickers with your logo. MOQ 500.', 'range', 1.5, 3, 'pc', 500, 'made_to_order', null, 'product'),
-  (6, 'crafts-gifts', 'Handwoven Table Runner', 'Natural fiber, 3 colors. Made to order within 2 weeks.', 'fixed', 750, null, 'pc', 1, 'made_to_order', null, 'product'),
+  (1, 'food-beverages', 'Spicy Garlic Chili Oil 250ml (bottle)', 'Crunchy chili oil, no preservatives. Best sold by the dozen to resellers.', 'fixed', 135, null, 'bottle', 6, 'in_stock', 240, 'product'),
+  (1, 'food-beverages', 'Homemade Ube Halaya 500g', 'Made to order, fresh batch every Friday. Good for 2 weeks refrigerated.', 'fixed', 220, null, 'tub', 1, 'made_to_order', null, 'product'),
+  (1, 'food-beverages', 'Party Tray Pancit Bihon (10 pax)', 'Catering tray with 2-day advance notice. Metro Manila delivery.', 'range', 850, 1200, 'tray', 1, 'pre_order', null, 'product'),
+  (2, 'food-beverages', 'Dried Mango 100g Pack (wholesale)', 'Cebu 7D-style dried mango, resealable pack. Bulk pricing for resellers.', 'fixed', 95, null, 'pack', 20, 'in_stock', 1500, 'product'),
+  (2, 'food-beverages', 'Dried Mango 1kg Bulk Bag', 'Food-grade bag, ideal for repacking. Nationwide shipping via courier.', 'fixed', 780, null, 'bag', 5, 'in_stock', 320, 'product'),
+  (2, 'gifts-crafts-personalized', 'Pasalubong Gift Box Set (Cebu)', 'Assorted dried mango, otap and peanut brittle in a gift box.', 'fixed', 450, null, 'box', 10, 'in_stock', 90, 'product'),
+  (3, 'food-beverages', 'Tablea de Cacao 500g (Davao)', 'Pure cacao tablea, no sugar. For sikwate and baking.', 'fixed', 260, null, 'pack', 10, 'in_stock', 400, 'product'),
+  (3, 'food-beverages', 'Roasted Cacao Nibs 1kg', 'Bulk cacao nibs for chocolatiers and smoothie bars.', 'fixed', 640, null, 'bag', 3, 'in_stock', 60, 'product'),
+  (3, 'food-beverages', 'Green Coffee Beans (Arabica) per kg', 'Direct from partner farmers. Message for current harvest price.', 'message', null, null, 'kg', 25, 'pre_order', null, 'product'),
+  (4, 'agriculture-farm-fisheries', 'Fresh Carrots (per kg, 20kg min)', 'Packed in sacks, delivered to Metro Manila daily.', 'fixed', 55, null, 'kg', 20, 'in_stock', 800, 'product'),
+  (4, 'agriculture-farm-fisheries', 'Cabbage (per kg)', 'Highland cabbage, grade A. Truck load available.', 'fixed', 38, null, 'kg', 50, 'in_stock', 2000, 'product'),
+  (4, 'agriculture-farm-fisheries', 'Strawberries 250g Box', 'La Trinidad strawberries, sold by the crate of 24.', 'range', 90, 130, 'box', 24, 'out_of_stock', 0, 'product'),
+  (5, 'packaging-printing-signage', 'Kraft Paper Food Box 6x6 (100 pcs)', 'Grease-resistant, good for pastries and rice meals.', 'fixed', 480, null, 'bundle', 1, 'in_stock', 350, 'product'),
+  (5, 'packaging-printing-signage', 'Amber Glass Bottle 100ml w/ dropper', 'For serums, oils and tinctures. Sold per 12 pcs.', 'fixed', 360, null, 'dozen', 1, 'in_stock', 120, 'product'),
+  (5, 'packaging-printing-signage', 'Custom Roll Stickers (waterproof)', 'Label stickers with your logo. MOQ 500.', 'range', 1.5, 3, 'pc', 500, 'made_to_order', null, 'product'),
+  (6, 'gifts-crafts-personalized', 'Handwoven Table Runner', 'Natural fiber, 3 colors. Made to order within 2 weeks.', 'fixed', 750, null, 'pc', 1, 'made_to_order', null, 'product'),
   (6, 'fashion-apparel', 'Habi Tote Bag (Small)', 'Great for corporate giveaways. Bulk orders welcome.', 'fixed', 320, null, 'pc', 12, 'in_stock', 45, 'product'),
-  (6, 'crafts-gifts', 'Woven Coaster Set of 6', 'Souvenir-ready set. Packed in kraft box.', 'fixed', 280, null, 'set', 6, 'in_stock', 150, 'product'),
-  (7, 'construction-hardware', 'Cordless Drill 20V Set', 'Includes 2 batteries and charger. 6-month shop warranty.', 'fixed', 3250, null, 'set', 1, 'in_stock', 14, 'product'),
-  (7, 'construction-hardware', 'Welding Rod 6013 (per kg)', 'Box of 5kg, retail and bulk.', 'fixed', 165, null, 'kg', 5, 'in_stock', 200, 'product'),
-  (7, 'construction-hardware', 'Hollow Blocks 4" (per 100)', 'Pickup in San Fernando or truck delivery.', 'fixed', 1500, null, 'hundred', 1, 'in_stock', 30, 'product'),
-  (8, 'services', 'Tarpaulin Printing (per sq ft)', 'Full-color, with eyelets. Same-day rush available.', 'fixed', 14, null, 'sq ft', 6, 'in_stock', null, 'service'),
-  (8, 'services', 'Logo & Branding Package', 'Logo, color palette and social media kit for your small business.', 'range', 2500, 6000, 'package', 1, 'in_stock', null, 'service'),
-  (8, 'services', 'Menu Board & Signage Design', 'Layout and print-ready files. Message for rush rates.', 'message', null, null, 'project', 1, 'in_stock', null, 'service'),
-  (9, 'electronics', 'Fast Charger 20W USB-C (wholesale)', 'Brand-new, 3-month store warranty. Tiered pricing for resellers.', 'fixed', 135, null, 'pc', 10, 'in_stock', 800, 'product'),
-  (9, 'electronics', 'Tempered Glass (assorted models)', 'Sold per 50 pcs. Message for model list.', 'range', 8, 14, 'pc', 50, 'in_stock', 5000, 'product'),
-  (9, 'electronics', 'Bluetooth Earbuds TWS', 'Imported direct, sealed box. Bulk price on request.', 'fixed', 320, null, 'pc', 5, 'out_of_stock', 0, 'product')
+  (6, 'gifts-crafts-personalized', 'Woven Coaster Set of 6', 'Souvenir-ready set. Packed in kraft box.', 'fixed', 280, null, 'set', 6, 'in_stock', 150, 'product'),
+  (7, 'construction-hardware-industrial', 'Cordless Drill 20V Set', 'Includes 2 batteries and charger. 6-month shop warranty.', 'fixed', 3250, null, 'set', 1, 'in_stock', 14, 'product'),
+  (7, 'construction-hardware-industrial', 'Welding Rod 6013 (per kg)', 'Box of 5kg, retail and bulk.', 'fixed', 165, null, 'kg', 5, 'in_stock', 200, 'product'),
+  (7, 'construction-hardware-industrial', 'Hollow Blocks 4" (per 100)', 'Pickup in San Fernando or truck delivery.', 'fixed', 1500, null, 'hundred', 1, 'in_stock', 30, 'product'),
+  (8, 'packaging-printing-signage--tarpaulin-printing', 'Tarpaulin Printing (per sq ft)', 'Full-color, with eyelets. Same-day rush available.', 'fixed', 14, null, 'sq ft', 6, 'in_stock', null, 'service'),
+  (8, 'advertising-marketing-creative--logo-design', 'Logo & Branding Package', 'Logo, color palette and social media kit for your small business.', 'range', 2500, 6000, 'package', 1, 'in_stock', null, 'service'),
+  (8, 'advertising-marketing-creative--signage', 'Menu Board & Signage Design', 'Layout and print-ready files. Message for rush rates.', 'message', null, null, 'project', 1, 'in_stock', null, 'service'),
+  (9, 'mobile-gadgets', 'Fast Charger 20W USB-C (wholesale)', 'Brand-new, 3-month store warranty. Tiered pricing for resellers.', 'fixed', 135, null, 'pc', 10, 'in_stock', 800, 'product'),
+  (9, 'mobile-gadgets', 'Tempered Glass (assorted models)', 'Sold per 50 pcs. Message for model list.', 'range', 8, 14, 'pc', 50, 'in_stock', 5000, 'product'),
+  (9, 'mobile-gadgets', 'Bluetooth Earbuds TWS', 'Imported direct, sealed box. Bulk price on request.', 'fixed', 320, null, 'pc', 5, 'out_of_stock', 0, 'product')
 )
 insert into public.listings
   (store_id, category_id, kind, title, description, price_type, price_min, price_max, unit, moq, stock_status, quantity_on_hand, region_code, province_code, city_code)

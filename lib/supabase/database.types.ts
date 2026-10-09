@@ -263,14 +263,14 @@ isOneToOne: false
                   ]
                 },"categories": {
                   Row: {
-                    "icon": string | null,"id": string,"is_active": boolean,"name_en": string,"name_fil": string,"parent_id": string | null,"slug": string,"sort_order": number
+                    "icon": string | null,"id": string,"is_active": boolean,"name_en": string,"name_fil": string,"parent_id": string | null,"slug": string,"sort_order": number,"tab": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "icon"?: string | null,"id"?: string,"is_active"?: boolean,"name_en": string,"name_fil": string,"parent_id"?: string | null,"slug": string,"sort_order"?: number
+                    "icon"?: string | null,"id"?: string,"is_active"?: boolean,"name_en": string,"name_fil": string,"parent_id"?: string | null,"slug": string,"sort_order"?: number,"tab"?: string
                   }
                   Update: {
-                    "icon"?: string | null,"id"?: string,"is_active"?: boolean,"name_en"?: string,"name_fil"?: string,"parent_id"?: string | null,"slug"?: string,"sort_order"?: number
+                    "icon"?: string | null,"id"?: string,"is_active"?: boolean,"name_en"?: string,"name_fil"?: string,"parent_id"?: string | null,"slug"?: string,"sort_order"?: number,"tab"?: string
                   }
                   Relationships: [
                     {
@@ -985,14 +985,14 @@ isOneToOne: false
                   ]
                 },"listings": {
                   Row: {
-                    "category_id": string | null,"city_code": string | null,"commission_pct": number | null,"created_at": string,"description": string | null,"id": string,"kind": Database["public"]['Enums']["listing_kind"],"low_stock_threshold": number | null,"moq": number,"price_max": number | null,"price_min": number | null,"price_type": Database["public"]['Enums']["price_type"],"province_code": string | null,"quantity_on_hand": number | null,"region_code": string | null,"status": Database["public"]['Enums']["listing_status"],"stock_status": Database["public"]['Enums']["stock_status"],"store_id": string,"title": string,"unit": string,"updated_at": string,"view_count": number,"weight_kg": number | null
+                    "category_id": string | null,"city_code": string | null,"commission_pct": number | null,"condition": string,"created_at": string,"description": string | null,"id": string,"kind": Database["public"]['Enums']["listing_kind"],"low_stock_threshold": number | null,"moq": number,"price_max": number | null,"price_min": number | null,"price_type": Database["public"]['Enums']["price_type"],"province_code": string | null,"quantity_on_hand": number | null,"region_code": string | null,"status": Database["public"]['Enums']["listing_status"],"stock_status": Database["public"]['Enums']["stock_status"],"store_id": string,"title": string,"unit": string,"updated_at": string,"view_count": number,"weight_kg": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "category_id"?: string | null,"city_code"?: string | null,"commission_pct"?: number | null,"created_at"?: string,"description"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"],"low_stock_threshold"?: number | null,"moq"?: number,"price_max"?: number | null,"price_min"?: number | null,"price_type"?: Database["public"]['Enums']["price_type"],"province_code"?: string | null,"quantity_on_hand"?: number | null,"region_code"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"stock_status"?: Database["public"]['Enums']["stock_status"],"store_id": string,"title": string,"unit"?: string,"updated_at"?: string,"view_count"?: number,"weight_kg"?: number | null
+                    "category_id"?: string | null,"city_code"?: string | null,"commission_pct"?: number | null,"condition"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"],"low_stock_threshold"?: number | null,"moq"?: number,"price_max"?: number | null,"price_min"?: number | null,"price_type"?: Database["public"]['Enums']["price_type"],"province_code"?: string | null,"quantity_on_hand"?: number | null,"region_code"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"stock_status"?: Database["public"]['Enums']["stock_status"],"store_id": string,"title": string,"unit"?: string,"updated_at"?: string,"view_count"?: number,"weight_kg"?: number | null
                   }
                   Update: {
-                    "category_id"?: string | null,"city_code"?: string | null,"commission_pct"?: number | null,"created_at"?: string,"description"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"],"low_stock_threshold"?: number | null,"moq"?: number,"price_max"?: number | null,"price_min"?: number | null,"price_type"?: Database["public"]['Enums']["price_type"],"province_code"?: string | null,"quantity_on_hand"?: number | null,"region_code"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"stock_status"?: Database["public"]['Enums']["stock_status"],"store_id"?: string,"title"?: string,"unit"?: string,"updated_at"?: string,"view_count"?: number,"weight_kg"?: number | null
+                    "category_id"?: string | null,"city_code"?: string | null,"commission_pct"?: number | null,"condition"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"kind"?: Database["public"]['Enums']["listing_kind"],"low_stock_threshold"?: number | null,"moq"?: number,"price_max"?: number | null,"price_min"?: number | null,"price_type"?: Database["public"]['Enums']["price_type"],"province_code"?: string | null,"quantity_on_hand"?: number | null,"region_code"?: string | null,"status"?: Database["public"]['Enums']["listing_status"],"stock_status"?: Database["public"]['Enums']["stock_status"],"store_id"?: string,"title"?: string,"unit"?: string,"updated_at"?: string,"view_count"?: number,"weight_kg"?: number | null
                   }
                   Relationships: [
                     {

@@ -1,8 +1,9 @@
 import { Building2, BriefcaseBusiness, Megaphone, ShieldCheck, ShoppingBag, Store, Truck, UserSearch } from "lucide-react";
 import Link from "next/link";
-import { CategoryIcon } from "@/components/listing/category-icon";
+import { CategoryExplorer } from "@/components/listing/category-explorer";
 import { ListingGrid } from "@/components/listing/listing-card";
 import { buttonClass } from "@/components/ui/button";
+import { buildTree } from "@/lib/categories";
 import { getCategories, getFeaturedStores, getLatestListings } from "@/lib/data";
 import { imageUrl } from "@/lib/images";
 import { getT } from "@/lib/i18n/server";
@@ -71,21 +72,7 @@ export default async function Home() {
         <h2 id="cats" className="mb-3 text-xl font-bold text-brand-dark">
           {t("home.categories")}
         </h2>
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-          {categories.map((c) => (
-            <li key={c.id}>
-              <Link
-                href={`/search?category=${c.slug}`}
-                className="flex h-full flex-col items-center gap-2 rounded-2xl border border-border bg-white p-3 text-center text-xs font-semibold text-brand-dark transition-colors hover:border-brand hover:bg-brand-soft"
-              >
-                <span className="grid h-11 w-11 place-items-center rounded-full bg-brand-soft text-brand">
-                  <CategoryIcon name={c.icon} />
-                </span>
-                {locale === "fil" ? c.name_fil : c.name_en}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <CategoryExplorer majors={buildTree(categories)} locale={locale} />
       </section>
 
       {featured.length > 0 && (

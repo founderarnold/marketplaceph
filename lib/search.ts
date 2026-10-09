@@ -1,3 +1,4 @@
+import { LISTING_CONDITIONS, type ListingCondition } from "@/lib/categories";
 import { SELLER_TYPES, STOCK_STATUSES, type SellerType } from "@/lib/domain";
 
 export type SearchFilters = {
@@ -11,6 +12,7 @@ export type SearchFilters = {
   sellerType: SellerType | null;
   verifiedOnly: boolean;
   inStockOnly: boolean;
+  condition: ListingCondition | null;
   sort: "new" | "price_asc" | "price_desc";
   page: number;
 };
@@ -41,6 +43,7 @@ export function parseSearchParams(sp: Raw): SearchFilters {
     sellerType: SELLER_TYPES.includes(sellerType as SellerType) ? (sellerType as SellerType) : null,
     verifiedOnly: one(sp.verified) === "1",
     inStockOnly: one(sp.in_stock) === "1",
+    condition: LISTING_CONDITIONS.includes(one(sp.condition) as ListingCondition) ? (one(sp.condition) as ListingCondition) : null,
     sort: sort === "price_asc" || sort === "price_desc" ? sort : "new",
     page: Number.isFinite(page) && page > 0 ? Math.min(page, 200) : 1,
   };
@@ -57,11 +60,12 @@ export interface FilterBuilder<T> {
   range(a: number, b: number): T;
 }
 
-/** `categoryId` must be resolved from the slug by the caller. */
-export function applyFilters<T extends FilterBuilder<T>>(query: T, f: SearchFilters, categoryId: string | null): T {
+/** `categoryIds` (the category and its sub-categories) must be resolved from the slug by the caller. */
+export function applyFilters<T extends FilterBuilder<T>>(query: T, f: SearchFilters, categoryIds: string[] | null): T {
   let q = query;
   if (f.q) q = q.or(`title.ilike.%${f.q}%,description.ilike.%${f.q}%`);
-  if (categoryId) q = q.eq("category_id", categoryId);
+  if (categoryIds?.length) q = q.in("category_id", categoryIds);
+  if (f.condition) q = q.eq("condition", f.condition);
   if (f.region) q = q.eq("region_code", f.region);
   if (f.province) q = q.eq("province_code", f.province);
   if (f.city) q = q.eq("city_code", f.city);

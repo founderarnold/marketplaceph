@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 import { StockBadge, VerificationBadge } from "@/components/listing/badges";
 import type { ListingCardData } from "@/lib/domain";
@@ -27,8 +28,9 @@ export function ListingCard({ l, t, priority }: { l: ListingCardData; t: TFuncti
           decoding="async"
           className={cn("h-full w-full object-cover", soldOut && "opacity-60 grayscale")}
         />
-        <div className="absolute left-2 top-2">
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           <StockBadge status={l.stock_status} t={t} />
+          {l.condition !== "new" && <Badge tone="accent">{t(`cond.${l.condition}`)}</Badge>}
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">

@@ -387,7 +387,7 @@ async function Users({ canEdit, me }: { canEdit: boolean; me: string }) {
 async function Categories({ canEdit }: { canEdit: boolean }) {
   const { t } = await getT();
   const supabase = await createClient();
-  const { data } = await supabase.from("categories").select("id, slug, name_en, name_fil, is_active").order("sort_order");
+  const { data } = await supabase.from("categories").select("id, slug, name_en, name_fil, is_active, tab").is("parent_id", null).order("sort_order");
   return (
     <div className="space-y-3">
       {canEdit && (

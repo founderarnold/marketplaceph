@@ -25,6 +25,7 @@ export type ListingCardData = {
   unit: string;
   moq: number;
   stock_status: StockStatus;
+  condition: "new" | "used" | "refurbished" | "surplus";
   quantity_on_hand: number | null;
   created_at: string;
   stores: {
@@ -39,7 +40,7 @@ export type ListingCardData = {
 };
 
 export const LISTING_CARD_SELECT = `
-  id, title, price_type, price_min, price_max, unit, moq, stock_status, quantity_on_hand, created_at,
+  id, title, price_type, price_min, price_max, unit, moq, stock_status, condition, quantity_on_hand, created_at,
   stores!inner ( id, slug, name, seller_type, verification_level ),
   listing_images ( path, position ),
   psgc_cities ( name )

@@ -69,8 +69,8 @@ async function addDoc(seeker: Client, kind: string, name: string) {
 
 describe("real estate category and public job board", () => {
   guarded("the Real Estate & Properties category exists", async () => {
-    const { data } = await anon().from("categories").select("name_en, icon").eq("slug", "real-estate").single();
-    expect(data).toMatchObject({ name_en: "Real Estate & Properties", icon: "building-2" });
+    const { data } = await anon().from("categories").select("name_en, icon").eq("slug", "real-estate-commercial").single();
+    expect(data).toMatchObject({ name_en: "Real Estate & Commercial Spaces", icon: "building-2" });
   });
 
   guarded("anyone can read open posts; expired and hidden posts are not public", async () => {
@@ -273,9 +273,28 @@ describe("messaging", () => {
     await svc().from("notifications").delete().eq("user_id", ids.seller2).eq("kind", "new_message");
   });
 
-  guarded("new shop categories exist with icons", async () => {
-    const { data } = await anon().from("categories").select("slug, icon").in("slug", ["import-brokerage", "trucking-logistics", "couriers-pasabuy", "advertising-marketing", "catering-concession", "accounting-tax", "rebrand-giveaways", "real-estate"]);
-    expect(data).toHaveLength(8);
-    expect(data!.every((c) => !!c.icon)).toBe(true);
+  guarded("the category tree: 30 majors in four tabs, sub-categories, no listing left without a category", async () => {
+    const all = (await anon().from("categories").select("id, slug, parent_id, tab, icon, is_active, name_en, name_fil")).data!;
+    const majors = all.filter((c) => !c.parent_id);
+    expect(majors).toHaveLength(30);
+    expect(new Set(majors.map((m) => m.tab))).toEqual(new Set(["products", "suppliers", "services", "negosyo"]));
+    expect(majors.every((m) => !!m.icon && m.is_active)).toBe(true);
+    const subs = all.filter((c) => c.parent_id);
+    expect(subs.length).toBeGreaterThan(600);
+    expect(subs.every((s) => majors.some((m) => m.id === s.parent_id))).toBe(true);   // two levels only
+    expect(new Set(all.map((c) => c.slug)).size).toBe(all.length);
+    for (const slug of ["food-beverages", "logistics-courier-pasabuy", "real-estate-commercial", "business-opportunities", "rebranding-oem-private-label"]) expect(majors.map((m) => m.slug)).toContain(slug);
+    // the old flat categories are gone and their slugs no longer exist
+    for (const old of ["food-beverage", "services", "accounting-tax", "catering-concession", "rebrand-giveaways", "import-brokerage"]) expect(all.map((c) => c.slug)).not.toContain(old);
+    expect((await svc().from("listings").select("id").is("category_id", null)).data).toEqual([]);
+  });
+
+  guarded("listing condition defaults to new and only accepts the four values", async () => {
+    const db = svc();
+    const { data: l } = await db.from("listings").select("id, condition").limit(1).single();
+    expect(l!.condition).toBe("new");
+    expect((await db.from("listings").update({ condition: "used" }).eq("id", l!.id)).error).toBeNull();
+    expect((await db.from("listings").update({ condition: "broken" as never }).eq("id", l!.id)).error).not.toBeNull();
+    await db.from("listings").update({ condition: "new" }).eq("id", l!.id);
   });
 });

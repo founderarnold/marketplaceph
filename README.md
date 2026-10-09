@@ -16,7 +16,7 @@ MSME-first online marketplace for the Philippines — the Market Access / Growth
 | Data access | `supabase-js` with generated types (`lib/supabase/database.types.ts`), plain SQL migrations |
 | i18n | English (default) + Filipino/Taglish, `messages/{en,fil}.json`, language toggle (cookie) |
 | PWA | `app/manifest.ts`, `public/sw.js` (network-first, offline page), maskable icons |
-| Tests | Vitest — unit tests + RLS/permission/due-process integration tests against local Supabase (124 tests) |
+| Tests | Vitest — unit tests + RLS/permission/due-process integration tests against local Supabase (129 tests) |
 
 > **This is not the Next.js you may know.** Next 16 renames Middleware to **Proxy** (`proxy.ts`), requires `<Suspense>` around request-time data (cookies, params, searchParams) when Cache Components is on, and makes `params`/`searchParams` promises. Read `node_modules/next/dist/docs/` before changing routing/caching code (see `AGENTS.md`).
 
@@ -192,6 +192,11 @@ Free for everyone, under **/jobs** (a **Jobs** button in the header and bottom b
 
 Also new on the site: a dismissible **"under construction — sign up for updates"** bar above the header, and a **Real Estate & Properties** shop category (listing prices up to ₱5 billion).
 
+## Buy/Sell categories
+
+30 major categories (about 670 sub-categories) in four discovery tabs: **Shop Products**, **Find Suppliers**, **Find Services**, **Negosyo Opportunities**. The home page shows 12 per tab with sample sub-categories on each tile and a **View all categories** button; `/categories` is the full directory (search across every category and sub-category, expandable chips). Searching a major category also returns its sub-categories' listings, with a breadcrumb and sub-category chips on the results page. "Pre-owned / surplus" is a listing **condition** (new, pre-owned, refurbished, surplus) with a filter, not a separate category.
+
+The tree is defined in `scripts/build-taxonomy-migration.mjs` (run `node scripts/build-taxonomy-migration.mjs` to regenerate the migration); change it later with a NEW migration. Sub-category names are English only; the 30 majors are bilingual. The Groceries sub-categories are my proposal. Listings from the old flat categories were moved to the closest new category.
 ## Deploying (Vercel + Supabase)
 
 1. Create the hosted Supabase project, then `npx supabase link --project-ref <ref>` and `npx supabase db push` (**do not** run `seed.sql` against production).
