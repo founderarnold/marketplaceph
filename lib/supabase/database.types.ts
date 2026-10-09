@@ -669,6 +669,178 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"job_applications": {
+                  Row: {
+                    "applicant_id": string,"created_at": string,"employer_note": string | null,"id": string,"note": string | null,"post_id": string,"shared_doc_ids": (string)[],"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "applicant_id": string,"created_at"?: string,"employer_note"?: string | null,"id"?: string,"note"?: string | null,"post_id": string,"shared_doc_ids"?: (string)[],"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "applicant_id"?: string,"created_at"?: string,"employer_note"?: string | null,"id"?: string,"note"?: string | null,"post_id"?: string,"shared_doc_ids"?: (string)[],"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_applications_applicant_id_fkey"
+      columns: ["applicant_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_applications_applicant_id_fkey"
+      columns: ["applicant_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_applications_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "job_posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_doc_access_logs": {
+                  Row: {
+                    "created_at": string,"doc_id": string,"id": number,"viewer_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"doc_id": string,"id"?: never,"viewer_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"doc_id"?: string,"id"?: never,"viewer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_doc_access_logs_viewer_id_fkey"
+      columns: ["viewer_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_doc_access_logs_viewer_id_fkey"
+      columns: ["viewer_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_documents": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"mime_type": string,"size_bytes": number | null,"storage_path": string,"title": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"mime_type": string,"size_bytes"?: number | null,"storage_path": string,"title"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"mime_type"?: string,"size_bytes"?: number | null,"storage_path"?: string,"title"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_documents_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_documents_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_posts": {
+                  Row: {
+                    "agency_license_no": string | null,"category": string,"city_code": string | null,"company_name": string,"created_at": string,"deadline": string | null,"description": string,"employment_type": string,"for_client": boolean,"id": string,"owner_id": string,"poster_type": string,"province_code": string | null,"qualifications": string | null,"region_code": string | null,"requirement_docs": (string)[],"salary_max": number | null,"salary_min": number | null,"salary_period": string | null,"status": string,"title": string,"updated_at": string,"vacancies": number,"work_setup": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "agency_license_no"?: string | null,"category": string,"city_code"?: string | null,"company_name": string,"created_at"?: string,"deadline"?: string | null,"description": string,"employment_type": string,"for_client"?: boolean,"id"?: string,"owner_id": string,"poster_type"?: string,"province_code"?: string | null,"qualifications"?: string | null,"region_code"?: string | null,"requirement_docs"?: (string)[],"salary_max"?: number | null,"salary_min"?: number | null,"salary_period"?: string | null,"status"?: string,"title": string,"updated_at"?: string,"vacancies"?: number,"work_setup"?: string
+                  }
+                  Update: {
+                    "agency_license_no"?: string | null,"category"?: string,"city_code"?: string | null,"company_name"?: string,"created_at"?: string,"deadline"?: string | null,"description"?: string,"employment_type"?: string,"for_client"?: boolean,"id"?: string,"owner_id"?: string,"poster_type"?: string,"province_code"?: string | null,"qualifications"?: string | null,"region_code"?: string | null,"requirement_docs"?: (string)[],"salary_max"?: number | null,"salary_min"?: number | null,"salary_period"?: string | null,"status"?: string,"title"?: string,"updated_at"?: string,"vacancies"?: number,"work_setup"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_posts_city_code_fkey"
+      columns: ["city_code"]
+isOneToOne: false
+      referencedRelation: "psgc_cities"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "job_posts_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_posts_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_posts_province_code_fkey"
+      columns: ["province_code"]
+isOneToOne: false
+      referencedRelation: "psgc_provinces"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "job_posts_region_code_fkey"
+      columns: ["region_code"]
+isOneToOne: false
+      referencedRelation: "psgc_regions"
+      referencedColumns: ["code"]
+    }
+                  ]
+                },"job_profiles": {
+                  Row: {
+                    "about": string | null,"address_note": string | null,"birthdate": string | null,"city_code": string | null,"civil_status": string | null,"consent_at": string | null,"contact_email": string | null,"created_at": string,"desired_roles": string | null,"education_level": string | null,"expected_salary_max": number | null,"expected_salary_min": number | null,"experience_years": number | null,"full_name": string,"headline": string | null,"job_types": (string)[],"open_to_work": boolean,"phone": string | null,"province_code": string | null,"region_code": string | null,"sex": string | null,"skills": (string)[],"updated_at": string,"user_id": string,"work_history": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "about"?: string | null,"address_note"?: string | null,"birthdate"?: string | null,"city_code"?: string | null,"civil_status"?: string | null,"consent_at"?: string | null,"contact_email"?: string | null,"created_at"?: string,"desired_roles"?: string | null,"education_level"?: string | null,"expected_salary_max"?: number | null,"expected_salary_min"?: number | null,"experience_years"?: number | null,"full_name": string,"headline"?: string | null,"job_types"?: (string)[],"open_to_work"?: boolean,"phone"?: string | null,"province_code"?: string | null,"region_code"?: string | null,"sex"?: string | null,"skills"?: (string)[],"updated_at"?: string,"user_id": string,"work_history"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "about"?: string | null,"address_note"?: string | null,"birthdate"?: string | null,"city_code"?: string | null,"civil_status"?: string | null,"consent_at"?: string | null,"contact_email"?: string | null,"created_at"?: string,"desired_roles"?: string | null,"education_level"?: string | null,"expected_salary_max"?: number | null,"expected_salary_min"?: number | null,"experience_years"?: number | null,"full_name"?: string,"headline"?: string | null,"job_types"?: (string)[],"open_to_work"?: boolean,"phone"?: string | null,"province_code"?: string | null,"region_code"?: string | null,"sex"?: string | null,"skills"?: (string)[],"updated_at"?: string,"user_id"?: string,"work_history"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_profiles_city_code_fkey"
+      columns: ["city_code"]
+isOneToOne: false
+      referencedRelation: "psgc_cities"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "job_profiles_province_code_fkey"
+      columns: ["province_code"]
+isOneToOne: false
+      referencedRelation: "psgc_provinces"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "job_profiles_region_code_fkey"
+      columns: ["region_code"]
+isOneToOne: false
+      referencedRelation: "psgc_regions"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "job_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"listing_images": {
                   Row: {
                     "created_at": string,"id": string,"listing_id": string,"path": string,"position": number
@@ -1834,6 +2006,9 @@ isOneToOne: false
 "amount_range":
 { Args: { "n": number }; Returns: string
                            },
+"apply_to_job":
+{ Args: { "p_docs"?: (string)[],"p_note"?: string,"p_post": string }; Returns: string
+                           },
 "assert_not_restricted":
 { Args: { "p_user": string }; Returns: undefined
                            },
@@ -1913,6 +2088,12 @@ isOneToOne: false
 "dispute_respond":
 { Args: { "p_body": string,"p_dispute": string,"p_paths"?: (string)[] }; Returns: undefined
                            },
+"employer_can_see_applicant":
+{ Args: { "p_applicant": string }; Returns: boolean
+                           },
+"employer_can_see_doc":
+{ Args: { "p_doc": string }; Returns: boolean
+                           },
 "evidence_shared_with_me":
 { Args: { "p_report": string }; Returns: {
               "id": string,"note": string,"storage_path": string
@@ -1944,6 +2125,9 @@ isOneToOne: false
                            },
 "is_order_participant":
 { Args: { "p_order": string }; Returns: boolean
+                           },
+"job_doc_open":
+{ Args: { "p_doc": string }; Returns: string
                            },
 "listing_usage":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -2042,6 +2226,9 @@ isOneToOne: false
               "buyer_id": string,"display_name": string,"orders_count": number,"qty": number,"spent": number
             }[]
                            },
+"set_application_status":
+{ Args: { "p_app": string,"p_note"?: string,"p_status": string }; Returns: undefined
+                           },
 "set_evidence_shareable":
 { Args: { "p_evidence": string,"p_shareable": boolean }; Returns: undefined
                            },
@@ -2098,6 +2285,9 @@ isOneToOne: false
 { Args: { "p_user": string }; Returns: {
               "amount_label": string,"avg_rating": number,"cancellation_rate": number,"completed_orders": number,"member_since": string,"payment_reliability": number,"review_count": number
             }[]
+                           },
+"withdraw_application":
+{ Args: { "p_app": string }; Returns: undefined
                            }
           }
           Enums: {

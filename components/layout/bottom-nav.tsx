@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Home, MessageCircle, PlusCircle, User } from "lucide-react";
+import { BriefcaseBusiness, Home, MessageCircle, PlusCircle, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n/client";
@@ -12,7 +12,7 @@ export function BottomNav() {
   const path = usePathname();
   const items = [
     { href: "/", icon: Home, label: t("nav.home") },
-    { href: "/favorites", icon: Heart, label: t("nav.saved") },
+    { href: "/jobs", icon: BriefcaseBusiness, label: t("nav.jobs") },
     { href: "/sell/new", icon: PlusCircle, label: t("nav.sell"), highlight: true },
     { href: "/messages", icon: MessageCircle, label: t("nav.messages") },
     { href: "/account", icon: User, label: t("nav.account") },

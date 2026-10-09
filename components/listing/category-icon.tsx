@@ -1,4 +1,4 @@
-import { Briefcase, Car, Gift, Hammer, HeartPulse, Package, Shirt, Smartphone, Sofa, Sprout, Tag, Utensils, Wrench, type LucideIcon } from "lucide-react";
+import { Briefcase, Building2, Car, Gift, Hammer, HeartPulse, Package, Shirt, Smartphone, Sofa, Sprout, Tag, Utensils, Wrench, type LucideIcon } from "lucide-react";
 
 const icons: Record<string, LucideIcon> = {
   utensils: Utensils,
@@ -12,6 +12,7 @@ const icons: Record<string, LucideIcon> = {
   car: Car,
   gift: Gift,
   briefcase: Briefcase,
+  "building-2": Building2,
   wrench: Wrench,
 };
 

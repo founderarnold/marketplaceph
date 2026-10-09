@@ -1,4 +1,4 @@
-import { Bell, ShieldCheck, ShoppingCart } from "lucide-react";
+import { Bell, BriefcaseBusiness, ShieldCheck, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { signOut } from "@/app/actions/auth";
@@ -22,6 +22,9 @@ export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, t
         </div>
         <div className="ml-auto flex items-center gap-2">
           <LanguageToggle />
+          <Link href="/jobs" className={buttonClass("outline", "sm", "gap-1.5 border-accent text-accent-strong")}>
+            <BriefcaseBusiness size={16} aria-hidden /> {t("nav.jobs")}
+          </Link>
           <Link href="/check" className={buttonClass("ghost", "sm", "hidden lg:inline-flex")}>
             {t("nav.check")}
           </Link>

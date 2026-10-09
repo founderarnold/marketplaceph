@@ -1,4 +1,4 @@
-import { ShieldCheck, Store, Truck } from "lucide-react";
+import { Building2, BriefcaseBusiness, ShieldCheck, Store, Truck, UserSearch } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/listing/category-icon";
 import { ListingGrid } from "@/components/listing/listing-card";
@@ -13,19 +13,53 @@ export default async function Home() {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand-dark via-brand to-brand-sky p-6 text-white md:p-10">
-        <p className="text-sm font-semibold uppercase tracking-wide text-white/80">{t("brand.name")}</p>
-        <h1 className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight md:text-5xl">{t("brand.tagline")}</h1>
-        <p className="mt-3 max-w-xl text-base text-white/90 md:text-lg">{t("brand.hook")}</p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/sell/new" className={buttonClass("accent", "lg")}>
-            {t("home.cta_post")}
-          </Link>
-          <Link href="/search" className={buttonClass("outline", "lg", "border-white/0")}>
-            {t("home.cta_browse")}
-          </Link>
-        </div>
-      </section>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Left pane: the business marketplace (original hero, unchanged in meaning) */}
+        <section aria-labelledby="hero-biz" className="flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-brand-dark via-brand to-brand-sky p-6 text-white md:p-8">
+          <p className="text-sm font-semibold uppercase tracking-wide text-white/80">{t("brand.name")}</p>
+          <h1 id="hero-biz" className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight md:text-4xl">{t("brand.tagline")}</h1>
+          <p className="mt-3 max-w-xl text-base text-white/90 md:text-lg">{t("brand.hook")}</p>
+          <div className="mt-auto flex flex-wrap gap-3 pt-6">
+            <Link href="/sell/new" className={buttonClass("accent", "lg")}>
+              {t("home.cta_post")}
+            </Link>
+            <Link href="/search" className={buttonClass("outline", "lg", "border-white/0")}>
+              {t("home.cta_browse")}
+            </Link>
+          </div>
+        </section>
+
+        {/* Right pane: jobs — job seekers and employers */}
+        <section aria-labelledby="hero-jobs" className="flex flex-col rounded-3xl border-2 border-accent bg-accent-soft p-6 md:p-8">
+          <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-accent-strong">
+            <BriefcaseBusiness size={16} aria-hidden /> {t("home.jobs_kicker")}
+          </p>
+          <h2 id="hero-jobs" className="mt-2 text-3xl font-extrabold leading-tight text-brand-dark md:text-4xl">{t("home.jobs_title")}</h2>
+          <p className="mt-3 text-base text-foreground md:text-lg">{t("home.jobs_sub")}</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col rounded-2xl bg-white p-4 shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-brand-dark"><UserSearch size={18} aria-hidden /> {t("home.seeker_title")}</h3>
+              <ul className="mb-4 mt-2 space-y-1 text-sm text-muted-foreground">
+                <li>✓ {t("home.seeker_1")}</li>
+                <li>✓ {t("home.seeker_2")}</li>
+                <li>✓ {t("home.seeker_3")}</li>
+              </ul>
+              <Link href="/jobs" className={buttonClass("primary", "md", "mt-auto w-full")}>{t("home.seeker_cta")}</Link>
+              <Link href="/jobs/profile" className="mt-2 text-center text-sm font-semibold text-brand underline">{t("home.seeker_cta2")}</Link>
+            </div>
+            <div className="flex flex-col rounded-2xl bg-white p-4 shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-brand-dark"><Building2 size={18} aria-hidden /> {t("home.employer_title")}</h3>
+              <ul className="mb-4 mt-2 space-y-1 text-sm text-muted-foreground">
+                <li>✓ {t("home.employer_1")}</li>
+                <li>✓ {t("home.employer_2")}</li>
+                <li>✓ {t("home.employer_3")}</li>
+              </ul>
+              <Link href="/jobs/post" className={buttonClass("accent", "md", "mt-auto w-full")}>{t("home.employer_cta")}</Link>
+              <Link href="/jobs/employer" className="mt-2 text-center text-sm font-semibold text-brand underline">{t("home.employer_cta2")}</Link>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <section aria-labelledby="cats">
         <h2 id="cats" className="mb-3 text-xl font-bold text-brand-dark">

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Suspense } from "react";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer, Header } from "@/components/layout/header";
 import { RegisterSW } from "@/components/layout/register-sw";
 import { LocaleProvider } from "@/lib/i18n/client";
@@ -45,6 +46,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
   const isStaff = role === "admin" || role === "moderator";
   return (
     <LocaleProvider locale={locale}>
+      <AnnouncementBar signedIn={!!data?.claims} />
       <Header signedIn={!!data?.claims} unread={unread} cartCount={cartCount} isStaff={isStaff} t={t} />
       {/* min-height keeps the footer below the fold while page content streams in (prevents layout shift) */}
       <main className="mx-auto min-h-[85svh] w-full max-w-6xl flex-1 px-4 py-4 pb-24 md:pb-8">{children}</main>

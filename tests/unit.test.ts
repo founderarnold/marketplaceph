@@ -12,6 +12,7 @@ import { distanceBetween, islandGroup, recommendShipping, sizeClass, unitPriceFo
 import { DISPUTE_REASONS, FLOW, PAYMENT_KINDS, whoseTurn, friendlyDbError } from "@/lib/orders";
 import { parseRange, safeCell, toCsv } from "@/lib/export";
 import { tablesToCsv, tablesToPdf, tablesToXlsx } from "@/lib/export-files";
+import { APPLICATION_STATUSES, CIVIL_STATUSES, DOC_KINDS, EDUCATION_LEVELS, EMPLOYMENT_TYPES, JOB_CATEGORIES, POST_STATUSES, POSTER_TYPES, SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, ageFrom, salaryLabel, splitList } from "@/lib/jobs";
 import { FEATURE_MIN_RANK, TIERS, TIER_KEYS, canUse, featuresAddedAt, isProError, tierByKey, tierByRank, yearlySaving, type Feature } from "@/lib/plans";
 
 describe("phone + redirects", () => {
@@ -144,6 +145,10 @@ describe("i18n", () => {
   for (const s of ["order_requested", "order_quoted", "payment_submitted", "payment_cod", "payment_confirmed", "payment_rejected", "order_packed", "order_shipped", "order_delivered", "dispute_opened", "dispute_resolved"]) used.add(`notif.${s}`);
   for (const s of ["overview", "customers", "suppliers", "reminders", "reports", "finance", "inventory", "sms", "plan", "affiliates", "share"]) used.add(`biz.nav.${s}`);
   for (const f of Object.keys(FEATURE_MIN_RANK)) used.add(`plan.feat.${f}`);
+  for (const [g, list] of Object.entries({ status: APPLICATION_STATUSES, poststatus: POST_STATUSES, cat: JOB_CATEGORIES, type: EMPLOYMENT_TYPES, setup: WORK_SETUPS, per: SALARY_PERIODS, edu: EDUCATION_LEVELS, sex: SEX_OPTIONS, civil: CIVIL_STATUSES, doc: DOC_KINDS })) for (const k of list) used.add(`job.${g}.${k}`);
+  for (const k of POSTER_TYPES) { used.add(`job.poster.${k}`); used.add(`job.poster.${k}_hint`); }
+  for (const k of ["job_application_received", "job_application_status"]) used.add(`notif.${k}`);
+  used.add("admin.tab.jobs");
   for (const k of TIER_KEYS) used.add(`plan.tier.${k}`);
   for (const k of ["monthly", "yearly"]) used.add(`plan.billing.${k}`);
   for (const k of ["pending", "approved", "rejected", "revoked"]) used.add(`aff.status.${k}`);
@@ -295,6 +300,26 @@ describe("exports", () => {
     expect(pdf.length).toBeGreaterThan(1000);
     expect(tablesToCsv(tables).includes("'=evil()")).toBe(true);
     expect(tablesToCsv([...tables, ...tables]).split("Sales").length).toBeGreaterThan(2);
+  });
+});
+
+describe("jobs helpers", () => {
+  const per = (p: string) => p;
+  it("formats pay ranges", () => {
+    expect(salaryLabel(14000, 16000, "month", per)).toBe("₱14,000 – ₱16,000 / month");
+    expect(salaryLabel(450, null, "day", per)).toBe("₱450 / day");
+    expect(salaryLabel(500, 500, "day", per)).toBe("₱500 / day");
+    expect(salaryLabel(null, null, "day", per)).toBeNull();
+  });
+  it("cleans skill lists", () => {
+    expect(splitList(" Cooking, cooking ,Forklift,, MS Excel\nSales")).toEqual(["Cooking", "cooking", "Forklift", "MS Excel", "Sales"]);
+    expect(splitList(Array.from({ length: 40 }, (_, i) => "s" + i).join(","), 20)).toHaveLength(20);
+    expect(splitList("x".repeat(100))[0]).toHaveLength(40);
+  });
+  it("computes age safely", () => {
+    expect(ageFrom("2000-01-01", Date.UTC(2026, 0, 2))).toBe(26);
+    expect(ageFrom(null)).toBeNull();
+    expect(ageFrom("not-a-date")).toBeNull();
   });
 });
 

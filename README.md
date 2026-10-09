@@ -16,7 +16,7 @@ MSME-first online marketplace for the Philippines — the Market Access / Growth
 | Data access | `supabase-js` with generated types (`lib/supabase/database.types.ts`), plain SQL migrations |
 | i18n | English (default) + Filipino/Taglish, `messages/{en,fil}.json`, language toggle (cookie) |
 | PWA | `app/manifest.ts`, `public/sw.js` (network-first, offline page), maskable icons |
-| Tests | Vitest — unit tests + RLS/permission/due-process integration tests against local Supabase (110 tests) |
+| Tests | Vitest — unit tests + RLS/permission/due-process integration tests against local Supabase (121 tests) |
 
 > **This is not the Next.js you may know.** Next 16 renames Middleware to **Proxy** (`proxy.ts`), requires `<Suspense>` around request-time data (cookies, params, searchParams) when Cache Components is on, and makes `params`/`searchParams` promises. Read `node_modules/next/dist/docs/` before changing routing/caching code (see `AGENTS.md`).
 
@@ -177,6 +177,19 @@ Everything lives under **/business** (also linked from the header and the accoun
 - **Trade Assurance:** design only — `lib/escrow.ts` (provider-agnostic interface), `TRADE_ASSURANCE_ENABLED=false`, and [docs/TRADE_ASSURANCE.md](docs/TRADE_ASSURANCE.md). It needs a licensed payment partner; nothing is live.
 
 Demo accounts: `seller2@…` Pro, `seller3@…` Neo, `seller4@…` Champion, `buyer@…` Micro, `admin@…` Champion; `seller1@…` and the rest are Apprentice. The demo buyer has an approved affiliate link (`/r/demo2024`) and a pending request.
+
+## Jobs marketplace (job seekers ⇄ employers and manpower agencies)
+
+Free for everyone, under **/jobs** (a **Jobs** button in the header and bottom bar, and the right-hand hero on the home page).
+
+- **Job seekers** make one profile (`/jobs/profile`): personal details, location, skills, education, work history, expected pay, and **documents** — 2x2 and half-body photos, resume, barangay / police / NBI clearance, transcript of records, certificates of employment, diploma, licences. Photos are shrunk on the phone; PDFs are accepted (max 5 MB each).
+- **Employers and manpower agencies** post jobs (`/jobs/post`) with a description, qualifications, pay, deadline and the **documents they want attached**; agencies must show a licence/registration number and can mark "hiring for a client". They review applicants at `/jobs/employer`.
+- **Applying** (`/jobs/<id>`): one tap with the profile; the seeker **chooses which documents to share per application**.
+- **Privacy:** profiles and documents are never public. Only an employer the person applied to can see the profile, and only the documents ticked for that job. Files sit in a private bucket and are opened through 60-second signed links; **every employer open is logged** (`job_doc_access_logs`). Withdrawing an application removes the employer's access.
+- **Anti-scam:** posts that ask for fees (placement, training, processing… also in Filipino) are rejected by the database; agencies need a licence number; at most 25 open posts per account; moderators can remove posts in **Admin → Jobs**.
+- Not built yet: employers browsing a talent pool (only applicants are visible), in-app messaging with applicants, job alerts, and overseas-recruitment verification (DMW/POEA).
+
+Also new on the site: a dismissible **"under construction — sign up for updates"** bar above the header, and a **Real Estate & Properties** shop category (listing prices up to ₱5 billion).
 
 ## Deploying (Vercel + Supabase)
 

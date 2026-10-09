@@ -356,5 +356,36 @@ from public.listings l where l.store_id = '10000000-0000-4000-8000-000000000002'
 insert into public.affiliate_clicks (link_id) select l.id from public.affiliate_links l, generate_series(1, 14) where l.code = 'demo2024';
 update public.stores set website_url = 'https://example.com/cebu-sweet-mango', facebook_url = 'https://facebook.com/cebusweetmango' where id = '10000000-0000-4000-8000-000000000002';
 
+-- ───────── Jobs demo data ─────────
+insert into public.job_posts (owner_id, poster_type, company_name, agency_license_no, for_client, title, category, description, qualifications, requirement_docs,
+  employment_type, work_setup, region_code, province_code, city_code, salary_min, salary_max, salary_period, vacancies)
+select u.id, v.pt, v.company, v.lic, v.for_client, v.title, v.cat, v.descr, v.qual, v.docs::text[], v.et, v.ws, st.region_code, st.province_code, st.city_code, v.smin, v.smax, v.sp, v.vac
+from (values
+  ('00000000-0000-4000-8000-000000000004'::uuid, 'employer', 'Cebu Sweet Mango Co.', null, false, 'Packing Staff (Dried Mango)', 'manufacturing',
+   'Pack and label dried mango for wholesale orders. Training provided. Work is at our Cebu City packing house, Monday to Saturday.',
+   E'• At least high school graduate\n• Can lift up to 15 kg\n• Neat, honest and punctual', '{resume,barangay_clearance,photo_2x2}', 'full_time', 'onsite', 14000, 16000, 'month', 5, '10000000-0000-4000-8000-000000000002'::uuid),
+  ('00000000-0000-4000-8000-000000000003'::uuid, 'employer', 'Kusina ni Aling Nena', null, false, 'Cook / Kitchen Helper', 'food_hospitality',
+   'We are looking for a cook and a kitchen helper for our growing carinderia and catering. Free meals during shift.',
+   E'• 1 year kitchen experience preferred\n• Willing to work weekends\n• Food handler health card is a plus', '{resume,photo_2x2}', 'full_time', 'onsite', 450, 600, 'day', 2, '10000000-0000-4000-8000-000000000001'::uuid),
+  ('00000000-0000-4000-8000-000000000007'::uuid, 'agency', 'Divisoria Staffing Solutions', 'DOLE-NCR-2026-0142', true, 'Warehouse Staff for Logistics Client', 'logistics_driving',
+   'Hiring on behalf of a logistics client in Valenzuela. Receiving, stock-keeping and loading. Shifts available.',
+   E'• High school graduate or higher\n• Forklift experience is a plus\n• Willing to work shifting schedule', '{resume,nbi_clearance,police_clearance,photo_2x2}', 'contract', 'onsite', 520, 580, 'day', 10, '10000000-0000-4000-8000-000000000003'::uuid),
+  ('00000000-0000-4000-8000-000000000008'::uuid, 'employer', 'Iloilo Habi Weaves', null, false, 'Social Media Assistant (Part-time, Remote)', 'creative_media',
+   'Post product photos, reply to messages and help with online selling. Work from home with flexible hours.',
+   E'• Good with Facebook / Instagram / TikTok\n• Fluent in Filipino and English\n• Has own phone and internet', '{resume,photo_half_body}', 'part_time', 'remote', 8000, 12000, 'month', 1, '10000000-0000-4000-8000-000000000004'::uuid)
+) as v(owner, pt, company, lic, for_client, title, cat, descr, qual, docs, et, ws, smin, smax, sp, vac, store_id)
+join public.profiles u on u.id = v.owner
+join public.stores st on st.id = v.store_id;
+
+-- A demo job seeker (the demo buyer) with a profile; documents are added by real users through the app.
+insert into public.job_profiles (user_id, full_name, headline, phone, contact_email, birthdate, sex, civil_status, region_code, province_code, city_code,
+  about, education_level, skills, experience_years, desired_roles, job_types, expected_salary_min, expected_salary_max, work_history, consent_at)
+select '00000000-0000-4000-8000-000000000002', 'Buyer Demo', 'Reliable warehouse and sales assistant', '09171112222', 'buyer@marketplaceph.test', '1998-05-14', 'prefer_not', 'single',
+  st.region_code, st.province_code, st.city_code,
+  'Hardworking and honest. 3 years of experience in stock-keeping and retail. Looking for a stable job near Pampanga.', 'senior_high',
+  array['Stock-keeping', 'Retail sales', 'Inventory counting', 'MS Excel (basic)'], 3, 'Warehouse staff, sales assistant', array['full_time', 'contract'], 14000, 18000,
+  '[{"company": "Pampanga Tools & Hardware", "role": "Stock clerk", "from": "2022", "to": "2025", "notes": "Receiving, counting and arranging stock."}]'::jsonb, now()
+from public.stores st where st.id = '10000000-0000-4000-8000-000000000005';
+
 -- The demo deals/reviews above fire notification triggers; start the demo with a clean inbox.
 delete from public.notifications;

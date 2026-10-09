@@ -7,6 +7,7 @@ import {
   setListingStatus, setStoreVerification, setUserRole, toggleCategory,
 } from "@/app/actions/admin";
 import { Disputes } from "@/app/admin/disputes";
+import { JobsAdmin } from "@/app/admin/jobs";
 import { Plans } from "@/app/admin/plans";
 import { purgeExpiredDocuments, reviewVerification } from "@/app/actions/verification";
 import { DocButton } from "@/components/admin/doc-button";
@@ -20,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
-const TABS = ["cases", "appeals", "disputes", "plans", "verification", "watchlist", "listings", "stores", "users", "categories", "banned", "audit"] as const;
+const TABS = ["cases", "appeals", "disputes", "plans", "jobs", "verification", "watchlist", "listings", "stores", "users", "categories", "banned", "audit"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AdminPage(props: PageProps<"/admin">) {
@@ -62,6 +63,7 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
       {tab === "appeals" && <Appeals isAdmin={isAdmin} />}
       {tab === "disputes" && <Disputes isAdmin={isAdmin} />}
       {tab === "plans" && <Plans isAdmin={isAdmin} />}
+      {tab === "jobs" && <JobsAdmin />}
       {tab === "verification" && <Verification />}
       {tab === "watchlist" && <Watchlist />}
       {tab === "listings" && <Listings />}

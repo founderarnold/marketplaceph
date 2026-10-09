@@ -27,6 +27,8 @@ export default async function AccountPage() {
         {[
           ["/my/listings", t("nav.my_store")],
           ["/business", t("biz.title")],
+          ["/jobs/profile", t("job.nav.profile")],
+          ["/jobs/employer", t("job.nav.employer")],
           ["/cart", t("cart.title")],
           ["/orders", t("orders.title")],
           ["/my/shipping", t("shipset.title")],

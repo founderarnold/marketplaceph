@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased] — Jobs marketplace, announcement bar, real estate
+
+### Added
+- **Jobs marketplace** (`/jobs`): seeker profiles with private documents (2x2, half-body, resume, barangay/police/NBI clearance, transcript, certificates), job posts from employers and licensed manpower agencies, applications with per-job document sharing, hiring statuses (shortlist, interview, hired, not selected), employer dashboard, "my applications" with withdraw, notifications, Admin → Jobs moderation, English and Filipino.
+- **Privacy and safety:** documents in a private bucket, signed links, every employer open logged; no-fee guard on posts; agency licence required.
+- **Home page:** two hero panes — business marketplace (original hero kept) on the left, jobs for seekers and employers on the right; **Jobs** button in the header and bottom navigation.
+- **Announcement bar** above the header: the site is under construction, sign up for updates (dismissible).
+- **Real Estate & Properties** shop category; listing price cap raised to ₱5 billion.
+- **Database:** migration `20261013000001_jobs_and_real_estate.sql`.
+- **Tests:** 121 total (11 new).
+
 ## [Unreleased] — Phase 5: Growth & Integrations
 
 ### Added
