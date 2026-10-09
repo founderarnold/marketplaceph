@@ -202,3 +202,5 @@ Demo accounts: `seller2@…` Pro, `seller3@…` Neo, `seller4@…` Champion, `bu
 - The service worker only caches brand assets and shows an offline page; it is registered in production builds only.
 - Affiliate clicks are counted per visit (no bot filtering yet) and commissions are bookkeeping only: the platform doesn't move or verify payouts. A commission is credited when an order is placed from the affiliate cookie, so a buyer who uses two affiliates' links is credited to the last one.
 - The embed widget and feed are public by design (they show only what's already public on the storefront). No rate limit on them yet beyond CDN caching.
+
+Deployed automatically from GitHub to Vercel on every push to `main`.
