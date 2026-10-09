@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n/client";
 import { cn } from "@/lib/utils";
 
 /** Mobile-first primary navigation (hidden on desktop). */
-export function BottomNav() {
+export function BottomNav({ unread = 0 }: { unread?: number }) {
   const { t } = useT();
   const path = usePathname();
   const items = [
@@ -32,7 +32,10 @@ export function BottomNav() {
                   highlight ? "text-accent-strong" : active ? "text-brand" : "text-muted-foreground",
                 )}
               >
-                <Icon size={highlight ? 28 : 22} aria-hidden />
+                <span className="relative">
+                  <Icon size={highlight ? 28 : 22} aria-hidden />
+                  {href === "/messages" && unread > 0 && <span className="absolute -right-2 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-brand-dark">{unread > 9 ? "9+" : unread}</span>}
+                </span>
                 {label}
               </Link>
             </li>

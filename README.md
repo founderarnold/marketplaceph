@@ -16,7 +16,7 @@ MSME-first online marketplace for the Philippines — the Market Access / Growth
 | Data access | `supabase-js` with generated types (`lib/supabase/database.types.ts`), plain SQL migrations |
 | i18n | English (default) + Filipino/Taglish, `messages/{en,fil}.json`, language toggle (cookie) |
 | PWA | `app/manifest.ts`, `public/sw.js` (network-first, offline page), maskable icons |
-| Tests | Vitest — unit tests + RLS/permission/due-process integration tests against local Supabase (121 tests) |
+| Tests | Vitest — unit tests + RLS/permission/due-process integration tests against local Supabase (124 tests) |
 
 > **This is not the Next.js you may know.** Next 16 renames Middleware to **Proxy** (`proxy.ts`), requires `<Suspense>` around request-time data (cookies, params, searchParams) when Cache Components is on, and makes `params`/`searchParams` promises. Read `node_modules/next/dist/docs/` before changing routing/caching code (see `AGENTS.md`).
 
@@ -187,7 +187,8 @@ Free for everyone, under **/jobs** (a **Jobs** button in the header and bottom b
 - **Applying** (`/jobs/<id>`): one tap with the profile; the seeker **chooses which documents to share per application**.
 - **Privacy:** profiles and documents are never public. Only an employer the person applied to can see the profile, and only the documents ticked for that job. Files sit in a private bucket and are opened through 60-second signed links; **every employer open is logged** (`job_doc_access_logs`). Withdrawing an application removes the employer's access.
 - **Anti-scam:** posts that ask for fees (placement, training, processing… also in Filipino) are rejected by the database; agencies need a licence number; at most 25 open posts per account; moderators can remove posts in **Admin → Jobs**.
-- Not built yet: employers browsing a talent pool (only applicants are visible), in-app messaging with applicants, job alerts, and overseas-recruitment verification (DMW/POEA).
+- **Messaging:** employers and applicants can chat inside MarketplacePH (/jobs/messages), live, one thread per application; the chat closes if the application is withdrawn. Buyers and sellers chat at /messages (a Message store button is now also on every storefront), and both chats show an unread badge and send one notification per burst of messages.
+- Not built yet: employers browsing a talent pool (only applicants are visible), job alerts, and overseas-recruitment verification (DMW/POEA).
 
 Also new on the site: a dismissible **"under construction — sign up for updates"** bar above the header, and a **Real Estate & Properties** shop category (listing prices up to ₱5 billion).
 

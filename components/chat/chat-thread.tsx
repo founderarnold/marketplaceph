@@ -12,11 +12,16 @@ export function ChatThread({
   conversationId,
   me,
   initial,
+  kind = "shop",
 }: {
   conversationId: string;
   me: string;
   initial: ChatMessage[];
+  /** "shop" = buyer ⇄ seller, "job" = job applicant ⇄ employer (the id is then the job thread id). */
+  kind?: "shop" | "job";
 }) {
+  const table = kind === "job" ? "job_messages" : "messages";
+  const keyCol = kind === "job" ? "thread_id" : "conversation_id";
   const { t } = useT();
   const [supabase] = useState(() => createClient());
   const [messages, setMessages] = useState<ChatMessage[]>(initial);
@@ -27,23 +32,24 @@ export function ChatThread({
 
   // Realtime: new messages in this conversation (RLS limits what the socket receives to participants).
   useEffect(() => {
-    supabase.rpc("mark_conversation_read", { p_conv: conversationId }).then(() => {});
+    const markRead = () => (kind === "job" ? supabase.rpc("mark_job_thread_read", { p_thread: conversationId }) : supabase.rpc("mark_conversation_read", { p_conv: conversationId })).then(() => {});
+    markRead();
     const channel = supabase
       .channel(`messages:${conversationId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        { event: "INSERT", schema: "public", table, filter: `${keyCol}=eq.${conversationId}` },
         (payload) => {
           const m = payload.new as ChatMessage;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-          if (m.sender_id !== me) supabase.rpc("mark_conversation_read", { p_conv: conversationId }).then(() => {});
+          if (m.sender_id !== me) markRead();
         },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, me, supabase]);
+  }, [conversationId, me, supabase, kind, table, keyCol]);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
@@ -55,11 +61,11 @@ export function ChatThread({
     if (!body || sending) return;
     setSending(true);
     setError(null);
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({ conversation_id: conversationId, sender_id: me, body })
-      .select("id, sender_id, body, created_at, read_at")
-      .single();
+    const cols = "id, sender_id, body, created_at, read_at";
+    const { data, error } =
+      kind === "job"
+        ? await supabase.from("job_messages").insert({ thread_id: conversationId, sender_id: me, body }).select(cols).single()
+        : await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: me, body }).select(cols).single();
     setSending(false);
     if (error) return setError(error.message.includes("too fast") ? t("chat.too_fast") : t("common.error"));
     setText("");

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   ["/jobs", "job.nav.find"],
   ["/jobs/applications", "job.nav.applications"],
+  ["/jobs/messages", "job.nav.messages"],
   ["/jobs/profile", "job.nav.profile"],
   ["/jobs/employer", "job.nav.employer"],
   ["/jobs/post", "job.nav.post"],

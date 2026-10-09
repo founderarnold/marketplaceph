@@ -1,4 +1,4 @@
-import { Building2, BriefcaseBusiness, ShieldCheck, Store, Truck, UserSearch } from "lucide-react";
+import { Building2, BriefcaseBusiness, Megaphone, Search, ShieldCheck, ShoppingBag, Store, Truck, UserSearch } from "lucide-react";
 import Link from "next/link";
 import { CategoryIcon } from "@/components/listing/category-icon";
 import { ListingGrid } from "@/components/listing/listing-card";
@@ -14,18 +14,29 @@ export default async function Home() {
   return (
     <div className="space-y-8">
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Left pane: the business marketplace (original hero, unchanged in meaning) */}
-        <section aria-labelledby="hero-biz" className="flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-brand-dark via-brand to-brand-sky p-6 text-white md:p-8">
-          <p className="text-sm font-semibold uppercase tracking-wide text-white/80">{t("brand.name")}</p>
-          <h1 id="hero-biz" className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight md:text-4xl">{t("brand.tagline")}</h1>
-          <p className="mt-3 max-w-xl text-base text-white/90 md:text-lg">{t("brand.hook")}</p>
-          <div className="mt-auto flex flex-wrap gap-3 pt-6">
-            <Link href="/sell/new" className={buttonClass("accent", "lg")}>
-              {t("home.cta_post")}
-            </Link>
-            <Link href="/search" className={buttonClass("outline", "lg", "border-white/0")}>
-              {t("home.cta_browse")}
-            </Link>
+        {/* Left pane: the business marketplace, laid out like the jobs pane: kicker, headline, plain sentence, three actions */}
+        <section aria-labelledby="hero-biz" className="flex flex-col rounded-3xl bg-gradient-to-br from-brand-dark via-brand to-brand-sky p-6 text-white md:p-8">
+          <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-white/80">
+            <Store size={16} aria-hidden /> {t("brand.name")}
+          </p>
+          <h1 id="hero-biz" className="mt-2 text-3xl font-extrabold leading-tight md:text-4xl">{t("brand.tagline")}</h1>
+          <p className="mt-3 text-base text-white/90 md:text-lg">{t("brand.hook")}</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="flex flex-col rounded-2xl bg-white p-4 text-foreground shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-brand-dark"><Search size={18} aria-hidden /> {t("home.browse_title")}</h3>
+              <p className="mb-4 mt-2 text-sm text-muted-foreground">{t("home.browse_body")}</p>
+              <Link href="/search" className={buttonClass("primary", "md", "mt-auto w-full")}>{t("home.cta_browse")}</Link>
+            </div>
+            <div className="flex flex-col rounded-2xl bg-white p-4 text-foreground shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-brand-dark"><ShoppingBag size={18} aria-hidden /> {t("home.buy_title")}</h3>
+              <p className="mb-4 mt-2 text-sm text-muted-foreground">{t("home.buy_body")}</p>
+              <Link href="/search?in_stock=1&sort=price_asc" className={buttonClass("primary", "md", "mt-auto w-full")}>{t("home.cta_buy")}</Link>
+            </div>
+            <div className="flex flex-col rounded-2xl bg-white p-4 text-foreground shadow-sm">
+              <h3 className="flex items-center gap-2 font-bold text-brand-dark"><Megaphone size={18} aria-hidden /> {t("home.sell_title")}</h3>
+              <p className="mb-4 mt-2 text-sm text-muted-foreground">{t("home.sell_body")}</p>
+              <Link href="/sell/new" className={buttonClass("accent", "md", "mt-auto w-full")}>{t("home.cta_sell")}</Link>
+            </div>
           </div>
         </section>
 

@@ -217,3 +217,65 @@ describe("applications, profile privacy and documents", () => {
     expect((await other.from("job_applications").select("id").eq("id", app.id)).data).toEqual([]);
   });
 });
+
+describe("messaging", () => {
+  guarded("job chat: only the two parties, closed when withdrawn, one notification per burst", async () => {
+    const seeker = await as("buyer@marketplaceph.test");
+    const employer = await as("seller2@marketplaceph.test");
+    const stranger = await as("seller3@marketplaceph.test");
+    const post = await seedPost(employer, ids.seller2);
+    await seeker.rpc("apply_to_job", { p_post: post });
+    const app = (await seeker.from("job_applications").select("id").eq("post_id", post).single()).data!;
+
+    expect((await stranger.rpc("open_job_thread", { p_app: app.id })).error?.message).toMatch(/not found/i);
+    expect((await anon().rpc("open_job_thread", { p_app: app.id })).error).not.toBeNull();
+    const t1 = await employer.rpc("open_job_thread", { p_app: app.id });
+    const t2 = await seeker.rpc("open_job_thread", { p_app: app.id });
+    expect(t1.error).toBeNull();
+    expect(t1.data).toBe(t2.data); // one thread per application
+    const thread = t1.data as string;
+
+    expect((await employer.from("job_messages").insert({ thread_id: thread, sender_id: ids.seller2, body: "Hi! Can you come for an interview on Monday?" })).error).toBeNull();
+    expect((await employer.from("job_messages").insert({ thread_id: thread, sender_id: ids.seller2, body: "Please bring a valid ID." })).error).toBeNull();
+    expect((await seeker.from("job_messages").insert({ thread_id: thread, sender_id: ids.seeker, body: "Yes po, thank you!" })).error).toBeNull();
+    // cannot write as someone else, and strangers cannot read or write
+    expect((await seeker.from("job_messages").insert({ thread_id: thread, sender_id: ids.seller2, body: "forged" })).error).not.toBeNull();
+    expect((await stranger.from("job_messages").insert({ thread_id: thread, sender_id: ids.seller3, body: "hello" })).error).not.toBeNull();
+    expect((await stranger.from("job_messages").select("id").eq("thread_id", thread)).data).toEqual([]);
+    expect((await stranger.from("job_threads").select("id")).data).toEqual([]);
+
+    // two employer messages in a row produce a single notification for the applicant
+    const notes = (await seeker.from("notifications").select("kind").eq("kind", "job_message")).data!;
+    expect(notes).toHaveLength(1);
+
+    // reading marks messages as read
+    expect((await seeker.from("job_messages").select("read_at").eq("sender_id", ids.seller2)).data!.every((m) => m.read_at === null)).toBe(true);
+    await seeker.rpc("mark_job_thread_read", { p_thread: thread });
+    expect((await seeker.from("job_messages").select("read_at").eq("sender_id", ids.seller2)).data!.every((m) => m.read_at !== null)).toBe(true);
+
+    // withdrawing closes the chat
+    await seeker.rpc("withdraw_application", { p_app: app.id });
+    expect((await employer.from("job_messages").insert({ thread_id: thread, sender_id: ids.seller2, body: "Are you still there?" })).error).not.toBeNull();
+    await svc().from("notifications").delete().eq("user_id", ids.seeker).eq("kind", "job_message");
+  });
+
+  guarded("shop chat notifies the other person once per burst", async () => {
+    const buyer = await as("buyer@marketplaceph.test");
+    const seller = await as("seller2@marketplaceph.test");
+    const { data: convo } = await buyer.from("conversations").select("id").eq("store_id", "10000000-0000-4000-8000-000000000002").is("listing_id", null).maybeSingle();
+    const conv = convo ?? (await buyer.from("conversations").select("id").eq("store_id", "10000000-0000-4000-8000-000000000002").limit(1).single()).data!;
+    const before = (await seller.from("notifications").select("id").eq("kind", "new_message")).data!.length;
+    await buyer.from("messages").insert({ conversation_id: conv.id, sender_id: ids.seeker, body: "Is the 100g pack still available?" });
+    await buyer.from("messages").insert({ conversation_id: conv.id, sender_id: ids.seeker, body: "I need 300 packs." });
+    const after = (await seller.from("notifications").select("id").eq("kind", "new_message")).data!.length;
+    expect(after - before).toBe(1);
+    await svc().from("messages").delete().eq("conversation_id", conv.id).in("body", ["Is the 100g pack still available?", "I need 300 packs."]);
+    await svc().from("notifications").delete().eq("user_id", ids.seller2).eq("kind", "new_message");
+  });
+
+  guarded("new shop categories exist with icons", async () => {
+    const { data } = await anon().from("categories").select("slug, icon").in("slug", ["import-brokerage", "trucking-logistics", "couriers-pasabuy", "advertising-marketing", "catering-concession", "accounting-tax", "rebrand-giveaways", "real-estate"]);
+    expect(data).toHaveLength(8);
+    expect(data!.every((c) => !!c.icon)).toBe(true);
+  });
+});

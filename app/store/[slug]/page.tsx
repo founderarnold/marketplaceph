@@ -1,9 +1,11 @@
-import { Calendar, FileText, Globe, MapPin, Phone } from "lucide-react";
+import { Calendar, FileText, Globe, MapPin, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { startConversation } from "@/app/actions/engage";
+import { buttonClass } from "@/components/ui/button";
 import { SellerTypeBadge, VerificationBadge } from "@/components/listing/badges";
 import { FavoriteButton, ReportButton, ShareButton } from "@/components/listing/engage-buttons";
 import { ListingGrid } from "@/components/listing/listing-card";
@@ -146,6 +148,13 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
         {store.description && <p className="mt-3 whitespace-pre-line text-sm">{store.description}</p>}
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {userId !== store.owner_id && (
+            <form action={startConversation.bind(null, store.id, null)}>
+              <button className={buttonClass("accent", "md", "h-11 gap-2")}>
+                <MessageCircle size={20} aria-hidden /> {t("store.message")}
+              </button>
+            </form>
+          )}
           {userId !== store.owner_id && <FavoriteButton storeId={store.id} initialSaved={saved} label />}
           <ShareButton title={store.name} />
           <Link href={`/store/${store.slug}/sheet`} className="btn inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 font-semibold">

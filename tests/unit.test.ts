@@ -147,7 +147,7 @@ describe("i18n", () => {
   for (const f of Object.keys(FEATURE_MIN_RANK)) used.add(`plan.feat.${f}`);
   for (const [g, list] of Object.entries({ status: APPLICATION_STATUSES, poststatus: POST_STATUSES, cat: JOB_CATEGORIES, type: EMPLOYMENT_TYPES, setup: WORK_SETUPS, per: SALARY_PERIODS, edu: EDUCATION_LEVELS, sex: SEX_OPTIONS, civil: CIVIL_STATUSES, doc: DOC_KINDS })) for (const k of list) used.add(`job.${g}.${k}`);
   for (const k of POSTER_TYPES) { used.add(`job.poster.${k}`); used.add(`job.poster.${k}_hint`); }
-  for (const k of ["job_application_received", "job_application_status"]) used.add(`notif.${k}`);
+  for (const k of ["job_application_received", "job_application_status", "job_message", "new_message"]) used.add(`notif.${k}`);
   used.add("admin.tab.jobs");
   for (const k of TIER_KEYS) used.add(`plan.tier.${k}`);
   for (const k of ["monthly", "yearly"]) used.add(`plan.billing.${k}`);

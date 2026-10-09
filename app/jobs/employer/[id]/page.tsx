@@ -1,4 +1,4 @@
-import { GraduationCap, Mail, MapPin, Phone } from "lucide-react";
+import { GraduationCap, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -7,6 +7,7 @@ import { z } from "zod";
 import { ApplicantActions } from "@/components/jobs/employer-actions";
 import { JobDocButton } from "@/components/jobs/job-parts";
 import { Badge } from "@/components/ui/badge";
+import { buttonClass } from "@/components/ui/button";
 import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ageFrom, salaryLabel } from "@/lib/jobs";
@@ -114,6 +115,9 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
                     </div>
                   )}
                 </div>
+                <Link href={`/jobs/messages/${a.id}`} className={buttonClass("outline", "md", "gap-2")}>
+                  <MessageCircle size={16} aria-hidden /> {t("job.msg.message_applicant")}
+                </Link>
                 <ApplicantActions id={a.id} status={a.status} note={a.employer_note} />
               </li>
             );

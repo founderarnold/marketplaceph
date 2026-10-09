@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased] - Messaging, more categories, hero update
+
+- Home: the business hero now mirrors the jobs hero with three actions (Browse listings, Buy now, Sell now); the heading is now Buy/Sell by Category.
+- Seven new categories: import and brokerage, trucking and logistics, couriers and pasabuy, advertising and marketing, catering and concession, accounting and tax compliance, rebrand items and corporate giveaways.
+- Job messaging between applicants and employers (live chat, per application) and message notifications plus unread badges for the shop chat; Message store button on storefronts.
+- Migration 20261014000001_messaging_and_more_categories.sql; tests: 124.
+
 ## [Unreleased] — Jobs marketplace, announcement bar, real estate
 
 ### Added

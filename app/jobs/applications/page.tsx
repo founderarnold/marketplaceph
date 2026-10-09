@@ -44,7 +44,10 @@ export default async function MyApplicationsPage() {
                 <Badge tone={tone(a.status)}>{t(`job.status.${a.status}`)}</Badge>
               </div>
               {a.employer_note && <p className="rounded-xl bg-muted p-2 text-sm"><b>{t("job.app.employer_says")}</b> {a.employer_note}</p>}
-              {a.status !== "withdrawn" && a.status !== "hired" && <WithdrawButton id={a.id} />}
+              <div className="flex flex-wrap items-center gap-2">
+                {a.status !== "withdrawn" && <Link href={`/jobs/messages/${a.id}`} className={buttonClass("outline", "sm", "gap-1.5")}>{t("job.msg.message_employer")}</Link>}
+                {a.status !== "withdrawn" && a.status !== "hired" && <WithdrawButton id={a.id} />}
+              </div>
             </li>
           ))}
         </ul>

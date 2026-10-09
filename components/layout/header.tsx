@@ -7,7 +7,7 @@ import { SearchBar } from "@/components/layout/search-bar";
 import { buttonClass } from "@/components/ui/button";
 import type { TFunction } from "@/lib/i18n/shared";
 
-export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, t }: { signedIn: boolean; unread?: number; cartCount?: number; isStaff?: boolean; t: TFunction }) {
+export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, msgUnread = 0, t }: { signedIn: boolean; unread?: number; cartCount?: number; isStaff?: boolean; msgUnread?: number; t: TFunction }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
@@ -47,8 +47,9 @@ export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, t
                 <Bell size={20} aria-hidden />
                 {unread > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-brand-dark">{unread > 9 ? "9+" : unread}</span>}
               </Link>
-              <Link href="/messages" className={buttonClass("ghost", "sm", "hidden md:inline-flex")}>
+              <Link href="/messages" className={buttonClass("ghost", "sm", "hidden gap-1.5 md:inline-flex")}>
                 {t("nav.messages")}
+                {msgUnread > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-brand-dark">{msgUnread > 9 ? "9+" : msgUnread}</span>}
               </Link>
               <Link href="/favorites" className={buttonClass("ghost", "sm", "hidden md:inline-flex")}>
                 {t("nav.saved")}

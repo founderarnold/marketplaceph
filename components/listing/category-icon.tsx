@@ -1,4 +1,4 @@
-import { Briefcase, Building2, Car, Gift, Hammer, HeartPulse, Package, Shirt, Smartphone, Sofa, Sprout, Tag, Utensils, Wrench, type LucideIcon } from "lucide-react";
+import { Bike, Briefcase, Building2, Calculator, Car, ChefHat, Gift, Hammer, HeartPulse, Megaphone, Package, Ship, Sparkles, Truck, Shirt, Smartphone, Sofa, Sprout, Tag, Utensils, Wrench, type LucideIcon } from "lucide-react";
 
 const icons: Record<string, LucideIcon> = {
   utensils: Utensils,
@@ -13,6 +13,13 @@ const icons: Record<string, LucideIcon> = {
   gift: Gift,
   briefcase: Briefcase,
   "building-2": Building2,
+  ship: Ship,
+  truck: Truck,
+  bike: Bike,
+  megaphone: Megaphone,
+  "chef-hat": ChefHat,
+  calculator: Calculator,
+  sparkles: Sparkles,
   wrench: Wrench,
 };
 

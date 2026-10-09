@@ -753,6 +753,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"job_messages": {
+                  Row: {
+                    "body": string,"created_at": string,"id": string,"read_at": string | null,"sender_id": string,"thread_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: string,"read_at"?: string | null,"sender_id": string,"thread_id": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: string,"read_at"?: string | null,"sender_id"?: string,"thread_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_messages_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_messages_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_messages_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "job_threads"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"job_posts": {
                   Row: {
                     "agency_license_no": string | null,"category": string,"city_code": string | null,"company_name": string,"created_at": string,"deadline": string | null,"description": string,"employment_type": string,"for_client": boolean,"id": string,"owner_id": string,"poster_type": string,"province_code": string | null,"qualifications": string | null,"region_code": string | null,"requirement_docs": (string)[],"salary_max": number | null,"salary_min": number | null,"salary_period": string | null,"status": string,"title": string,"updated_at": string,"vacancies": number,"work_setup": string
@@ -837,6 +869,50 @@ isOneToOne: true
       foreignKeyName: "job_profiles_user_id_fkey"
       columns: ["user_id"]
 isOneToOne: true
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_threads": {
+                  Row: {
+                    "applicant_id": string,"application_id": string,"created_at": string,"employer_id": string,"id": string,"last_message_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "applicant_id": string,"application_id": string,"created_at"?: string,"employer_id": string,"id"?: string,"last_message_at"?: string
+                  }
+                  Update: {
+                    "applicant_id"?: string,"application_id"?: string,"created_at"?: string,"employer_id"?: string,"id"?: string,"last_message_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_threads_applicant_id_fkey"
+      columns: ["applicant_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_threads_applicant_id_fkey"
+      columns: ["applicant_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_threads_application_id_fkey"
+      columns: ["application_id"]
+isOneToOne: true
+      referencedRelation: "job_applications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_threads_employer_id_fkey"
+      columns: ["employer_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_threads_employer_id_fkey"
+      columns: ["employer_id"]
+isOneToOne: false
       referencedRelation: "public_profiles"
       referencedColumns: ["id"]
     }
@@ -2123,6 +2199,9 @@ isOneToOne: false
 "is_conversation_participant":
 { Args: { "p_conv": string }; Returns: boolean
                            },
+"is_job_thread_participant":
+{ Args: { "p_thread": string }; Returns: boolean
+                           },
 "is_order_participant":
 { Args: { "p_order": string }; Returns: boolean
                            },
@@ -2143,6 +2222,9 @@ isOneToOne: false
 "mark_delivered":
 { Args: { "p_order": string }; Returns: undefined
                            },
+"mark_job_thread_read":
+{ Args: { "p_thread": string }; Returns: undefined
+                           },
 "mark_notifications_read":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
@@ -2162,6 +2244,9 @@ isOneToOne: false
                            },
 "open_dispute":
 { Args: { "p_details": string,"p_order": string,"p_paths"?: (string)[],"p_reason": string }; Returns: string
+                           },
+"open_job_thread":
+{ Args: { "p_app": string }; Returns: string
                            },
 "order_payment_options":
 { Args: { "p_order": string }; Returns: {
