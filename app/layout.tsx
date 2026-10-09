@@ -41,9 +41,11 @@ async function Shell({ children }: { children: React.ReactNode }) {
     ? ((await supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null)).count ?? 0)
     : 0;
   const cartCount = data?.claims ? ((await supabase.from("cart_items").select("id", { count: "exact", head: true })).count ?? 0) : 0;
+  const role = data?.claims ? (await supabase.from("profiles").select("role").eq("id", data.claims.sub as string).maybeSingle()).data?.role : null;
+  const isStaff = role === "admin" || role === "moderator";
   return (
     <LocaleProvider locale={locale}>
-      <Header signedIn={!!data?.claims} unread={unread} cartCount={cartCount} t={t} />
+      <Header signedIn={!!data?.claims} unread={unread} cartCount={cartCount} isStaff={isStaff} t={t} />
       {/* min-height keeps the footer below the fold while page content streams in (prevents layout shift) */}
       <main className="mx-auto min-h-[85svh] w-full max-w-6xl flex-1 px-4 py-4 pb-24 md:pb-8">{children}</main>
       <Footer t={t} />

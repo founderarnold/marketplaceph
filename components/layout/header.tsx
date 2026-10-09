@@ -1,4 +1,4 @@
-import { Bell, ShoppingCart } from "lucide-react";
+import { Bell, ShieldCheck, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { signOut } from "@/app/actions/auth";
@@ -7,7 +7,7 @@ import { SearchBar } from "@/components/layout/search-bar";
 import { buttonClass } from "@/components/ui/button";
 import type { TFunction } from "@/lib/i18n/shared";
 
-export function Header({ signedIn, unread = 0, cartCount = 0, t }: { signedIn: boolean; unread?: number; cartCount?: number; t: TFunction }) {
+export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, t }: { signedIn: boolean; unread?: number; cartCount?: number; isStaff?: boolean; t: TFunction }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
@@ -30,6 +30,12 @@ export function Header({ signedIn, unread = 0, cartCount = 0, t }: { signedIn: b
           </Link>
           {signedIn ? (
             <>
+              {isStaff && (
+                <Link href="/admin" aria-label={t("admin.title")} title={t("admin.title")} className="inline-flex h-11 items-center gap-1 rounded-xl bg-brand px-3 text-sm font-semibold text-white hover:bg-brand-dark">
+                  <ShieldCheck size={18} aria-hidden />
+                  <span className="hidden sm:inline">{t("admin.title")}</span>
+                </Link>
+              )}
               <Link href="/cart" aria-label={t("cart.title") + (cartCount ? ` (${cartCount})` : "")} className="relative grid h-11 w-11 place-items-center rounded-xl text-brand hover:bg-brand-soft">
                 <ShoppingCart size={20} aria-hidden />
                 {cartCount > 0 && <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[11px] font-bold text-brand-dark">{cartCount > 9 ? "9+" : cartCount}</span>}
