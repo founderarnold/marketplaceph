@@ -7,10 +7,15 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
   const next = safeNext(searchParams.get("next"));
+  let detail = searchParams.get("error_description") ?? searchParams.get("error") ?? "";
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) return NextResponse.redirect(`${origin}${next}`);
+    detail = error.message;
+  } else if (!detail) {
+    detail = "no code returned";
   }
-  return NextResponse.redirect(`${origin}/login?error=oauth`);
+  console.error("auth/callback failed:", detail);
+  return NextResponse.redirect(`${origin}/login?error=oauth&detail=${encodeURIComponent(detail.slice(0, 160))}`);
 }

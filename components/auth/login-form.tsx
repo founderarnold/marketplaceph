@@ -29,6 +29,9 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const search = useSearchParams();
+  const oauthFailed = search.get("error") === "oauth";
+  const oauthDetail = (search.get("detail") ?? "").slice(0, 160);
   const [info, setInfo] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -183,6 +186,11 @@ export function LoginForm() {
         </form>
       )}
 
+      {oauthFailed && !error && (
+        <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm font-medium text-danger">
+          {t("auth.oauth_failed")} {oauthDetail && <span className="block text-xs font-normal">({oauthDetail})</span>}
+        </p>
+      )}
       {error && (
         <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm font-medium text-danger">
           {error}

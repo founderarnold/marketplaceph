@@ -1090,5 +1090,6 @@
   "flame.events_body": "Trade fairs, webinars and meet-ups near you.",
   "flame.soon": "Coming soon",
   "flame.sync_note": "Already a FLAME PH member? Use the same email on MarketplacePH and your tier is applied automatically once FLAME PH syncs it; until then, send a request on the Plans page.",
-  "plan.free_price": "Free"
+  "plan.free_price": "Free",
+  "auth.oauth_failed": "Google sign-in did not complete. Please try again, or use your email."
 }

@@ -1090,5 +1090,6 @@
   "flame.events_body": "Trade fairs, webinars at meet-ups malapit sa iyo.",
   "flame.soon": "Malapit na",
   "flame.sync_note": "Miyembro ka na ba ng FLAME PH? Gamitin ang parehong email sa MarketplacePH at awtomatikong mailalapat ang tier mo kapag na-sync ito ng FLAME PH; hanggang doon, magpadala ng request sa Plans page.",
-  "plan.free_price": "Libre"
+  "plan.free_price": "Libre",
+  "auth.oauth_failed": "Hindi natapos ang pag-sign in gamit ang Google. Subukan muli, o gamitin ang email."
 }
