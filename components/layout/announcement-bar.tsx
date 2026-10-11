@@ -26,15 +26,16 @@ function dismissed() {
 }
 
 /**
- * Thin notice above the header: the site is still being built and people can sign up now to get updates.
+ * Thin notice below the footer: the site is still being built and people can sign up now to get updates.
  * It can be dismissed (remembered on this device); if storage is unavailable it simply shows every visit.
  */
 export function AnnouncementBar({ signedIn }: { signedIn: boolean }) {
   const { t } = useT();
   const hidden = useSyncExternalStore(subscribe, dismissed, () => false);
-  if (hidden) return null;
+  // On phones the fixed bottom navigation covers the last ~4rem of the page, so keep that space free whether or not the bar shows.
+  if (hidden) return <div className="h-16 md:hidden" aria-hidden />;
   return (
-    <div role="region" aria-label={t("announce.label")} className="relative bg-brand-dark px-10 py-2 text-center text-xs text-white sm:text-sm">
+    <div role="region" aria-label={t("announce.label")} className="relative bg-brand-dark px-10 pb-20 pt-3 text-center text-xs text-white sm:text-sm md:pb-3">
       <p className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
         <Construction size={16} className="shrink-0 text-accent" aria-hidden />
         <span>
@@ -57,7 +58,7 @@ export function AnnouncementBar({ signedIn }: { signedIn: boolean }) {
           }
           window.dispatchEvent(new Event(EVENT));
         }}
-        className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full hover:bg-white/15"
+        className="absolute right-1 top-3 grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"
       >
         <X size={16} aria-hidden />
       </button>

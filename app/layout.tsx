@@ -51,11 +51,11 @@ async function Shell({ children }: { children: React.ReactNode }) {
   const isStaff = role === "admin" || role === "moderator";
   return (
     <LocaleProvider locale={locale}>
-      <AnnouncementBar signedIn={!!data?.claims} />
       <Header signedIn={!!data?.claims} unread={unread} cartCount={cartCount} isStaff={isStaff} msgUnread={msgUnread} t={t} />
       {/* min-height keeps the footer below the fold while page content streams in (prevents layout shift) */}
       <main className="mx-auto min-h-[85svh] w-full max-w-6xl flex-1 px-4 py-4 pb-24 md:pb-8">{children}</main>
       <Footer t={t} />
+      <AnnouncementBar signedIn={!!data?.claims} />
       <BottomNav unread={msgUnread} />
       <RegisterSW />
     </LocaleProvider>

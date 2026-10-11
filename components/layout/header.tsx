@@ -82,7 +82,7 @@ export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, m
 
 export function Footer({ t }: { t: TFunction }) {
   return (
-    <footer className="mt-12 border-t border-border bg-muted pb-24 pt-8 text-sm text-muted-foreground md:pb-8">
+    <footer className="mt-12 border-t border-border bg-muted pb-8 pt-8 text-sm text-muted-foreground">
       <div className="mx-auto max-w-6xl space-y-2 px-4">
         <p className="font-semibold text-brand-dark">{t("brand.tagline")}</p>
         <p>{t("brand.hook")}</p>
