@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
@@ -19,7 +19,6 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
   const GOOGLE_LOGIN = providers.google;
   const PHONE_LOGIN = providers.phone;
   const { t } = useT();
-  const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
   const supabase = createClient();
 
@@ -37,9 +36,11 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
   const [info, setInfo] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
+  // Pass through flameph.org so this one sign-in also works across FLAME PH sites, then land on `next`.
   const done = () => {
-    router.push(next);
-    router.refresh();
+    // A full page load: the route hops to flameph.org and back, which client-side navigation can't follow.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`/auth/flame/push?next=${encodeURIComponent(next)}`);
   };
 
   function sendOtp() {
