@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { CategoryDirectory } from "@/components/listing/category-directory";
 import { CATEGORY_TABS, buildTree, type CategoryTab } from "@/lib/categories";
 import { getCategories } from "@/lib/data";
@@ -9,7 +10,15 @@ export const metadata: Metadata = {
   description: "Browse every Buy/Sell category on MarketplacePH: products, suppliers, services and negosyo opportunities.",
 };
 
-export default async function CategoriesPage({ searchParams }: PageProps<"/categories">) {
+export default function CategoriesPage(props: PageProps<"/categories">) {
+  return (
+    <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-muted" />}>
+      <Directory searchParams={props.searchParams} />
+    </Suspense>
+  );
+}
+
+async function Directory({ searchParams }: Pick<PageProps<"/categories">, "searchParams">) {
   const sp = await searchParams;
   const { locale, t } = await getT();
   const tab = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
