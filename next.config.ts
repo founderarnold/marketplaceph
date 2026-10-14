@@ -26,7 +26,8 @@ const csp = [
   "manifest-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  // log-out hands off to flameph.org (one FLAME PH account); a no-JS form post may follow that redirect
+  "form-action 'self' https://www.flameph.org",
   "frame-ancestors 'none'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");

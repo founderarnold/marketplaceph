@@ -2,7 +2,7 @@
 
 import { ArrowLeft, BadgeCheck, BriefcaseBusiness, Megaphone, Smartphone, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
@@ -58,7 +58,6 @@ export function AuthModal({ providers }: { providers: AuthProviders }) {
   const GOOGLE_LOGIN = providers.google;
   const PHONE_LOGIN = providers.phone;
   const { t } = useT();
-  const router = useRouter();
   const path = usePathname();
   const ref = useRef<HTMLDialogElement>(null);
   const [mode, setMode] = useState<Mode>("signin");
@@ -131,7 +130,10 @@ export function AuthModal({ providers }: { providers: AuthProviders }) {
       if (res.error) return setError(mode === "signup" ? friendlyAuthError(res.error, t) : res.error.status === 429 ? t("auth.too_many") : t("auth.bad_credentials"));
       if (mode === "signup" && !res.data.session) return setInfo(t("auth.check_email"));
       close();
-      router.refresh();
+      // Same as the login page: pass through flameph.org so this sign-in works across FLAME PH sites (a no-op
+      // redirect back here while SSO is off), then reload the page the visitor was on.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign(`/auth/flame/push?next=${encodeURIComponent(location.pathname + location.search)}`);
     });
   }
 
