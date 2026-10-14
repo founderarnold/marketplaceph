@@ -5,6 +5,11 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { ApplicantActions } from "@/components/jobs/employer-actions";
+import { HiringReviewForm } from "@/components/social/hiring-review-form";
+import { ProfileLinks } from "@/components/social/profile-links";
+import { ApprovedBadges, TxStats } from "@/components/social/social-ui";
+import { loadTxCounts } from "@/lib/social-data";
+import { Stars } from "@/components/trust/trust-ui";
 import { JobDocButton } from "@/components/jobs/job-parts";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
@@ -38,16 +43,30 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
 
   const { data: apps } = await supabase
     .from("job_applications")
-    .select("id, applicant_id, note, status, employer_note, shared_doc_ids, created_at")
+    .select("id, applicant_id, note, status, employer_note, shared_doc_ids, created_at, applicant_confirmed_at")
     .eq("post_id", id)
     .neq("status", "withdrawn")
     .order("created_at", { ascending: false });
   const ids = (apps ?? []).map((a) => a.applicant_id);
   const docIds = (apps ?? []).flatMap((a) => a.shared_doc_ids);
-  const [{ data: profiles }, { data: docs }] = await Promise.all([
+  const hiredIds = (apps ?? []).filter((a) => a.status === "hired").map((a) => a.id);
+  const [{ data: profiles }, { data: docs }, { data: badgeRows }, { data: myReviews }, { data: applicantReviews }] = await Promise.all([
     ids.length ? supabase.from("job_profiles").select("*, psgc_cities ( name ), psgc_provinces ( name )").in("user_id", ids) : Promise.resolve({ data: [] }),
     docIds.length ? supabase.from("job_documents").select("id, kind, title").in("id", docIds) : Promise.resolve({ data: [] }),
+    ids.length ? supabase.from("user_badges").select("user_id, badge").in("user_id", ids) : Promise.resolve({ data: [] as { user_id: string; badge: string }[] }),
+    hiredIds.length ? supabase.from("job_reviews").select("application_id").eq("reviewer_id", userId).in("application_id", hiredIds) : Promise.resolve({ data: [] as { application_id: string }[] }),
+    ids.length ? supabase.from("job_reviews").select("reviewee_id, rating").eq("direction", "employer_to_applicant").in("reviewee_id", ids) : Promise.resolve({ data: [] as { reviewee_id: string; rating: number }[] }),
   ]);
+  const { data: linkRows } = ids.length ? await supabase.from("profile_links").select("user_id, kind, value, label").in("user_id", ids).order("position") : { data: [] };
+  const linksOf = (u: string) => (linkRows ?? []).filter((l) => l.user_id === u);
+  const txList = await Promise.all(ids.map((u) => loadTxCounts(supabase, u)));
+  const txOf = (u: string) => txList[ids.indexOf(u)];
+  const badgesOf = (u: string) => (badgeRows ?? []).filter((b) => b.user_id === u).map((b) => b.badge);
+  const reviewedApp = new Set((myReviews ?? []).map((r) => r.application_id));
+  const ratingOf = (u: string) => {
+    const rs = (applicantReviews ?? []).filter((r) => r.reviewee_id === u);
+    return rs.length ? { avg: rs.reduce((x, r) => x + r.rating, 0) / rs.length, n: rs.length } : null;
+  };
   const prof = new Map((profiles ?? []).map((p) => [p.user_id, p]));
   const doc = new Map((docs ?? []).map((d) => [d.id, d]));
 
@@ -74,6 +93,12 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h2 className="text-lg font-bold text-brand-dark">{p?.full_name ?? "—"}</h2>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-sm">
+                      <ApprovedBadges badges={badgesOf(a.applicant_id)} t={t} />
+                      {(() => { const rt = ratingOf(a.applicant_id); return rt ? <span className="inline-flex items-center gap-1 font-semibold">{rt.avg.toFixed(1)} <Stars value={rt.avg} size={12} /> ({rt.n})</span> : null; })()}
+                    </div>
+                    <TxStats counts={txOf(a.applicant_id)} t={t} className="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground" />
+                    <ProfileLinks links={linksOf(a.applicant_id)} t={t} className="mt-2" />
                     {p?.headline && <p className="text-sm text-muted-foreground">{p.headline}</p>}
                   </div>
                   <div className="flex items-center gap-2">
@@ -119,6 +144,12 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
                   <MessageCircle size={16} aria-hidden /> {t("job.msg.message_applicant")}
                 </Link>
                 <ApplicantActions id={a.id} status={a.status} note={a.employer_note} />
+                {a.status === "hired" && (
+                  <p className={a.applicant_confirmed_at ? "text-sm font-semibold text-success" : "text-sm text-muted-foreground"}>
+                    {a.applicant_confirmed_at ? `✓ ${t("job.confirm.by_applicant")}` : t("job.confirm.waiting")}
+                  </p>
+                )}
+                {a.status === "hired" && (reviewedApp.has(a.id) ? <p className="text-sm font-semibold text-success">✓ {t("rate.done")}</p> : <HiringReviewForm applicationId={a.id} about="applicant" />)}
               </li>
             );
           })}

@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -5,10 +7,11 @@ import { JobPostForm } from "@/components/jobs/post-form";
 import { getLocations } from "@/lib/data";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "Post a job" };
 
-export default async function PostJobPage() {
+async function PostJobPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -23,7 +26,16 @@ export default async function PostJobPage() {
         <p className="text-muted-foreground">{t("job.post.sub")}</p>
         <p className="flex items-start gap-2 rounded-xl bg-brand-soft p-3 text-sm text-brand-dark"><ShieldCheck size={18} className="mt-0.5 shrink-0" aria-hidden /> {t("job.post.free_note")}</p>
       </header>
+      <ToolGuide toolKey="hiring" t={t} />
       <JobPostForm locations={locations} defaultCompany={store?.name ?? ""} />
     </div>
+  );
+}
+
+export default function PostJobPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <PostJobPageContent />
+    </Suspense>
   );
 }

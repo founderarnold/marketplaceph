@@ -6,6 +6,10 @@ import { BuyerTrustCard, EarnedBadges, ReviewList } from "@/components/trust/tru
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { loadReviews } from "@/lib/trust";
+import { FriendButton } from "@/components/social/friend-button";
+import { loadProfileLinks, ProfileLinks } from "@/components/social/profile-links";
+import { ApprovedBadges, FriendStats, TxStats } from "@/components/social/social-ui";
+import { loadFriendInfo, loadTxCounts, loadUserBadges } from "@/lib/social-data";
 
 export const metadata: Metadata = { title: "Buyer information sheet", robots: { index: false } };
 
@@ -33,7 +37,15 @@ async function BuyerSheet({ params }: Pick<PageProps<"/buyer/[id]">, "params">) 
       </div>
     );
   }
-  const reviews = await loadReviews(supabase, { revieweeId: id, direction: "seller_to_buyer" }, 5);
+  const { data: claims } = await supabase.auth.getClaims();
+  const me = (claims?.claims?.sub as string | undefined) ?? null;
+  const [reviews, friend, userBadges, buyerLinks] = await Promise.all([
+    loadReviews(supabase, { revieweeId: id, direction: "seller_to_buyer" }, 5),
+    loadFriendInfo(supabase, id, me),
+    loadUserBadges(supabase, id),
+    loadProfileLinks(supabase, id),
+  ]);
+  const buyerTx = await loadTxCounts(supabase, id);
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -43,14 +55,20 @@ async function BuyerSheet({ params }: Pick<PageProps<"/buyer/[id]">, "params">) 
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{t("sheet.buyer_title")}</p>
             <h1 className="text-2xl font-extrabold text-brand-dark">{sheet.display_name}</h1>
-            <p className="text-sm text-muted-foreground">{t("sheet.member_since")}: {new Date(sheet.member_since).toLocaleDateString("en-PH", { month: "long", year: "numeric" })}</p>
+            <p className="text-sm text-muted-foreground">{t("sheet.member_since")}: {new Date(sheet.member_since).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "long", year: "numeric" })}</p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/logo-wordmark.webp" alt="MarketplacePH" className="h-12 w-auto" />
         </header>
         <div className="flex flex-wrap gap-1.5">
           <EarnedBadges codes={sheet.badges} t={t} />
+          <ApprovedBadges badges={userBadges.badges} t={t} />
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
+          <span className="flex flex-wrap gap-x-4 gap-y-1"><FriendStats info={friend} t={t} /><TxStats counts={buyerTx} t={t} /></span>
+          {me && me !== id && <FriendButton targetUserId={id} initialAdded={friend.added} signedIn size="sm" />}
+        </div>
+        <ProfileLinks links={buyerLinks} t={t} title />
         <BuyerTrustCard
           trust={{ completed_orders: sheet.trust_completed, amount_label: sheet.trust_amount, cancellation_rate: sheet.cancellation_rate, avg_rating: sheet.avg_rating, review_count: sheet.review_count }}
           t={t}
@@ -63,7 +81,7 @@ async function BuyerSheet({ params }: Pick<PageProps<"/buyer/[id]">, "params">) 
         )}
         <footer className="border-t border-border pt-3 text-xs text-muted-foreground">
           <p>{t("sheet.disclaimer")}</p>
-          <p className="mt-1">{t("sheet.generated", { date: new Date().toLocaleDateString("en-PH") })}</p>
+          <p className="mt-1">{t("sheet.generated", { date: new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) })}</p>
         </footer>
       </article>
     </div>

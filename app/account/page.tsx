@@ -1,19 +1,27 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Download } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DeleteAccount, ProfileForm } from "@/components/account/account-forms";
+import { ProfileLinksForm } from "@/components/account/profile-links-form";
+import { loadProfileLinks } from "@/components/social/profile-links";
 import { buttonClass } from "@/components/ui/button";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { isStaff } from "@/lib/roles";
 
 export const metadata: Metadata = { title: "Account" };
 
-export default async function AccountPage() {
+async function AccountPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const id = claims?.claims?.sub as string;
-  const { data: profile } = await supabase.from("profiles").select("display_name, locale, role, phone, sheet_public").eq("id", id).single();
+  const [{ data: profile }, links] = await Promise.all([
+    supabase.from("profiles").select("display_name, locale, role, phone, sheet_public").eq("id", id).single(),
+    loadProfileLinks(supabase, id),
+  ]);
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
@@ -22,6 +30,7 @@ export default async function AccountPage() {
         {(claims?.claims?.email as string | undefined) ?? profile?.phone}
       </p>
       <ProfileForm displayName={profile?.display_name ?? ""} locale={profile?.locale ?? "en"} sheetPublic={profile?.sheet_public ?? false} />
+      <ProfileLinksForm initial={links} />
 
       <nav aria-label={t("account.shortcuts")} className="grid gap-2 sm:grid-cols-2">
         {[
@@ -32,6 +41,9 @@ export default async function AccountPage() {
           ["/cart", t("cart.title")],
           ["/orders", t("orders.title")],
           ["/my/shipping", t("shipset.title")],
+          ["/account/password", t("auth.change_password")],
+          ["/updates", t("nav.updates")],
+          ["/account/badges", t("badges.title")],
           ["/sell/verify", t("verify.title")],
           ["/my/cases", t("cases.title")],
           ["/notifications", t("notif.title")],
@@ -44,7 +56,7 @@ export default async function AccountPage() {
         ))}
       </nav>
       <div className="flex flex-wrap gap-2">
-        {(profile?.role === "admin" || profile?.role === "moderator") && (
+        {isStaff(profile?.role) && (
           <Link href="/admin" className={buttonClass("primary")}>
             {t("admin.title")}
           </Link>
@@ -60,5 +72,13 @@ export default async function AccountPage() {
       </section>
       <DeleteAccount />
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <AccountPageContent />
+    </Suspense>
   );
 }

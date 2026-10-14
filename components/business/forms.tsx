@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { todayPH } from "@/lib/format";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
@@ -109,7 +110,7 @@ export function RestockRow({ id, title, every, nextRun, enabled }: { id: string;
   return (
     <li className="flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-sm">
       <label className="flex min-h-10 items-center"><input type="checkbox" aria-label={t("rem.enabled")} className="h-5 w-5 accent-[var(--brand)]" checked={enabled} disabled={pending} onChange={(e) => run(() => toggleRestockReminder(id, e.target.checked))} /></label>
-      <span className="min-w-0 flex-1"><b>{title}</b> <span className="text-muted-foreground">· {t("rem.every_n", { n: every })} · {t("rem.next", { date: new Date(nextRun).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) })}</span></span>
+      <span className="min-w-0 flex-1"><b>{title}</b> <span className="text-muted-foreground">· {t("rem.every_n", { n: every })} · {t("rem.next", { date: new Date(nextRun).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" }) })}</span></span>
       <button type="button" aria-label={t("my.delete")} disabled={pending} onClick={() => run(() => deleteRestockReminder(id))} className="grid h-10 w-10 place-items-center rounded-xl text-danger hover:bg-danger-soft"><Trash2 size={16} aria-hidden /></button>
     </li>
   );
@@ -257,7 +258,7 @@ export function RequestPlanForm({ currentRank, requested }: { currentRank: numbe
 export function EntryForm({ kind, categories }: { kind: "income" | "expense"; categories: string[] }) {
   const { t } = useT();
   const { run, pending, Msg } = useAct();
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(todayPH);
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState(categories[0] ?? "");
   const [vendor, setVendor] = useState("");

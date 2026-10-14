@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Lock, MessageSquareText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,7 +11,7 @@ import { timeAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Reminders" };
 
-export default async function RemindersPage() {
+async function RemindersPageContent() {
   const { supabase, userId, can, store, t } = await businessContext();
   const pro = can("sms");
   const followUps = can("follow_ups");
@@ -101,5 +103,13 @@ export default async function RemindersPage() {
         <SmsOptInForm accepts={me?.accepts_sms ?? false} phone={me?.sms_phone ?? ""} />
       </section>
     </div>
+  );
+}
+
+export default function RemindersPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <RemindersPageContent />
+    </Suspense>
   );
 }

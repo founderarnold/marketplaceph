@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SellerTypeBadge, VerificationBadge } from "@/components/listing/badges";
@@ -9,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Saved" };
 
-export default async function FavoritesPage() {
+async function FavoritesPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -63,5 +65,13 @@ export default async function FavoritesPage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function FavoritesPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <FavoritesPageContent />
+    </Suspense>
   );
 }

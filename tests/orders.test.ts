@@ -409,3 +409,63 @@ describe("disputes", () => {
     expect((await buyer.rpc("open_dispute", { p_order: old!.id, p_reason: "other", p_details: "Trying to dispute a legacy deal" })).error?.message).toMatch(/not found/i);
   });
 });
+
+describe("double-tapped Place order", () => {
+  guarded("two simultaneous requests from the same cart create exactly one order", async () => {
+    const buyer = await as("buyer@marketplaceph.test");
+    const l = await listingIn(ids.store2, "Dried Mango 100g Pack (wholesale)");
+    await svc().from("cart_items").upsert({ user_id: ids.buyer, listing_id: l.id, quantity: 100 }, { onConflict: "user_id,listing_id" });
+    const call = () =>
+      buyer.rpc("place_order", { p_store: ids.store2, p_items: [{ listing_id: l.id, quantity: 100 }], p_delivery: delivery, p_urgency: "standard", p_preferred: undefined, p_note: "", p_from_cart: true });
+    const [a, b] = await Promise.all([call(), call()]);
+    const ok = [a, b].filter((r) => !r.error);
+    for (const r of ok) created.push(r.data as string);
+    expect(ok).toHaveLength(1);
+    expect([a, b].find((r) => r.error)?.error?.message).toMatch(/already sent/);
+    await svc().from("cart_items").delete().eq("user_id", ids.buyer).eq("listing_id", l.id);
+  });
+});
+
+describe("order progress in Messages + successful transaction counts", () => {
+  guarded("every step posts an update card in the buyer–seller chat; counts go up when the buyer confirms", async () => {
+    const buyer = await as("buyer@marketplaceph.test");
+    const seller = await as("seller2@marketplaceph.test");
+    const before = (await anon().rpc("transaction_counts", { p_user: ids.seller2 })).data![0];
+    const buyerBefore = (await anon().rpc("transaction_counts", { p_user: ids.buyer })).data![0];
+
+    const id = await request(buyer);
+    const convo = (await buyer.from("orders").select("conversation_id").eq("id", id).single()).data!.conversation_id!;
+    const cards = async (who: typeof buyer) =>
+      ((await who.from("messages").select("system_kind, sender_id, system_link").eq("conversation_id", convo).eq("is_system", true).eq("system_link", `/orders/${id}`).order("created_at")).data ?? []);
+
+    // the seller gets an unread update in Messages as soon as the buyer checks out
+    expect((await cards(seller)).map((c) => c.system_kind)).toEqual(["order.requested"]);
+    expect((await cards(seller))[0].sender_id).toBe(ids.buyer);
+
+    await quote(seller, id);
+    expect((await buyer.rpc("submit_payment", { p_order: id, p_method: "gcash", p_reference: "REF-7777", p_amount: 8950, p_proof_path: gcash })).error).toBeNull();
+    expect((await seller.rpc("review_payment", { p_order: id, p_confirm: true, p_note: "Received" })).error).toBeNull();
+    const { data: items } = await seller.from("order_items").select("id").eq("order_id", id);
+    await seller.rpc("submit_packing", { p_order: id, p_checked: items!.map((i) => i.id), p_photos: [`${ids.seller2}/pack-${Date.now()}.jpg`], p_note: "" });
+    await seller.rpc("ship_order", { p_order: id, p_method: undefined, p_details: { method_name: "Own rider" } });
+    await seller.rpc("mark_delivered", { p_order: id });
+    expect((await buyer.rpc("confirm_received", { p_order: id })).error).toBeNull();
+
+    // both sides see the same, complete trail of updates, each from the person who acted
+    const trail = await cards(buyer);
+    expect(trail.map((c) => c.system_kind)).toEqual([
+      "order.requested", "order.quoted", "order.payment_submitted", "order.paid", "order.packed", "order.shipped", "order.delivered", "order.completed",
+    ]);
+    expect(trail.find((c) => c.system_kind === "order.paid")!.sender_id).toBe(ids.seller2);
+    expect(trail.find((c) => c.system_kind === "order.completed")!.sender_id).toBe(ids.buyer);
+    expect((await cards(seller)).length).toBe(8);
+
+    // update cards don't trigger "new message" notifications (each step already notifies)
+    // and nobody can post a fake update card themselves
+    expect((await buyer.from("messages").insert({ conversation_id: convo, sender_id: ids.buyer, body: "Order update", is_system: true, system_kind: "order.paid" } as never)).error).not.toBeNull();
+
+    // successful transactions went up for both
+    expect((await anon().rpc("transaction_counts", { p_user: ids.seller2 })).data![0].sold).toBe(before.sold + 1);
+    expect((await anon().rpc("transaction_counts", { p_user: ids.buyer })).data![0].bought).toBe(buyerBefore.bought + 1);
+  });
+});

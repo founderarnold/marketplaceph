@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AppealForm, ResponseForm, SharedEvidenceLink } from "@/components/trust/case-forms";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +9,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Reports & appeals" };
 
-const dateFmt = (iso: string) => new Date(iso).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+const dateFmt = (iso: string) => new Date(iso).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric", year: "numeric" });
 
-export default async function MyCasesPage() {
+async function MyCasesPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -94,5 +96,13 @@ export default async function MyCasesPage() {
         <p className="text-xs text-muted-foreground">{t("cases.reporter_privacy")}</p>
       </section>
     </div>
+  );
+}
+
+export default function MyCasesPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <MyCasesPageContent />
+    </Suspense>
   );
 }

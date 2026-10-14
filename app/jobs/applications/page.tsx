@@ -1,7 +1,10 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { HiringReviewForm } from "@/components/social/hiring-review-form";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { WithdrawButton } from "@/components/jobs/employer-actions";
+import { ConfirmHireButton, WithdrawButton } from "@/components/jobs/employer-actions";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { timeAgo } from "@/lib/format";
@@ -12,7 +15,7 @@ export const metadata: Metadata = { title: "My applications" };
 
 const tone = (s: string) => (s === "hired" || s === "shortlisted" || s === "interview" ? "success" : s === "rejected" || s === "withdrawn" ? "neutral" : "brand") as "success" | "neutral" | "brand";
 
-export default async function MyApplicationsPage() {
+async function MyApplicationsPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -20,9 +23,12 @@ export default async function MyApplicationsPage() {
   if (!userId) redirect("/login?next=/jobs/applications");
   const { data: apps } = await supabase
     .from("job_applications")
-    .select("id, status, created_at, employer_note, job_posts ( id, title, company_name, status )")
+    .select("id, status, created_at, employer_note, applicant_confirmed_at, job_posts ( id, title, company_name, status )")
     .eq("applicant_id", userId)
     .order("created_at", { ascending: false });
+  const hiredIds = (apps ?? []).filter((a) => a.status === "hired").map((a) => a.id);
+  const { data: mine } = hiredIds.length ? await supabase.from("job_reviews").select("application_id").eq("reviewer_id", userId).in("application_id", hiredIds) : { data: [] };
+  const reviewed = new Set((mine ?? []).map((r) => r.application_id));
 
   return (
     <div className="space-y-4">
@@ -48,10 +54,21 @@ export default async function MyApplicationsPage() {
                 {a.status !== "withdrawn" && <Link href={`/jobs/messages/${a.id}`} className={buttonClass("outline", "sm", "gap-1.5")}>{t("job.msg.message_employer")}</Link>}
                 {a.status !== "withdrawn" && a.status !== "hired" && <WithdrawButton id={a.id} />}
               </div>
+              {a.status === "hired" && !a.applicant_confirmed_at && <ConfirmHireButton id={a.id} />}
+              {a.status === "hired" && a.applicant_confirmed_at && <p className="text-sm font-semibold text-success">✓ {t("job.confirm.done")}</p>}
+              {a.status === "hired" && (reviewed.has(a.id) ? <p className="text-sm font-semibold text-success">✓ {t("rate.done")}</p> : <HiringReviewForm applicationId={a.id} about="employer" />)}
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+export default function MyApplicationsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <MyApplicationsPageContent />
+    </Suspense>
   );
 }

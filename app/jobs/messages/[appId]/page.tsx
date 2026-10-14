@@ -40,7 +40,7 @@ async function Thread({ params }: Pick<PageProps<"/jobs/messages/[appId]">, "par
   const { data: prof } = iAmEmployer ? await supabase.from("job_profiles").select("full_name").eq("user_id", app.applicant_id).maybeSingle() : { data: null };
   const title = iAmEmployer ? (prof?.full_name ?? t("job.msg.applicant")) : app.job_posts.company_name;
 
-  const { data: msgs } = await supabase.from("job_messages").select("id, sender_id, body, created_at, read_at").eq("thread_id", threadId).order("created_at", { ascending: true }).limit(200);
+  const { data: msgs } = await supabase.from("job_messages").select("id, sender_id, body, created_at, read_at, is_system, system_kind, system_link").eq("thread_id", threadId).order("created_at", { ascending: false }).limit(200); // newest 200, shown oldest-first
 
   return (
     <div className="mx-auto max-w-2xl space-y-3">
@@ -55,7 +55,7 @@ async function Thread({ params }: Pick<PageProps<"/jobs/messages/[appId]">, "par
       {app.status === "withdrawn" ? (
         <p className="rounded-xl bg-danger-soft p-3 text-sm font-semibold text-danger">{t("job.msg.withdrawn")}</p>
       ) : (
-        <ChatThread conversationId={threadId} me={me} initial={msgs ?? []} kind="job" />
+        <ChatThread conversationId={threadId} me={me} initial={(msgs ?? []).reverse()} kind="job" />
       )}
       <p className="text-xs text-muted-foreground">{t("job.msg.safety")}</p>
     </div>

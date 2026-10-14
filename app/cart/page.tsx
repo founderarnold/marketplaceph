@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CartQty } from "@/components/cart/cart-row";
@@ -10,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Cart" };
 
-export default async function CartPage() {
+async function CartPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -88,5 +90,13 @@ export default async function CartPage() {
         );
       })}
     </div>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <CartPageContent />
+    </Suspense>
   );
 }

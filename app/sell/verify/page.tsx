@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Lock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -17,7 +19,7 @@ const steps = [
   { level: 3, key: "verify.step3" },
 ] as const;
 
-export default async function VerifyPage() {
+async function VerifyPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -93,5 +95,13 @@ export default async function VerifyPage() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <VerifyPageContent />
+    </Suspense>
   );
 }

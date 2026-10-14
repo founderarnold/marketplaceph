@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CustomMethodForm, ListingShippingPicker, MyMethodList, PaymentMethods, StoreShippingPicker, type Method } from "@/components/settings/shipping-settings";
@@ -6,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Shipping & payment settings" };
 
-export default async function ShippingSettingsPage() {
+async function ShippingSettingsPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -72,5 +74,13 @@ export default async function ShippingSettingsPage() {
         </p>
       )}
     </div>
+  );
+}
+
+export default function ShippingSettingsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <ShippingSettingsPageContent />
+    </Suspense>
   );
 }

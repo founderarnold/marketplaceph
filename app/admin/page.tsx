@@ -9,6 +9,9 @@ import {
 import { Disputes } from "@/app/admin/disputes";
 import { JobsAdmin } from "@/app/admin/jobs";
 import { Plans } from "@/app/admin/plans";
+import { BadgesAdmin } from "@/app/admin/badges";
+import { RidersAdmin } from "@/app/admin/riders";
+import { ALL_ROLES, isFullAdmin, isStaff } from "@/lib/roles";
 import { purgeExpiredDocuments, reviewVerification } from "@/app/actions/verification";
 import { DocButton } from "@/components/admin/doc-button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
-const TABS = ["cases", "appeals", "disputes", "plans", "jobs", "verification", "watchlist", "listings", "stores", "users", "categories", "banned", "audit"] as const;
+const TABS = ["cases", "appeals", "disputes", "badges", "riders", "plans", "jobs", "verification", "watchlist", "listings", "stores", "users", "categories", "banned", "audit"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AdminPage(props: PageProps<"/admin">) {
@@ -41,8 +44,8 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
   const { data: claims } = await supabase.auth.getClaims();
   const me = claims?.claims?.sub as string;
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", me).single();
-  if (profile?.role !== "admin" && profile?.role !== "moderator") redirect("/");
-  const isAdmin = profile.role === "admin";
+  if (!isStaff(profile?.role)) redirect("/");
+  const isAdmin = isFullAdmin(profile?.role);
 
   return (
     <div className="space-y-4">
@@ -62,6 +65,8 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
       {tab === "cases" && <Cases isAdmin={isAdmin} />}
       {tab === "appeals" && <Appeals isAdmin={isAdmin} />}
       {tab === "disputes" && <Disputes isAdmin={isAdmin} />}
+      {tab === "badges" && <BadgesAdmin isAdmin={isAdmin} />}
+      {tab === "riders" && <RidersAdmin isAdmin={isAdmin} show={sp.show === "all" ? "all" : "pending"} />}
       {tab === "plans" && <Plans isAdmin={isAdmin} />}
       {tab === "jobs" && <JobsAdmin />}
       {tab === "verification" && <Verification />}
@@ -77,7 +82,7 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
 }
 
 const card = "rounded-2xl border border-border bg-white p-3 text-sm";
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : "—");
+const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }) : "—");
 const OPEN = ["open", "reviewing", "under_review"];
 
 /* ───────── Cases ───────── */
@@ -371,7 +376,7 @@ async function Users({ canEdit, me }: { canEdit: boolean; me: string }) {
           {canEdit && u.id !== me ? (
             <form action={setUserRole.bind(null, u.id)} className="flex gap-2">
               <Select name="role" defaultValue={u.role} className="h-10 w-auto">
-                {["user", "moderator", "admin"].map((r) => <option key={r} value={r}>{r}</option>)}
+                {ALL_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
               </Select>
               <Button size="sm" variant="outline" type="submit">{t("common.save")}</Button>
             </form>

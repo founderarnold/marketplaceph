@@ -1,6 +1,6 @@
 "use client";
 
-import { BriefcaseBusiness, Home, MessageCircle, PlusCircle, User } from "lucide-react";
+import { BriefcaseBusiness, MessageCircle, PlusCircle, ShoppingBag, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useT } from "@/lib/i18n/client";
@@ -10,18 +10,19 @@ import { cn } from "@/lib/utils";
 export function BottomNav({ unread = 0 }: { unread?: number }) {
   const { t } = useT();
   const path = usePathname();
+  // Home is the logo in the header. "Buy" also lights up while browsing products, stores and categories.
   const items = [
-    { href: "/", icon: Home, label: t("nav.home") },
-    { href: "/jobs", icon: BriefcaseBusiness, label: t("nav.jobs") },
-    { href: "/sell/new", icon: PlusCircle, label: t("nav.sell"), highlight: true },
-    { href: "/messages", icon: MessageCircle, label: t("nav.messages") },
-    { href: "/account", icon: User, label: t("nav.account") },
+    { href: "/jobs", icon: BriefcaseBusiness, label: t("nav.jobs"), match: ["/jobs"] },
+    { href: "/search", icon: ShoppingBag, label: t("nav.shop"), match: ["/search", "/categories", "/listing", "/store", "/cart", "/checkout"] },
+    { href: "/sell/new", icon: PlusCircle, label: t("nav.sell"), highlight: true, match: ["/sell"] },
+    { href: "/messages", icon: MessageCircle, label: t("nav.messages"), match: ["/messages"] },
+    { href: "/account", icon: User, label: t("nav.account"), match: ["/account"] },
   ];
   return (
     <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white md:hidden">
       <ul className="mx-auto grid max-w-lg grid-cols-5">
-        {items.map(({ href, icon: Icon, label, highlight }) => {
-          const active = href === "/" ? path === "/" : path.startsWith(href);
+        {items.map(({ href, icon: Icon, label, highlight, match }) => {
+          const active = match.some((m) => path === m || path.startsWith(m + "/"));
           return (
             <li key={href}>
               <Link

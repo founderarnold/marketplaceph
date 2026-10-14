@@ -33,17 +33,20 @@ async function Checkout({ params }: Pick<PageProps<"/checkout/[storeId]">, "para
     supabase.from("stores").select("id, slug, name, owner_id, region_code, province_code, city_code").eq("id", storeId).maybeSingle(),
     supabase
       .from("cart_items")
-      .select("id, quantity, listings!inner ( id, title, unit, price_type, price_min, weight_kg, store_id, listing_price_tiers ( min_qty, unit_price ) )")
+      .select("id, quantity, listings!inner ( id, title, unit, price_type, price_min, weight_kg, store_id, status, stock_status, listing_price_tiers ( min_qty, unit_price ) )")
       .eq("user_id", me),
     getLocations(),
     supabase.from("profiles").select("display_name, phone").eq("id", me).single(),
   ]);
   if (!store) notFound();
-  const rows = (cart ?? []).filter((c) => c.listings.store_id === storeId);
+  const inStore = (cart ?? []).filter((c) => c.listings.store_id === storeId);
+  const available = (c: (typeof inStore)[number]) => c.listings.status === "active" && c.listings.stock_status !== "out_of_stock";
+  const rows = inStore.filter(available);
+  const skipped = inStore.filter((c) => !available(c));
   if (rows.length === 0) {
     return (
       <div className="mx-auto max-w-md space-y-3 rounded-3xl bg-muted p-8 text-center">
-        <p>{t("cart.empty")}</p>
+        <p>{skipped.length ? t("checkout.all_unavailable") : t("cart.empty")}</p>
         <Link href={`/store/${store.slug}`} className={buttonClass("primary")}>{t("home.cta_browse")}</Link>
       </div>
     );
@@ -78,12 +81,21 @@ async function Checkout({ params }: Pick<PageProps<"/checkout/[storeId]">, "para
       </div>
       <section className="rounded-2xl border border-border bg-white p-4">
         <ul className="space-y-1 text-sm">
-          {rows.map((r) => (
-            <li key={r.id} className="flex justify-between gap-2">
-              <span className="truncate">{r.listings.title} × {r.quantity} {r.listings.unit}</span>
-            </li>
-          ))}
+          {rows.map((r) => {
+            const p = unitPriceFor(r.listings, r.listings.listing_price_tiers, r.quantity);
+            return (
+              <li key={r.id} className="flex justify-between gap-2">
+                <span className="truncate">{r.listings.title} × {r.quantity} {r.listings.unit}</span>
+                <span className="shrink-0 font-semibold">{p != null ? formatPeso(p * r.quantity) : t("cart.price_pending")}</span>
+              </li>
+            );
+          })}
         </ul>
+        {skipped.length > 0 && (
+          <p className="mt-2 rounded-xl bg-accent-soft p-2 text-xs text-accent-strong">
+            {t("checkout.skipped", { items: skipped.map((s) => s.listings.title).join(", ") })}
+          </p>
+        )}
         <p className="mt-2 border-t border-border pt-2 text-sm">
           {t("cart.subtotal")}: <b>{formatPeso(est)}</b> {unpriced && <span className="text-muted-foreground">+ {t("cart.price_pending")}</span>}
         </p>

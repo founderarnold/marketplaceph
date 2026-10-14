@@ -41,7 +41,7 @@ export function FlagBanner({ flaggedAt, t }: { flaggedAt: string | null; t: TFun
       <ShieldAlert className="mt-0.5 shrink-0" aria-hidden />
       <div>
         <p className="font-bold">{t("flag.title")}</p>
-        <p className="text-sm">{t("flag.body", { date: new Date(flaggedAt).toLocaleDateString("en-PH", { month: "long", year: "numeric" }) })}</p>
+        <p className="text-sm">{t("flag.body", { date: new Date(flaggedAt).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "long", year: "numeric" }) })}</p>
       </div>
     </div>
   );

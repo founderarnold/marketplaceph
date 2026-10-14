@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { BookOpen, Banknote, CalendarDays, Handshake } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -14,7 +16,7 @@ const HOOKS = [
   ["events", CalendarDays],
 ] as const;
 
-export default async function FlamePage() {
+async function FlamePageContent() {
   const { t } = await getT();
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -38,5 +40,13 @@ export default async function FlamePage() {
       </ul>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("flame.sync_note")}</p>
     </div>
+  );
+}
+
+export default function FlamePage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <FlamePageContent />
+    </Suspense>
   );
 }

@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Info } from "lucide-react";
 import type { Metadata } from "next";
 import { ProBadge, ProNote } from "@/components/business/pro-note";
@@ -7,7 +9,7 @@ import { timeAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "SMS setup" };
 
-export default async function SmsPage() {
+async function SmsPageContent() {
   const { supabase, userId, can, t } = await businessContext();
   const pro = can("sms");
   const [{ data: settings }, { data: queue }] = await Promise.all([
@@ -49,5 +51,13 @@ export default async function SmsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function SmsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <SmsPageContent />
+    </Suspense>
   );
 }

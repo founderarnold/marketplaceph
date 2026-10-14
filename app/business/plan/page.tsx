@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
 import { RequestPlanForm } from "@/components/business/forms";
@@ -8,7 +10,7 @@ import { TIERS, featuresAddedAt, yearlySaving } from "@/lib/plans";
 export const metadata: Metadata = { title: "Plans" };
 
 /** FLAME PH membership tiers: what you have, what each tier adds, and a request form (billing is handled manually for now). */
-export default async function PlanPage() {
+async function PlanPageContent() {
   const { supabase, userId, tier, periodEnd, t } = await businessContext();
   const [{ data: req }, { data: listing }, { data: aff }] = await Promise.all([
     supabase.from("plan_requests").select("plan, billing").eq("user_id", userId).eq("status", "open").maybeSingle(),
@@ -28,7 +30,7 @@ export default async function PlanPage() {
 
       <section className={`rounded-2xl p-4 ${tier.rank > 0 ? "bg-success-soft" : "bg-muted"}`} aria-labelledby="cur-h">
         <p id="cur-h" className="text-lg font-extrabold text-brand-dark">{t("plan.current")}: {tier.name}</p>
-        {tier.rank > 0 && <p className="text-sm">{periodEnd ? t("plan.until", { date: new Date(periodEnd).toLocaleDateString("en-PH", { dateStyle: "long" }) }) : t("plan.no_end")}</p>}
+        {tier.rank > 0 && <p className="text-sm">{periodEnd ? t("plan.until", { date: new Date(periodEnd).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", dateStyle: "long" }) }) : t("plan.no_end")}</p>}
         <p className="mt-1 text-sm">{limit ? t("plan.usage_listings", { used, limit }) : t("plan.usage_listings_unlimited", { used })} · {t("plan.usage_affiliates", { used: affUsed, limit: tier.affiliateLinks })}</p>
       </section>
 
@@ -61,5 +63,13 @@ export default async function PlanPage() {
       </section>
       <p className="text-xs text-muted-foreground">{t("plan.fair_note")}</p>
     </div>
+  );
+}
+
+export default function PlanPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <PlanPageContent />
+    </Suspense>
   );
 }

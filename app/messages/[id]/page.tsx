@@ -40,9 +40,9 @@ async function Thread({ params }: Pick<PageProps<"/messages/[id]">, "params">) {
 
   const { data: msgs } = await supabase
     .from("messages")
-    .select("id, sender_id, body, created_at, read_at")
+    .select("id, sender_id, body, created_at, read_at, is_system, system_kind, system_link")
     .eq("conversation_id", id)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false }) // newest 200, shown oldest-first
     .limit(200);
 
   const iAmSeller = convo.stores.owner_id === me;
@@ -84,7 +84,7 @@ async function Thread({ params }: Pick<PageProps<"/messages/[id]">, "params">) {
           {t("chat.buyer_sheet")}
         </Link>
       )}
-      <ChatThread conversationId={convo.id} me={me} initial={msgs ?? []} />
+      <ChatThread conversationId={convo.id} me={me} initial={(msgs ?? []).reverse()} />
       <p className="rounded-xl bg-brand-soft p-3 text-xs text-brand-dark">{t("safety.tip")}</p>
     </div>
   );

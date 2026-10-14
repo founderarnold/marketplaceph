@@ -1,13 +1,16 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MyListingRow, type MyListing } from "@/components/sell/my-listing-row";
 import { buttonClass } from "@/components/ui/button";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "My listings" };
 
-export default async function MyListingsPage() {
+async function MyListingsPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -53,6 +56,7 @@ export default async function MyListingsPage() {
           {t("nav.post_free")}
         </Link>
       </div>
+      <ToolGuide toolKey="my_store" t={t} open={rows.length === 0} />
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">
         {cap ? t("plan.usage_listings", { used, limit: cap }) : t("plan.usage_listings_unlimited", { used })}
         {cap && used >= cap - 2 && (
@@ -74,5 +78,13 @@ export default async function MyListingsPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function MyListingsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <MyListingsPageContent />
+    </Suspense>
   );
 }

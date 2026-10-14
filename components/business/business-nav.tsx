@@ -13,6 +13,7 @@ const ITEMS = [
   ["/business/reports", "biz.nav.reports"],
   ["/business/finance", "biz.nav.finance"],
   ["/business/inventory", "biz.nav.inventory"],
+  ["/business/staff", "biz.nav.staff"],
   ["/business/affiliates", "biz.nav.affiliates"],
   ["/business/share", "biz.nav.share"],
   ["/business/sms", "biz.nav.sms"],

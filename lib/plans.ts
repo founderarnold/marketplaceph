@@ -46,6 +46,11 @@ export const FEATURE_MIN_RANK = {
   // paid
   long_ranges: 1, // Starter: any date range
   csv_export: 1, // Starter: CSV exports
+  costing: 1, // Starter: product costing calculator
+  break_even: 1, // Starter: break-even calculator
+  staff_dtr: 1, // Starter: staff daily time record (enforced in the database too)
+  mini_site: 1, // Starter: standalone mini website at /site/<store>
+
   reports_full: 2, // Micro: best sellers, top customers, trends, spending by supplier / category
   excel_export: 2, // Micro: Excel exports
   follow_ups: 3, // Neo: automatic restock follow-ups to your customers

@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Bell } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Notifications" };
 
-export default async function NotificationsPage() {
+async function NotificationsPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data } = await supabase.from("notifications").select("id, kind, params, link, read_at, created_at").order("created_at", { ascending: false }).limit(50);
@@ -25,9 +27,10 @@ export default async function NotificationsPage() {
             ? t(kind === "dispute_opened" ? `dispute.reason.${v}` : `report.reason.${v}`)
             : v;
     }
-    if (typeof params.appeal_by === "string") p.appeal_by = new Date(params.appeal_by).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+    if (typeof params.appeal_by === "string") p.appeal_by = new Date(params.appeal_by).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" });
     if (typeof params.level === "number") p.level = params.level === 3 ? t("verify.business") : t("verify.id");
     if (kind === "appeal_decided" && typeof params.outcome === "string") p.outcome = t(`appeal.status.${params.outcome}`);
+    if (typeof params.badge === "string") p.badge = t(`badge.${params.badge}`);
     return t(`notif.${kind}`, p);
   };
 
@@ -60,5 +63,13 @@ export default async function NotificationsPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <NotificationsPageContent />
+    </Suspense>
   );
 }

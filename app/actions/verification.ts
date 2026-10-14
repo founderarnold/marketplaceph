@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { isStaff } from "@/lib/roles";
 
 const docTypes = ["gov_id", "selfie_with_id", "dti", "sec", "cda", "bir_cor", "mayors_permit", "fda", "other"] as const;
 
@@ -37,7 +38,7 @@ async function requireAdmin() {
   const id = data?.claims?.sub as string | undefined;
   if (!id) throw new Error("auth");
   const { data: me } = await supabase.from("profiles").select("role").eq("id", id).single();
-  if (me?.role !== "admin" && me?.role !== "moderator") throw new Error("forbidden");
+  if (!isStaff(me?.role)) throw new Error("forbidden");
   return { supabase, id };
 }
 

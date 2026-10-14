@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -8,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Job messages" };
 
-export default async function JobMessagesPage() {
+async function JobMessagesPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -18,11 +20,12 @@ export default async function JobMessagesPage() {
   const { data: threads } = await supabase
     .from("job_threads")
     .select("id, application_id, employer_id, applicant_id, last_message_at, job_applications ( post_id, job_posts ( title, company_name ) )")
+    .or(`employer_id.eq.${me},applicant_id.eq.${me}`) // explicit, so the per-person indexes are used
     .order("last_message_at", { ascending: false })
     .limit(50);
   const ids = (threads ?? []).map((x) => x.id);
   const { data: recent } = ids.length
-    ? await supabase.from("job_messages").select("thread_id, sender_id, body, created_at, read_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(300)
+    ? await supabase.from("job_messages").select("thread_id, sender_id, body, created_at, read_at, is_system, system_kind").in("thread_id", ids).order("created_at", { ascending: false }).limit(300)
     : { data: [] };
   const applicantIds = [...new Set((threads ?? []).filter((x) => x.employer_id === me).map((x) => x.applicant_id))];
   const { data: names } = applicantIds.length ? await supabase.from("job_profiles").select("user_id, full_name").in("user_id", applicantIds) : { data: [] };
@@ -58,7 +61,7 @@ export default async function JobMessagesPage() {
                       <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(th.last_message_at)}</span>
                     </span>
                     <span className="block truncate text-xs text-muted-foreground">{post?.title}</span>
-                    <span className={`block truncate text-sm ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{last?.body ?? t("job.msg.no_messages")}</span>
+                    <span className={`block truncate text-sm ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{last?.is_system && last.system_kind ? t(`sys.${last.system_kind}`) : (last?.body ?? t("job.msg.no_messages"))}</span>
                   </span>
                   {unread > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-brand-dark">{unread}</span>}
                 </Link>
@@ -68,5 +71,13 @@ export default async function JobMessagesPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function JobMessagesPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <JobMessagesPageContent />
+    </Suspense>
   );
 }

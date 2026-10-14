@@ -3,7 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Routes that need a signed-in user. (Real authorization is enforced by RLS and in server code;
 // this is only an optimistic redirect.)
-const PROTECTED = ["/sell", "/my", "/messages", "/favorites", "/account", "/admin", "/orders", "/notifications", "/cart", "/checkout", "/business", "/export"];
+// "/sell" itself is the public seller hub; everything under it needs an account.
+const PROTECTED = ["/sell/new", "/sell/edit", "/sell/verify", "/sell/tools", "/sell/website", "/my", "/messages", "/favorites", "/account", "/admin", "/orders", "/notifications", "/cart", "/checkout", "/business", "/export",
+  "/jobs/profile", "/jobs/applications", "/jobs/post", "/jobs/employer", "/jobs/messages", "/updates", "/looking-for/new", "/delivery/new", "/delivery/register"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

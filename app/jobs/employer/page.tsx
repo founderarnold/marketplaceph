@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,7 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Employer dashboard" };
 
-export default async function EmployerDashboard() {
+async function EmployerDashboardContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -67,5 +69,13 @@ export default async function EmployerDashboard() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function EmployerDashboard() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <EmployerDashboardContent />
+    </Suspense>
   );
 }

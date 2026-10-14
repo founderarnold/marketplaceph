@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyLink } from "@/components/affiliates/affiliate-forms";
@@ -10,7 +12,7 @@ export const metadata: Metadata = { title: "Share & embed" };
 const code = "block overflow-x-auto whitespace-pre rounded-xl bg-muted p-3 text-xs";
 
 /** Storefront link, Facebook / website links, the "Shop on MarketplacePH" button and widget, and the product feed. */
-export default async function SharePage() {
+async function SharePageContent() {
   const { supabase, can, store, t } = await businessContext();
   if (!store) return <NoStore t={t} />;
   const { data: links } = await supabase.from("stores").select("facebook_url, website_url").eq("id", store.id).maybeSingle();
@@ -68,5 +70,13 @@ export default async function SharePage() {
         )}
       </section>
     </div>
+  );
+}
+
+export default function SharePage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <SharePageContent />
+    </Suspense>
   );
 }

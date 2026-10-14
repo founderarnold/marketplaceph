@@ -1,9 +1,9 @@
 "use client";
 
 import { Flag, Heart, Share2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { submitReport, toggleFavorite } from "@/app/actions/engage";
+import { openAuth } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
 import { PrivateFileInput, type UploadedFile } from "@/components/trust/private-files";
 import { Field, Select, Textarea } from "@/components/ui/field";
@@ -24,7 +24,6 @@ export function FavoriteButton({
   label?: boolean;
 }) {
   const { t } = useT();
-  const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
   const [pending, start] = useTransition();
 
@@ -37,7 +36,7 @@ export function FavoriteButton({
       onClick={() =>
         start(async () => {
           const res = await toggleFavorite({ listingId, storeId });
-          if (res.error === "auth") return router.push(`/login?next=${encodeURIComponent(location.pathname)}`);
+          if (res.error === "auth") return openAuth();
           if (res.ok) setSaved(!!res.saved);
         })
       }
@@ -81,7 +80,6 @@ export function ShareButton({ title }: { title: string }) {
 
 export function ReportButton({ targetType, targetId, userId }: { targetType: "listing" | "store"; targetId: string; userId?: string | null }) {
   const { t } = useT();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [evidence, setEvidence] = useState<UploadedFile[]>([]);
@@ -104,7 +102,7 @@ export function ReportButton({ targetType, targetId, userId }: { targetType: "li
                 details: String(fd.get("details") ?? ""),
                 evidence: evidence.map((e) => ({ path: e.path, note: e.name.slice(0, 120) })),
               });
-              if (res.error === "auth") return router.push(`/login?next=${encodeURIComponent(location.pathname)}`);
+              if (res.error === "auth") return openAuth();
               setMsg(res.ok ? t("report.sent") : res.error === "limit" ? t("report.limit") : res.error === "duplicate" ? t("report.duplicate") : t("common.error"));
               if (res.ok) setOpen(false);
             })

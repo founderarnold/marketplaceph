@@ -77,7 +77,7 @@ async function Sheet({ params }: Pick<PageProps<"/store/[slug]/sheet">, "params"
 
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div><dt className="text-xs text-muted-foreground">{t("sheet.location")}</dt><dd className="font-medium">{where || "—"}</dd></div>
-          <div><dt className="text-xs text-muted-foreground">{t("sheet.member_since")}</dt><dd className="font-medium">{new Date(store.created_at).toLocaleDateString("en-PH", { month: "long", year: "numeric" })}</dd></div>
+          <div><dt className="text-xs text-muted-foreground">{t("sheet.member_since")}</dt><dd className="font-medium">{new Date(store.created_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "long", year: "numeric" })}</dd></div>
           {store.year_started && <div><dt className="text-xs text-muted-foreground">{t("store.year_started")}</dt><dd className="font-medium">{store.year_started}</dd></div>}
           {store.contact_phone && <div><dt className="text-xs text-muted-foreground">{t("store.contact_phone")}</dt><dd className="font-medium">{store.contact_phone}</dd></div>}
           {store.facebook_url && <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">{t("store.facebook")}</dt><dd className="break-all font-medium">{store.facebook_url}</dd></div>}
@@ -96,7 +96,7 @@ async function Sheet({ params }: Pick<PageProps<"/store/[slug]/sheet">, "params"
         <footer className="border-t border-border pt-3 text-xs text-muted-foreground">
           <p>{t("sheet.verify_at", { url: `marketplaceph.com/store/${store.slug}` })}</p>
           <p className="mt-1">{t("sheet.disclaimer")}</p>
-          <p className="mt-1">{t("sheet.generated", { date: new Date().toLocaleDateString("en-PH") })}</p>
+          <p className="mt-1">{t("sheet.generated", { date: new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) })}</p>
         </footer>
       </article>
     </div>

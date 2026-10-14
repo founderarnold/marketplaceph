@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NoStore } from "@/components/business/pro-note";
@@ -6,7 +8,7 @@ import { timeAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Customers" };
 
-export default async function CustomersPage(props: PageProps<"/business/customers">) {
+async function CustomersPageContent(props: PageProps<"/business/customers">) {
   const sp = await props.searchParams;
   const tag = typeof sp.tag === "string" ? sp.tag : null;
   const { supabase, store, t } = await businessContext();
@@ -53,5 +55,13 @@ export default async function CustomersPage(props: PageProps<"/business/customer
       )}
       <p className="text-xs text-muted-foreground">{t("crm.privacy")}</p>
     </div>
+  );
+}
+
+export default function CustomersPage(props: PageProps<"/business/customers">) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <CustomersPageContent {...props} />
+    </Suspense>
   );
 }

@@ -48,7 +48,7 @@ async function Reports({ searchParams }: Pick<PageProps<"/business/reports">, "s
   ]);
   const s = sSum.data?.[0];
   const b = bSum.data?.[0];
-  const fmtDay = (iso: string) => new Date(iso).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+  const fmtDay = (iso: string) => new Date(iso).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" });
 
   return (
     <div className="space-y-6">

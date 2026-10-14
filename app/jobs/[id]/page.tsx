@@ -1,12 +1,19 @@
 import { Briefcase, CalendarClock, MapPin, ShieldAlert, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SignInButton } from "@/components/auth/auth-modal";
+import { CommentsSection } from "@/components/social/comments";
+import { loadProfileLinks, ProfileLinks } from "@/components/social/profile-links";
+import { FriendButton } from "@/components/social/friend-button";
+import { ApprovedBadges, FriendStats, TxStats } from "@/components/social/social-ui";
+import { Stars } from "@/components/trust/trust-ui";
+import { loadFriendInfo, loadTxCounts, loadUserBadges } from "@/lib/social-data";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { ApplyPanel } from "@/components/jobs/apply-panel";
 import { buttonClass } from "@/components/ui/button";
-import { timeAgo } from "@/lib/format";
+import { timeAgo, todayPH } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { salaryLabel } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
@@ -36,7 +43,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = (claims?.claims?.sub as string | undefined) ?? null;
   const isOwner = userId === job.owner_id;
-  const open = job.status === "active" && (!job.deadline || job.deadline >= new Date().toISOString().slice(0, 10));
+  const open = job.status === "active" && (!job.deadline || job.deadline >= todayPH());
   const pay = salaryLabel(job.salary_min, job.salary_max, job.salary_period, (p) => t(`job.per.${p}`));
   const where = job.work_setup === "remote" ? t("job.setup.remote") : [job.psgc_cities?.name, job.psgc_provinces?.name, job.psgc_regions?.short_name].filter(Boolean).join(", ");
 
@@ -53,6 +60,15 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
     profileReady = !!prof?.consent_at;
     docs = d ?? [];
   }
+
+  const [friend, employerBadges, { data: rating }, employerLinks] = await Promise.all([
+    loadFriendInfo(supabase, job.owner_id, userId),
+    loadUserBadges(supabase, job.owner_id),
+    supabase.rpc("job_rating", { p_user: job.owner_id, p_direction: "applicant_to_employer" }),
+    loadProfileLinks(supabase, job.owner_id),
+  ]);
+  const employerTx = await loadTxCounts(supabase, job.owner_id);
+  const empRating = rating?.[0];
 
   return (
     <article className="grid gap-5 md:grid-cols-[1fr_20rem]">
@@ -74,7 +90,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
             <li className="flex items-center gap-1"><Briefcase size={15} aria-hidden /> {t(`job.type.${job.employment_type}`)} · {t(`job.setup.${job.work_setup}`)}</li>
             {where && <li className="flex items-center gap-1"><MapPin size={15} aria-hidden /> {where}</li>}
             <li className="flex items-center gap-1"><Users size={15} aria-hidden /> {t("job.vacancies_n", { n: job.vacancies })}</li>
-            {job.deadline && <li className="flex items-center gap-1"><CalendarClock size={15} aria-hidden /> {t("job.deadline_on", { date: new Date(job.deadline).toLocaleDateString("en-PH", { dateStyle: "medium" }) })}</li>}
+            {job.deadline && <li className="flex items-center gap-1"><CalendarClock size={15} aria-hidden /> {t("job.deadline_on", { date: new Date(job.deadline).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium" }) })}</li>}
           </ul>
           {pay && <p className="inline-block rounded-xl bg-success-soft px-3 py-1.5 text-lg font-extrabold text-success">{pay}</p>}
           <p className="text-xs text-muted-foreground">{t("job.posted", { when: timeAgo(job.created_at) })} · {t(`job.cat.${job.category}`)}</p>
@@ -96,6 +112,27 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
             <ul className="list-disc space-y-0.5 pl-5">{job.requirement_docs.map((k) => <li key={k}>{t(`job.doc.${k}`)}</li>)}</ul>
           </section>
         )}
+        <section aria-labelledby="employer-h" className="rounded-2xl border border-border bg-white p-4">
+          <h2 id="employer-h" className="font-bold text-brand-dark">{t("job.about_employer")}</h2>
+          <p className="mt-1 font-semibold">{job.company_name}</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            <ApprovedBadges badges={employerBadges.badges} t={t} />
+          </div>
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            {empRating && empRating.review_count > 0 ? (
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                {Number(empRating.avg_rating).toFixed(1)} <Stars value={Number(empRating.avg_rating)} size={13} /> ({empRating.review_count})
+              </span>
+            ) : (
+              <span>{t("rate.none_yet")}</span>
+            )}
+            <FriendStats info={friend} t={t} />
+            <TxStats counts={employerTx} t={t} />
+          </p>
+          <ProfileLinks links={employerLinks} t={t} className="mt-2" />
+          {!isOwner && <FriendButton targetUserId={job.owner_id} initialAdded={friend.added} signedIn={!!userId} size="sm" className="mt-2" />}
+        </section>
+        <CommentsSection supabase={supabase} kind="job" targetId={job.id} ownerId={job.owner_id} me={userId} t={t} />
         <aside className="flex gap-2 rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">
           <ShieldAlert size={18} className="mt-0.5 shrink-0" aria-hidden />
           <p>{t("job.safety")}</p>
@@ -111,7 +148,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
         ) : !userId ? (
           <>
             <p className="text-sm text-muted-foreground">{t("job.apply.login")}</p>
-            <Link href={`/login?next=/jobs/${job.id}`} className={buttonClass("accent", "lg", "w-full")}>{t("job.apply.login_btn")}</Link>
+            <SignInButton className={buttonClass("accent", "lg", "w-full")}>{t("job.apply.login_btn")}</SignInButton>
           </>
         ) : application ? (
           <div className="space-y-2">

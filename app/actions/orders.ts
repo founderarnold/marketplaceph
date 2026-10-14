@@ -39,7 +39,7 @@ export async function addToCart(listingId: string, quantity: number): Promise<R>
 }
 
 export async function updateCartQty(itemId: string, quantity: number): Promise<R> {
-  if (!uuid.safeParse(itemId).success || !Number.isInteger(quantity) || quantity < 1) return { ok: false, error: "invalid" };
+  if (!uuid.safeParse(itemId).success || !Number.isInteger(quantity) || quantity < 1 || quantity > 1_000_000) return { ok: false, error: "invalid" };
   const { supabase } = await me();
   const { error } = await supabase.from("cart_items").update({ quantity }).eq("id", itemId);
   revalidatePath("/cart");
@@ -77,8 +77,11 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<R>
   if (!parsed.success) return { ok: false, error: "invalid" };
   const { supabase, userId } = await me();
   if (!userId) return { ok: false, error: "auth" };
-  const { data: cart } = await supabase.from("cart_items").select("listing_id, quantity, listings!inner ( store_id )").eq("user_id", userId);
-  const items = (cart ?? []).filter((c) => c.listings.store_id === parsed.data.storeId).map((c) => ({ listing_id: c.listing_id, quantity: c.quantity }));
+  const { data: cart } = await supabase.from("cart_items").select("listing_id, quantity, listings!inner ( store_id, status, stock_status )").eq("user_id", userId);
+  // Sold-out or hidden items stay in the cart instead of failing the whole request.
+  const items = (cart ?? [])
+    .filter((c) => c.listings.store_id === parsed.data.storeId && c.listings.status === "active" && c.listings.stock_status !== "out_of_stock")
+    .map((c) => ({ listing_id: c.listing_id, quantity: c.quantity }));
   if (!items.length) return { ok: false, error: "empty_cart" };
   const { data, error } = await supabase.rpc("place_order", {
     p_store: parsed.data.storeId,
@@ -87,6 +90,7 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<R>
     p_urgency: parsed.data.urgency,
     p_preferred: parsed.data.preferredMethodId ?? undefined,
     p_note: parsed.data.note,
+    p_from_cart: true, // a double-tapped "Place order" can't create a second copy
   });
   if (error) return fail(error.message);
   // Credit an affiliate if this browser arrived through an approved affiliate link (silent no-op otherwise).

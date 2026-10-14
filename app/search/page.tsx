@@ -43,13 +43,13 @@ async function Results({ searchParams }: Pick<PageProps<"/search">, "searchParam
   }
 
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const pageHref = (p: number) => {
+  const pageHref = (p: number, sort: string = filters.sort) => {
     const usp = new URLSearchParams();
     const sp = {
       q: filters.q, category: filters.category, region: filters.region, province: filters.province, city: filters.city,
       min: filters.minPrice, max: filters.maxPrice, seller_type: filters.sellerType,
       verified: filters.verifiedOnly ? "1" : null, in_stock: filters.inStockOnly ? "1" : null, condition: filters.condition,
-      sort: filters.sort === "new" ? null : filters.sort, page: p > 1 ? p : null,
+      sort: sort === "new" ? null : sort, page: p > 1 ? p : null,
     };
     for (const [k, v] of Object.entries(sp)) if (v !== null && v !== "" && v !== undefined) usp.set(k, String(v));
     return `/search?${usp.toString()}`;
@@ -58,7 +58,7 @@ async function Results({ searchParams }: Pick<PageProps<"/search">, "searchParam
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold text-brand-dark">
-        {filters.q ? t("search.results_for", { q: filters.q }) : t("search.all")}
+        {filters.q ? t("search.results_for", { q: filters.q }) : current ? nameOf(current, locale) : t("search.all")}
       </h1>
       {trail.length > 0 && (
         <nav aria-label="Category path" className="space-y-2">
@@ -84,10 +84,30 @@ async function Results({ searchParams }: Pick<PageProps<"/search">, "searchParam
         </nav>
       )}
       <SearchFiltersForm filters={filters} categories={categories} locations={locations} />
-      <p className="text-sm text-muted-foreground" aria-live="polite">
-        {t("search.count", { n: total })}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {t("search.count", { n: total })}
+        </p>
+        <nav aria-label={t("filters.sort")} className="-mx-4 flex max-w-[100vw] items-center gap-1 overflow-x-auto px-4 text-sm [scrollbar-width:none] sm:mx-0 sm:px-0">
+          <span className="hidden text-muted-foreground sm:inline">{t("filters.sort")}:</span>
+          {(["new", "price_asc", "price_desc"] as const).map((k) => (
+            <Link
+              key={k}
+              href={pageHref(1, k)}
+              aria-current={filters.sort === k ? "true" : undefined}
+              className={`inline-flex min-h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3 font-semibold ${filters.sort === k ? "bg-brand text-white" : "bg-muted text-brand-dark hover:bg-brand-soft"}`}
+            >
+              {t(`filters.sort_${k}`)}
+            </Link>
+          ))}
+        </nav>
+      </div>
       <ListingGrid items={items} t={t} />
+      {total === 0 && (filters.q || filters.category || filters.region || filters.minPrice != null || filters.maxPrice != null || filters.sellerType || filters.verifiedOnly || filters.inStockOnly || filters.condition) && (
+        <p className="text-center text-sm">
+          <Link href="/search" className="font-semibold text-brand underline">{t("search.try_all")}</Link>
+        </p>
+      )}
       {pages > 1 && (
         <nav aria-label="Pagination" className="flex items-center justify-center gap-3 pt-2">
           {filters.page > 1 && (

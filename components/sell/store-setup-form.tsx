@@ -54,7 +54,7 @@ export function StoreSetupForm({ locations }: { locations: Locations }) {
       </Field>
       {state?.error && (
         <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm font-medium text-danger">
-          {t("common.error")}
+          {state.error === "invalid" ? t("store.invalid") : t("common.error")}
         </p>
       )}
       <Button type="submit" size="lg" className="w-full" disabled={pending}>

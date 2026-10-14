@@ -1,13 +1,17 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { AlertTriangle, BarChart3, Bell, Boxes, CircleDollarSign, Lock, MessageSquareText, Truck, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProBadge } from "@/components/business/pro-note";
+import { SetupChecklist } from "@/components/business/setup-checklist";
 import { buttonClass } from "@/components/ui/button";
 import { businessContext, daysAgoIso, isoDay, peso } from "@/lib/business";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "My business" };
 
-export default async function BusinessHome() {
+async function BusinessHomeContent() {
   const { supabase, userId, can, tier, store, t } = await businessContext();
   const pro = can("sms");
   const today = new Date();
@@ -42,6 +46,22 @@ export default async function BusinessHome() {
         </div>
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${tier.rank > 0 ? "bg-success-soft text-success" : "bg-muted text-muted-foreground"}`}>{tier.name}</span>
       </div>
+
+      <SetupChecklist supabase={supabase} storeId={store?.id ?? null} t={t} />
+      <ToolGuide toolKey="dashboard" t={t} />
+
+      {store && (
+        <nav aria-label={t("biz.quick")} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            ["/sell/new", t("nav.post_free"), "bg-accent text-brand-dark hover:bg-[#ea6a0c]"],
+            ["/my/listings", t("my.title"), "bg-brand text-white hover:bg-brand-dark"],
+            ["/orders", t("orders.title"), "bg-white border border-border text-brand-dark hover:bg-muted"],
+            [`/store/${store.slug}`, t("my.view_store"), "bg-white border border-border text-brand-dark hover:bg-muted"],
+          ].map(([href, label, cls]) => (
+            <Link key={href} href={href} className={`flex min-h-12 items-center justify-center rounded-xl px-3 text-center text-sm font-bold ${cls}`}>{label}</Link>
+          ))}
+        </nav>
+      )}
 
       {(sellerTodo.count ?? 0) + (buyerTodo.count ?? 0) > 0 && (
         <Link href="/orders" className="flex items-center gap-3 rounded-2xl bg-accent-soft p-4 font-semibold text-accent-strong">
@@ -95,5 +115,13 @@ export default async function BusinessHome() {
         {!pro && <p className="text-sm font-semibold text-accent-strong">{t("sms.free_note")}</p>}
       </section>
     </div>
+  );
+}
+
+export default function BusinessHome() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <BusinessHomeContent />
+    </Suspense>
   );
 }

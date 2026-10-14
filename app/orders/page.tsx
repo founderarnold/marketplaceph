@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "My orders" };
 
-export default async function OrdersPage() {
+async function OrdersPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -44,8 +46,22 @@ export default async function OrdersPage() {
     );
   };
 
-  const asBuyer = (orders ?? []).filter((o) => o.buyer_id === me);
-  const asSeller = (orders ?? []).filter((o) => o.seller_id === me);
+  // Orders waiting on me first (stable, so newest-first is kept within each group).
+  const mineFirst = (rows: Row[], role: "buyer" | "seller") => [...rows].sort((a, b) => Number(!!whoseTurn(b.status, role)) - Number(!!whoseTurn(a.status, role)));
+  const asBuyer = mineFirst((orders ?? []).filter((o) => o.buyer_id === me), "buyer");
+  const asSeller = mineFirst((orders ?? []).filter((o) => o.seller_id === me), "seller");
+  const buyerSection = (
+    <section key="ob" aria-labelledby="ob">
+      <h2 id="ob" className="mb-2 text-lg font-bold text-brand-dark">{t("deal.as_buyer")}</h2>
+      {asBuyer.length ? <ul className="space-y-3">{asBuyer.map((o) => <Item key={o.id} o={o} role="buyer" />)}</ul> : <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">{t("orders.empty_buyer")}</p>}
+    </section>
+  );
+  const sellerSection = (
+    <section key="os" aria-labelledby="os">
+      <h2 id="os" className="mb-2 text-lg font-bold text-brand-dark">{t("deal.as_seller")}</h2>
+      {asSeller.length ? <ul className="space-y-3">{asSeller.map((o) => <Item key={o.id} o={o} role="seller" />)}</ul> : <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">{t("deal.empty_seller")}</p>}
+    </section>
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -53,14 +69,15 @@ export default async function OrdersPage() {
         <h1 className="text-2xl font-extrabold text-brand-dark">{t("orders.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("orders.intro")}</p>
       </div>
-      <section aria-labelledby="ob">
-        <h2 id="ob" className="mb-2 text-lg font-bold text-brand-dark">{t("deal.as_buyer")}</h2>
-        {asBuyer.length ? <ul className="space-y-3">{asBuyer.map((o) => <Item key={o.id} o={o} role="buyer" />)}</ul> : <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">{t("orders.empty_buyer")}</p>}
-      </section>
-      <section aria-labelledby="os">
-        <h2 id="os" className="mb-2 text-lg font-bold text-brand-dark">{t("deal.as_seller")}</h2>
-        {asSeller.length ? <ul className="space-y-3">{asSeller.map((o) => <Item key={o.id} o={o} role="seller" />)}</ul> : <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">{t("deal.empty_seller")}</p>}
-      </section>
+      {asSeller.length ? [sellerSection, buyerSection] : [buyerSection, sellerSection]}
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <OrdersPageContent />
+    </Suspense>
   );
 }

@@ -201,6 +201,44 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"badge_requests": {
+                  Row: {
+                    "badge": string,"created_at": string,"id": string,"note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"reviewer_note": string | null,"status": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "badge": string,"created_at"?: string,"id"?: string,"note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"reviewer_note"?: string | null,"status"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "badge"?: string,"created_at"?: string,"id"?: string,"note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"reviewer_note"?: string | null,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "badge_requests_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "badge_requests_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "badge_requests_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "badge_requests_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"badges": {
                   Row: {
                     "code": string,"description_en": string,"description_fil": string,"kind": string,"name_en": string,"name_fil": string
@@ -228,6 +266,106 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"buy_request_offers": {
+                  Row: {
+                    "conversation_id": string | null,"created_at": string,"delivery_days": number | null,"id": string,"listing_id": string | null,"message": string,"quantity": number | null,"request_id": string,"seller_id": string,"status": string,"store_id": string,"unit_price": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "conversation_id"?: string | null,"created_at"?: string,"delivery_days"?: number | null,"id"?: string,"listing_id"?: string | null,"message": string,"quantity"?: number | null,"request_id": string,"seller_id": string,"status"?: string,"store_id": string,"unit_price"?: number | null
+                  }
+                  Update: {
+                    "conversation_id"?: string | null,"created_at"?: string,"delivery_days"?: number | null,"id"?: string,"listing_id"?: string | null,"message"?: string,"quantity"?: number | null,"request_id"?: string,"seller_id"?: string,"status"?: string,"store_id"?: string,"unit_price"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "buy_request_offers_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_request_offers_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_request_offers_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "buy_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_request_offers_seller_id_fkey"
+      columns: ["seller_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_request_offers_seller_id_fkey"
+      columns: ["seller_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_request_offers_store_id_fkey"
+      columns: ["store_id"]
+isOneToOne: false
+      referencedRelation: "stores"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"buy_requests": {
+                  Row: {
+                    "budget_max": number | null,"budget_min": number | null,"buyer_id": string,"category_id": string | null,"city_code": string | null,"created_at": string,"details": string | null,"expires_at": string,"id": string,"kind": string,"needed_by": string | null,"province_code": string | null,"quantity": number | null,"region_code": string | null,"status": string,"title": string,"unit": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "budget_max"?: number | null,"budget_min"?: number | null,"buyer_id": string,"category_id"?: string | null,"city_code"?: string | null,"created_at"?: string,"details"?: string | null,"expires_at"?: string,"id"?: string,"kind"?: string,"needed_by"?: string | null,"province_code"?: string | null,"quantity"?: number | null,"region_code"?: string | null,"status"?: string,"title": string,"unit"?: string | null
+                  }
+                  Update: {
+                    "budget_max"?: number | null,"budget_min"?: number | null,"buyer_id"?: string,"category_id"?: string | null,"city_code"?: string | null,"created_at"?: string,"details"?: string | null,"expires_at"?: string,"id"?: string,"kind"?: string,"needed_by"?: string | null,"province_code"?: string | null,"quantity"?: number | null,"region_code"?: string | null,"status"?: string,"title"?: string,"unit"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "buy_requests_buyer_id_fkey"
+      columns: ["buyer_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_requests_buyer_id_fkey"
+      columns: ["buyer_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_requests_category_id_fkey"
+      columns: ["category_id"]
+isOneToOne: false
+      referencedRelation: "categories"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "buy_requests_city_code_fkey"
+      columns: ["city_code"]
+isOneToOne: false
+      referencedRelation: "psgc_cities"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "buy_requests_province_code_fkey"
+      columns: ["province_code"]
+isOneToOne: false
+      referencedRelation: "psgc_provinces"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "buy_requests_region_code_fkey"
+      columns: ["region_code"]
+isOneToOne: false
+      referencedRelation: "psgc_regions"
+      referencedColumns: ["code"]
+    }
                   ]
                 },"cart_items": {
                   Row: {
@@ -278,6 +416,32 @@ isOneToOne: false
       columns: ["parent_id"]
 isOneToOne: false
       referencedRelation: "categories"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"comments": {
+                  Row: {
+                    "author_id": string,"body": string,"created_at": string,"id": string,"target_id": string,"target_kind": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id": string,"body": string,"created_at"?: string,"id"?: string,"target_id": string,"target_kind": string
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string,"created_at"?: string,"id"?: string,"target_id"?: string,"target_kind"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "comments_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "comments_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -348,6 +512,150 @@ isOneToOne: false
       columns: ["store_id"]
 isOneToOne: false
       referencedRelation: "stores"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"delivery_invites": {
+                  Row: {
+                    "created_at": string,"request_id": string,"rider_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"request_id": string,"rider_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"request_id"?: string,"rider_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "delivery_invites_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "delivery_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_invites_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_invites_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"delivery_offers": {
+                  Row: {
+                    "created_at": string,"fee": number,"id": string,"message": string | null,"pickup_eta_minutes": number | null,"request_id": string,"rider_id": string,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"fee": number,"id"?: string,"message"?: string | null,"pickup_eta_minutes"?: number | null,"request_id": string,"rider_id": string,"status"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"fee"?: number,"id"?: string,"message"?: string | null,"pickup_eta_minutes"?: number | null,"request_id"?: string,"rider_id"?: string,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "delivery_offers_request_id_fkey"
+      columns: ["request_id"]
+isOneToOne: false
+      referencedRelation: "delivery_requests"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_offers_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_offers_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"delivery_requests": {
+                  Row: {
+                    "agreed_fee": number | null,"assigned_at": string | null,"cancelled_at": string | null,"completed_at": string | null,"created_at": string,"declared_value": number,"delivered_at": string | null,"dropoff_address": string,"dropoff_city_code": string,"dropoff_landmark": string | null,"dropoff_name": string,"dropoff_phone": string,"dropoff_province_code": string | null,"dropoff_region_code": string,"expires_at": string,"height_cm": number | null,"id": string,"item_description": string,"length_cm": number | null,"notes": string | null,"offered_fee": number | null,"order_id": string | null,"picked_up_at": string | null,"pickup_address": string,"pickup_at": string | null,"pickup_city_code": string,"pickup_landmark": string | null,"pickup_name": string,"pickup_phone": string,"pickup_province_code": string | null,"pickup_region_code": string,"quantity": number,"requester_id": string,"rider_id": string | null,"status": string,"total_weight_kg": number,"vehicle_type": string,"weight_per_piece_kg": number,"width_cm": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "agreed_fee"?: number | null,"assigned_at"?: string | null,"cancelled_at"?: string | null,"completed_at"?: string | null,"created_at"?: string,"declared_value": number,"delivered_at"?: string | null,"dropoff_address": string,"dropoff_city_code": string,"dropoff_landmark"?: string | null,"dropoff_name": string,"dropoff_phone": string,"dropoff_province_code"?: string | null,"dropoff_region_code": string,"expires_at"?: string,"height_cm"?: number | null,"id"?: string,"item_description": string,"length_cm"?: number | null,"notes"?: string | null,"offered_fee"?: number | null,"order_id"?: string | null,"picked_up_at"?: string | null,"pickup_address": string,"pickup_at"?: string | null,"pickup_city_code": string,"pickup_landmark"?: string | null,"pickup_name": string,"pickup_phone": string,"pickup_province_code"?: string | null,"pickup_region_code": string,"quantity": number,"requester_id": string,"rider_id"?: string | null,"status"?: string,"total_weight_kg": number,"vehicle_type": string,"weight_per_piece_kg": number,"width_cm"?: number | null
+                  }
+                  Update: {
+                    "agreed_fee"?: number | null,"assigned_at"?: string | null,"cancelled_at"?: string | null,"completed_at"?: string | null,"created_at"?: string,"declared_value"?: number,"delivered_at"?: string | null,"dropoff_address"?: string,"dropoff_city_code"?: string,"dropoff_landmark"?: string | null,"dropoff_name"?: string,"dropoff_phone"?: string,"dropoff_province_code"?: string | null,"dropoff_region_code"?: string,"expires_at"?: string,"height_cm"?: number | null,"id"?: string,"item_description"?: string,"length_cm"?: number | null,"notes"?: string | null,"offered_fee"?: number | null,"order_id"?: string | null,"picked_up_at"?: string | null,"pickup_address"?: string,"pickup_at"?: string | null,"pickup_city_code"?: string,"pickup_landmark"?: string | null,"pickup_name"?: string,"pickup_phone"?: string,"pickup_province_code"?: string | null,"pickup_region_code"?: string,"quantity"?: number,"requester_id"?: string,"rider_id"?: string | null,"status"?: string,"total_weight_kg"?: number,"vehicle_type"?: string,"weight_per_piece_kg"?: number,"width_cm"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "delivery_requests_dropoff_city_code_fkey"
+      columns: ["dropoff_city_code"]
+isOneToOne: false
+      referencedRelation: "psgc_cities"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "delivery_requests_dropoff_province_code_fkey"
+      columns: ["dropoff_province_code"]
+isOneToOne: false
+      referencedRelation: "psgc_provinces"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "delivery_requests_dropoff_region_code_fkey"
+      columns: ["dropoff_region_code"]
+isOneToOne: false
+      referencedRelation: "psgc_regions"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "delivery_requests_order_id_fkey"
+      columns: ["order_id"]
+isOneToOne: false
+      referencedRelation: "orders"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_requests_pickup_city_code_fkey"
+      columns: ["pickup_city_code"]
+isOneToOne: false
+      referencedRelation: "psgc_cities"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "delivery_requests_pickup_province_code_fkey"
+      columns: ["pickup_province_code"]
+isOneToOne: false
+      referencedRelation: "psgc_provinces"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "delivery_requests_pickup_region_code_fkey"
+      columns: ["pickup_region_code"]
+isOneToOne: false
+      referencedRelation: "psgc_regions"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "delivery_requests_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_requests_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_requests_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "delivery_requests_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -529,6 +837,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"featured_pins": {
+                  Row: {
+                    "created_at": string,"kind": string,"pinned_by": string | null,"until": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"kind": string,"pinned_by"?: string | null,"until"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"kind"?: string,"pinned_by"?: string | null,"until"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "featured_pins_pinned_by_fkey"
+      columns: ["pinned_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "featured_pins_pinned_by_fkey"
+      columns: ["pinned_by"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "featured_pins_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "featured_pins_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"follow_up_log": {
                   Row: {
                     "buyer_id": string,"id": number,"rule_id": string | null,"sent_at": string,"sms": boolean,"store_id": string
@@ -605,6 +951,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"follows": {
+                  Row: {
+                    "created_at": string,"followee_id": string,"follower_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"followee_id": string,"follower_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"followee_id"?: string,"follower_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "follows_followee_id_fkey"
+      columns: ["followee_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follows_followee_id_fkey"
+      columns: ["followee_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follows_follower_id_fkey"
+      columns: ["follower_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "follows_follower_id_fkey"
+      columns: ["follower_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"income_entries": {
                   Row: {
                     "amount": number,"category": string,"created_at": string,"entry_date": string,"id": string,"note": string | null,"user_id": string
@@ -671,14 +1055,14 @@ isOneToOne: false
                   ]
                 },"job_applications": {
                   Row: {
-                    "applicant_id": string,"created_at": string,"employer_note": string | null,"id": string,"note": string | null,"post_id": string,"shared_doc_ids": (string)[],"status": string,"updated_at": string
+                    "applicant_confirmed_at": string | null,"applicant_id": string,"created_at": string,"employer_note": string | null,"id": string,"note": string | null,"post_id": string,"shared_doc_ids": (string)[],"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "applicant_id": string,"created_at"?: string,"employer_note"?: string | null,"id"?: string,"note"?: string | null,"post_id": string,"shared_doc_ids"?: (string)[],"status"?: string,"updated_at"?: string
+                    "applicant_confirmed_at"?: string | null,"applicant_id": string,"created_at"?: string,"employer_note"?: string | null,"id"?: string,"note"?: string | null,"post_id": string,"shared_doc_ids"?: (string)[],"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "applicant_id"?: string,"created_at"?: string,"employer_note"?: string | null,"id"?: string,"note"?: string | null,"post_id"?: string,"shared_doc_ids"?: (string)[],"status"?: string,"updated_at"?: string
+                    "applicant_confirmed_at"?: string | null,"applicant_id"?: string,"created_at"?: string,"employer_note"?: string | null,"id"?: string,"note"?: string | null,"post_id"?: string,"shared_doc_ids"?: (string)[],"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -755,14 +1139,14 @@ isOneToOne: false
                   ]
                 },"job_messages": {
                   Row: {
-                    "body": string,"created_at": string,"id": string,"read_at": string | null,"sender_id": string,"thread_id": string
+                    "body": string,"created_at": string,"id": string,"is_system": boolean,"read_at": string | null,"sender_id": string,"system_kind": string | null,"system_link": string | null,"thread_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "body": string,"created_at"?: string,"id"?: string,"read_at"?: string | null,"sender_id": string,"thread_id": string
+                    "body": string,"created_at"?: string,"id"?: string,"is_system"?: boolean,"read_at"?: string | null,"sender_id": string,"system_kind"?: string | null,"system_link"?: string | null,"thread_id": string
                   }
                   Update: {
-                    "body"?: string,"created_at"?: string,"id"?: string,"read_at"?: string | null,"sender_id"?: string,"thread_id"?: string
+                    "body"?: string,"created_at"?: string,"id"?: string,"is_system"?: boolean,"read_at"?: string | null,"sender_id"?: string,"system_kind"?: string | null,"system_link"?: string | null,"thread_id"?: string
                   }
                   Relationships: [
                     {
@@ -869,6 +1253,50 @@ isOneToOne: true
       foreignKeyName: "job_profiles_user_id_fkey"
       columns: ["user_id"]
 isOneToOne: true
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_reviews": {
+                  Row: {
+                    "application_id": string,"comment": string | null,"created_at": string,"direction": string | null,"id": string,"rating": number,"reviewee_id": string | null,"reviewer_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "application_id": string,"comment"?: string | null,"created_at"?: string,"direction"?: string | null,"id"?: string,"rating": number,"reviewee_id"?: string | null,"reviewer_id": string
+                  }
+                  Update: {
+                    "application_id"?: string,"comment"?: string | null,"created_at"?: string,"direction"?: string | null,"id"?: string,"rating"?: number,"reviewee_id"?: string | null,"reviewer_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_reviews_application_id_fkey"
+      columns: ["application_id"]
+isOneToOne: false
+      referencedRelation: "job_applications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_reviews_reviewee_id_fkey"
+      columns: ["reviewee_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_reviews_reviewee_id_fkey"
+      columns: ["reviewee_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_reviews_reviewer_id_fkey"
+      columns: ["reviewer_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "job_reviews_reviewer_id_fkey"
+      columns: ["reviewer_id"]
+isOneToOne: false
       referencedRelation: "public_profiles"
       referencedColumns: ["id"]
     }
@@ -1029,14 +1457,14 @@ isOneToOne: false
                   ]
                 },"messages": {
                   Row: {
-                    "body": string | null,"conversation_id": string,"created_at": string,"id": string,"image_path": string | null,"read_at": string | null,"sender_id": string
+                    "body": string | null,"conversation_id": string,"created_at": string,"id": string,"image_path": string | null,"is_system": boolean,"read_at": string | null,"sender_id": string,"system_kind": string | null,"system_link": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "body"?: string | null,"conversation_id": string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"read_at"?: string | null,"sender_id": string
+                    "body"?: string | null,"conversation_id": string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"is_system"?: boolean,"read_at"?: string | null,"sender_id": string,"system_kind"?: string | null,"system_link"?: string | null
                   }
                   Update: {
-                    "body"?: string | null,"conversation_id"?: string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"read_at"?: string | null,"sender_id"?: string
+                    "body"?: string | null,"conversation_id"?: string,"created_at"?: string,"id"?: string,"image_path"?: string | null,"is_system"?: boolean,"read_at"?: string | null,"sender_id"?: string,"system_kind"?: string | null,"system_link"?: string | null
                   }
                   Relationships: [
                     {
@@ -1326,6 +1754,32 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"profile_links": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"label": string | null,"position": number,"user_id": string,"value": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"label"?: string | null,"position"?: number,"user_id": string,"value": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"label"?: string | null,"position"?: number,"user_id"?: string,"value"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profile_links_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "profile_links_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"profiles": {
                   Row: {
@@ -1653,6 +2107,82 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"rider_documents": {
+                  Row: {
+                    "created_at": string,"doc_type": string,"id": string,"rider_id": string,"storage_path": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"doc_type": string,"id"?: string,"rider_id": string,"storage_path": string
+                  }
+                  Update: {
+                    "created_at"?: string,"doc_type"?: string,"id"?: string,"rider_id"?: string,"storage_path"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rider_documents_rider_id_fkey"
+      columns: ["rider_id"]
+isOneToOne: false
+      referencedRelation: "rider_profiles"
+      referencedColumns: ["user_id"]
+    }
+                  ]
+                },"rider_profiles": {
+                  Row: {
+                    "about": string | null,"admin_note": string | null,"city_code": string | null,"created_at": string,"full_name": string,"id": string,"is_available": boolean,"license_expiry": string,"license_number": string,"phone": string,"plate_number": string,"province_code": string | null,"region_code": string,"reviewed_at": string | null,"reviewed_by": string | null,"status": string,"submitted_at": string,"user_id": string,"vehicle_model": string | null,"vehicle_type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "about"?: string | null,"admin_note"?: string | null,"city_code"?: string | null,"created_at"?: string,"full_name": string,"id"?: string,"is_available"?: boolean,"license_expiry": string,"license_number": string,"phone": string,"plate_number": string,"province_code"?: string | null,"region_code": string,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"submitted_at"?: string,"user_id": string,"vehicle_model"?: string | null,"vehicle_type": string
+                  }
+                  Update: {
+                    "about"?: string | null,"admin_note"?: string | null,"city_code"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"is_available"?: boolean,"license_expiry"?: string,"license_number"?: string,"phone"?: string,"plate_number"?: string,"province_code"?: string | null,"region_code"?: string,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"status"?: string,"submitted_at"?: string,"user_id"?: string,"vehicle_model"?: string | null,"vehicle_type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rider_profiles_city_code_fkey"
+      columns: ["city_code"]
+isOneToOne: false
+      referencedRelation: "psgc_cities"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "rider_profiles_province_code_fkey"
+      columns: ["province_code"]
+isOneToOne: false
+      referencedRelation: "psgc_provinces"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "rider_profiles_region_code_fkey"
+      columns: ["region_code"]
+isOneToOne: false
+      referencedRelation: "psgc_regions"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "rider_profiles_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rider_profiles_reviewed_by_fkey"
+      columns: ["reviewed_by"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rider_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rider_profiles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"shipments": {
                   Row: {
                     "booking_link": string | null,"bus_line": string | null,"bus_terminal_from": string | null,"bus_terminal_to": string | null,"driver_name": string | null,"driver_phone": string | null,"eta": string | null,"method_id": string | null,"method_kind": Database["public"]['Enums']["shipping_kind"],"method_name": string,"notes": string | null,"order_id": string,"plate_no": string | null,"shipped_at": string,"tracking_number": string | null,"waybill_path": string | null
@@ -1766,6 +2296,64 @@ isOneToOne: true
       columns: ["user_id"]
 isOneToOne: true
       referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"staff_members": {
+                  Row: {
+                    "active": boolean,"created_at": string,"daily_rate": number | null,"id": string,"name": string,"owner_id": string,"position": string | null,"shift_end": string | null,"shift_start": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "active"?: boolean,"created_at"?: string,"daily_rate"?: number | null,"id"?: string,"name": string,"owner_id": string,"position"?: string | null,"shift_end"?: string | null,"shift_start"?: string | null
+                  }
+                  Update: {
+                    "active"?: boolean,"created_at"?: string,"daily_rate"?: number | null,"id"?: string,"name"?: string,"owner_id"?: string,"position"?: string | null,"shift_end"?: string | null,"shift_start"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "staff_members_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "staff_members_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"staff_time_logs": {
+                  Row: {
+                    "created_at": string,"id": string,"note": string | null,"owner_id": string,"staff_id": string,"time_in": string,"time_out": string | null,"work_date": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"note"?: string | null,"owner_id": string,"staff_id": string,"time_in": string,"time_out"?: string | null,"work_date": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"note"?: string | null,"owner_id"?: string,"staff_id"?: string,"time_in"?: string,"time_out"?: string | null,"work_date"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "staff_time_logs_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "staff_time_logs_owner_id_fkey"
+      columns: ["owner_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "staff_time_logs_staff_id_fkey"
+      columns: ["staff_id"]
+isOneToOne: false
+      referencedRelation: "staff_members"
       referencedColumns: ["id"]
     }
                   ]
@@ -1979,6 +2567,82 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"user_badges": {
+                  Row: {
+                    "badge": string,"granted_at": string,"granted_by": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "badge": string,"granted_at"?: string,"granted_by"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "badge"?: string,"granted_at"?: string,"granted_by"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_badges_granted_by_fkey"
+      columns: ["granted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_badges_granted_by_fkey"
+      columns: ["granted_by"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_badges_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_badges_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"user_updates": {
+                  Row: {
+                    "author_id": string,"body": string,"created_at": string,"id": string,"job_id": string | null,"listing_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id": string,"body": string,"created_at"?: string,"id"?: string,"job_id"?: string | null,"listing_id"?: string | null
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string,"created_at"?: string,"id"?: string,"job_id"?: string | null,"listing_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_updates_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_updates_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "public_profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_updates_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "job_posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_updates_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"verification_documents": {
                   Row: {
                     "created_at": string,"doc_type": Database["public"]['Enums']["verification_doc_type"],"id": string,"retain_until": string | null,"storage_path": string,"verification_id": string
@@ -2063,8 +2727,14 @@ isOneToOne: false
 "_tier_rank":
 { Args: { "p_user": string }; Returns: number
                            },
+"accept_delivery_offer":
+{ Args: { "p_offer": string }; Returns: undefined
+                           },
 "adjust_stock":
 { Args: { "p_listing": string,"p_new_qty": number,"p_reason"?: string }; Returns: undefined
+                           },
+"admin_find_user":
+{ Args: { "p_email": string }; Returns: string
                            },
 "admin_set_plan":
 { Args: { "p_active": boolean,"p_billing"?: string,"p_days"?: number,"p_note"?: string,"p_tier"?: string,"p_user": string }; Returns: undefined
@@ -2084,6 +2754,9 @@ isOneToOne: false
                            },
 "apply_to_job":
 { Args: { "p_docs"?: (string)[],"p_note"?: string,"p_post": string }; Returns: string
+                           },
+"assert_clean_text":
+{ Args: { "p_text": string }; Returns: undefined
                            },
 "assert_not_restricted":
 { Args: { "p_user": string }; Returns: undefined
@@ -2138,6 +2811,12 @@ isOneToOne: false
               "expires_at": string,"flagged_at": string,"label": string,"match_kind": string
             }[]
                            },
+"comment_target_owner":
+{ Args: { "p_id": string,"p_kind": string }; Returns: string
+                           },
+"confirm_hire":
+{ Args: { "p_app": string }; Returns: undefined
+                           },
 "confirm_received":
 { Args: { "p_order": string }; Returns: undefined
                            },
@@ -2161,6 +2840,17 @@ isOneToOne: false
 "delete_follow_up_rule":
 { Args: { "p_id": string }; Returns: undefined
                            },
+"delivery_order_card":
+{ Args: { "p_kind": string,"r": Omit<Database["public"]['Tables']["delivery_requests"]['Row'], Database["public"]['Tables']["delivery_requests"]['ComputedFields']> }; Returns: undefined
+                           },
+"delivery_rider_contact":
+{ Args: { "p_id": string }; Returns: {
+              "full_name": string,"phone": string,"plate_number": string,"vehicle_model": string,"vehicle_type": string
+            }[]
+                           },
+"display_name_of":
+{ Args: { "p_user": string }; Returns: string
+                           },
 "dispute_respond":
 { Args: { "p_body": string,"p_dispute": string,"p_paths"?: (string)[] }; Returns: undefined
                            },
@@ -2180,6 +2870,11 @@ isOneToOne: false
               "store_id": string
             }[]
                            },
+"featured_users":
+{ Args: { "p_kind": string,"p_limit"?: number }; Returns: {
+              "avg_rating": number,"badges": (string)[],"friends": number,"image": string,"link": string,"name": string,"pinned": boolean,"review_count": number,"subtitle": string,"user_id": string,"verification_level": number
+            }[]
+                           },
 "file_appeal":
 { Args: { "p_body": string,"p_report": string }; Returns: undefined
                            },
@@ -2193,11 +2888,30 @@ isOneToOne: false
               "manual_expenses": number,"manual_income": number,"net": number,"order_income": number,"purchases": number
             }[]
                            },
+"friend_counts":
+{ Args: { "p_user": string }; Returns: {
+              "following": number,"friends": number,"suki": number
+            }[]
+                           },
+"friends_feed":
+{ Args: { "p_before"?: string,"p_limit"?: number }; Returns: {
+              "actor_id": string,"actor_name": string,"body": string,"created_at": string,"image_path": string,"item_id": string,"kind": string,"link_slug": string,"price_max": number,"price_min": number,"price_type": string,"title": string,"unit": string
+            }[]
+                           },
+"invite_rider":
+{ Args: { "p_request": string,"p_rider": string }; Returns: undefined
+                           },
+"is_active_rider":
+{ Args: { "p_user": string }; Returns: boolean
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "is_conversation_participant":
 { Args: { "p_conv": string }; Returns: boolean
+                           },
+"is_full_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "is_job_thread_participant":
 { Args: { "p_thread": string }; Returns: boolean
@@ -2207,6 +2921,16 @@ isOneToOne: false
                            },
 "job_doc_open":
 { Args: { "p_doc": string }; Returns: string
+                           },
+"job_rating":
+{ Args: { "p_direction": string,"p_user": string }; Returns: {
+              "avg_rating": number,"review_count": number
+            }[]
+                           },
+"listing_reviews":
+{ Args: { "p_limit"?: number,"p_listing": string }; Returns: {
+              "comment": string,"created_at": string,"rating": number,"reviewer_name": string
+            }[]
                            },
 "listing_usage":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -2228,6 +2952,11 @@ isOneToOne: false
 "mark_notifications_read":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"my_header_counts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "cart": number,"messages": number,"notifications": number,"role": string,"tier": number
+            }[]
+                           },
 "my_tier":
 { Args: Record<PropertyKey, never>; Returns: {
               "affiliate_links": number,"billing": string,"listing_limit": number,"name": string,"period_end": string,"rank": number,"tier": string
@@ -2242,6 +2971,11 @@ isOneToOne: false
 "open_case":
 { Args: { "p_days"?: number,"p_report": string }; Returns: undefined
                            },
+"open_deliveries":
+{ Args: { "p_id"?: string,"p_limit"?: number,"p_region"?: string }; Returns: {
+              "created_at": string,"declared_value": number,"dropoff_city": string,"dropoff_province": string,"height_cm": number,"id": string,"invited": boolean,"item_description": string,"length_cm": number,"notes": string,"offered_fee": number,"pickup_at": string,"pickup_city": string,"pickup_province": string,"pickup_region_code": string,"quantity": number,"status": string,"total_weight_kg": number,"vehicle_type": string,"weight_per_piece_kg": number,"width_cm": number
+            }[]
+                           },
 "open_dispute":
 { Args: { "p_details": string,"p_order": string,"p_paths"?: (string)[],"p_reason": string }; Returns: string
                            },
@@ -2254,7 +2988,12 @@ isOneToOne: false
             }[]
                            },
 "place_order":
-{ Args: { "p_delivery": Json,"p_items": Json,"p_note"?: string,"p_preferred"?: string,"p_store": string,"p_urgency"?: string }; Returns: string
+{ Args: { "p_delivery": Json,"p_from_cart"?: boolean,"p_items": Json,"p_note"?: string,"p_preferred"?: string,"p_store": string,"p_urgency"?: string }; Returns: string
+                           },
+"public_riders":
+{ Args: { "p_city"?: string,"p_ids"?: (string)[],"p_limit"?: number,"p_province"?: string,"p_region"?: string,"p_vehicle"?: string }; Returns: {
+              "avatar_url": string,"city": string,"completed": number,"is_available": boolean,"name": string,"nearness": number,"province": string,"region_code": string,"user_id": string,"vehicle_model": string,"vehicle_type": string
+            }[]
                            },
 "quote_order":
 { Args: { "p_items": Json,"p_method"?: string,"p_note"?: string,"p_order": string,"p_shipping_fee": number,"p_valid_days"?: number }; Returns: undefined
@@ -2265,20 +3004,37 @@ isOneToOne: false
 "request_affiliate_link":
 { Args: { "p_listing": string,"p_message"?: string }; Returns: string
                            },
+"request_offer_counts":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "offers": number,"request_id": string
+            }[]
+                           },
 "request_plan":
 { Args: { "p_billing"?: string,"p_note"?: string,"p_tier": string }; Returns: undefined
                            },
 "resolve_dispute":
 { Args: { "p_dispute": string,"p_note": string,"p_outcome": string,"p_result"?: string }; Returns: undefined
                            },
+"respond_to_offer":
+{ Args: { "p_accept": boolean,"p_offer": string }; Returns: string
+                           },
+"review_badge_request":
+{ Args: { "p_approve": boolean,"p_id": string,"p_note"?: string }; Returns: undefined
+                           },
 "review_payment":
 { Args: { "p_confirm": boolean,"p_note"?: string,"p_order": string }; Returns: undefined
+                           },
+"review_rider":
+{ Args: { "p_decision": string,"p_note"?: string,"p_user": string }; Returns: undefined
                            },
 "review_verification":
 { Args: { "p_decision": Database["public"]['Enums']["verification_status"],"p_id": string,"p_note": string }; Returns: undefined
                            },
 "revoke_affiliate_link":
 { Args: { "p_link": string }; Returns: undefined
+                           },
+"revoke_badge":
+{ Args: { "p_badge": string,"p_user": string }; Returns: undefined
                            },
 "run_due_reminders":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -2320,6 +3076,12 @@ isOneToOne: false
 "set_listing_commission":
 { Args: { "p_listing": string,"p_pct"?: number }; Returns: undefined
                            },
+"set_profile_links":
+{ Args: { "p_links": Json }; Returns: undefined
+                           },
+"set_rider_available":
+{ Args: { "p_on": boolean }; Returns: undefined
+                           },
 "ship_order":
 { Args: { "p_details"?: Json,"p_method"?: string,"p_order": string }; Returns: undefined
                            },
@@ -2355,6 +3117,9 @@ isOneToOne: false
 "submit_payment":
 { Args: { "p_amount"?: number,"p_method": string,"p_order": string,"p_proof_path"?: string,"p_reference"?: string }; Returns: undefined
                            },
+"submit_rider_application":
+{ Args: { "p": Json,"p_docs": Json }; Returns: undefined
+                           },
 "submit_verification":
 { Args: { "p_docs": Json,"p_store": string,"p_target": number }; Returns: string
                            },
@@ -2366,6 +3131,14 @@ isOneToOne: false
 "sync_membership":
 { Args: { "p_billing"?: string,"p_email": string,"p_period_end"?: string,"p_tier": string }; Returns: boolean
                            },
+"transaction_counts":
+{ Args: { "p_user": string }; Returns: {
+              "bought": number,"hired": number,"hires": number,"sold": number
+            }[]
+                           },
+"update_delivery_status":
+{ Args: { "p_id": string,"p_status": string }; Returns: undefined
+                           },
 "user_trust":
 { Args: { "p_user": string }; Returns: {
               "amount_label": string,"avg_rating": number,"cancellation_rate": number,"completed_orders": number,"member_since": string,"payment_reliability": number,"review_count": number
@@ -2376,7 +3149,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "listing_kind": "product"|"service","listing_status": "active"|"hidden"|"removed","order_status": "pending_confirmation"|"completed"|"cancelled"|"disputed"|"requested"|"quoted"|"payment_submitted"|"paid"|"packed"|"shipped"|"delivered","price_type": "fixed"|"range"|"message","report_status": "open"|"reviewing"|"dismissed"|"actioned"|"awaiting_response"|"under_review"|"warning"|"restricted"|"flagged","report_target": "listing"|"store"|"user"|"message","seller_type": "manufacturer"|"direct_importer"|"distributor"|"reseller"|"retailer"|"service_provider","shipping_kind": "courier"|"on_demand"|"trucking"|"bus"|"van_jeep"|"pickup"|"other","stock_status": "in_stock"|"made_to_order"|"pre_order"|"out_of_stock","user_role": "user"|"moderator"|"admin","verification_doc_type": "gov_id"|"selfie_with_id"|"dti"|"sec"|"cda"|"bir_cor"|"mayors_permit"|"fda"|"other","verification_status": "pending"|"approved"|"rejected"|"needs_more"
+            "listing_kind": "product"|"service","listing_status": "active"|"hidden"|"removed","order_status": "pending_confirmation"|"completed"|"cancelled"|"disputed"|"requested"|"quoted"|"payment_submitted"|"paid"|"packed"|"shipped"|"delivered","price_type": "fixed"|"range"|"message","report_status": "open"|"reviewing"|"dismissed"|"actioned"|"awaiting_response"|"under_review"|"warning"|"restricted"|"flagged","report_target": "listing"|"store"|"user"|"message","seller_type": "manufacturer"|"direct_importer"|"distributor"|"reseller"|"retailer"|"service_provider","shipping_kind": "courier"|"on_demand"|"trucking"|"bus"|"van_jeep"|"pickup"|"other","stock_status": "in_stock"|"made_to_order"|"pre_order"|"out_of_stock","user_role": "user"|"moderator"|"admin"|"founder"|"webmaster","verification_doc_type": "gov_id"|"selfie_with_id"|"dti"|"sec"|"cda"|"bir_cor"|"mayors_permit"|"fda"|"other","verification_status": "pending"|"approved"|"rejected"|"needs_more"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -2496,7 +3269,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "listing_kind": ["product", "service"],"listing_status": ["active", "hidden", "removed"],"order_status": ["pending_confirmation", "completed", "cancelled", "disputed", "requested", "quoted", "payment_submitted", "paid", "packed", "shipped", "delivered"],"price_type": ["fixed", "range", "message"],"report_status": ["open", "reviewing", "dismissed", "actioned", "awaiting_response", "under_review", "warning", "restricted", "flagged"],"report_target": ["listing", "store", "user", "message"],"seller_type": ["manufacturer", "direct_importer", "distributor", "reseller", "retailer", "service_provider"],"shipping_kind": ["courier", "on_demand", "trucking", "bus", "van_jeep", "pickup", "other"],"stock_status": ["in_stock", "made_to_order", "pre_order", "out_of_stock"],"user_role": ["user", "moderator", "admin"],"verification_doc_type": ["gov_id", "selfie_with_id", "dti", "sec", "cda", "bir_cor", "mayors_permit", "fda", "other"],"verification_status": ["pending", "approved", "rejected", "needs_more"]
+            "listing_kind": ["product", "service"],"listing_status": ["active", "hidden", "removed"],"order_status": ["pending_confirmation", "completed", "cancelled", "disputed", "requested", "quoted", "payment_submitted", "paid", "packed", "shipped", "delivered"],"price_type": ["fixed", "range", "message"],"report_status": ["open", "reviewing", "dismissed", "actioned", "awaiting_response", "under_review", "warning", "restricted", "flagged"],"report_target": ["listing", "store", "user", "message"],"seller_type": ["manufacturer", "direct_importer", "distributor", "reseller", "retailer", "service_provider"],"shipping_kind": ["courier", "on_demand", "trucking", "bus", "van_jeep", "pickup", "other"],"stock_status": ["in_stock", "made_to_order", "pre_order", "out_of_stock"],"user_role": ["user", "moderator", "admin", "founder", "webmaster"],"verification_doc_type": ["gov_id", "selfie_with_id", "dti", "sec", "cda", "bir_cor", "mayors_permit", "fda", "other"],"verification_status": ["pending", "approved", "rejected", "needs_more"]
           }
         }
 } as const

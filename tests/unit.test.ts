@@ -14,6 +14,11 @@ import { parseRange, safeCell, toCsv } from "@/lib/export";
 import { tablesToCsv, tablesToPdf, tablesToXlsx } from "@/lib/export-files";
 import { APPLICATION_STATUSES, CIVIL_STATUSES, DOC_KINDS, EDUCATION_LEVELS, EMPLOYMENT_TYPES, JOB_CATEGORIES, POST_STATUSES, POSTER_TYPES, SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, ageFrom, salaryLabel, splitList } from "@/lib/jobs";
 import { CATEGORY_TABS, LISTING_CONDITIONS, buildTree, categoryIdsFor, filterTree, nameOf, pathTo, type Cat } from "@/lib/categories";
+import { breakEven, costing } from "@/lib/calculators";
+import { SELLER_TOOLS } from "@/lib/seller-tools";
+import { BADGES, FEATURED_KINDS } from "@/lib/social";
+import { LINK_KINDS, linkHref, normalizeLink } from "@/lib/social-links";
+import { cutoffFor, formatMinutes, phClock, summarizeLog, summarizePeriod } from "@/lib/staff";
 import { FEATURE_MIN_RANK, TIERS, TIER_KEYS, canUse, featuresAddedAt, isProError, tierByKey, tierByRank, yearlySaving, type Feature } from "@/lib/plans";
 
 describe("phone + redirects", () => {
@@ -145,7 +150,7 @@ describe("i18n", () => {
   for (const s of ["open", "resolved"]) used.add(`dispute.status.${s}`);
   used.add("admin.tab.disputes");
   for (const s of ["order_requested", "order_quoted", "payment_submitted", "payment_cod", "payment_confirmed", "payment_rejected", "order_packed", "order_shipped", "order_delivered", "dispute_opened", "dispute_resolved"]) used.add(`notif.${s}`);
-  for (const s of ["overview", "customers", "suppliers", "reminders", "reports", "finance", "inventory", "sms", "plan", "affiliates", "share"]) used.add(`biz.nav.${s}`);
+  for (const s of ["overview", "customers", "suppliers", "reminders", "reports", "finance", "inventory", "staff", "sms", "plan", "affiliates", "share"]) used.add(`biz.nav.${s}`);
   for (const f of Object.keys(FEATURE_MIN_RANK)) used.add(`plan.feat.${f}`);
   for (const [g, list] of Object.entries({ status: APPLICATION_STATUSES, poststatus: POST_STATUSES, cat: JOB_CATEGORIES, type: EMPLOYMENT_TYPES, setup: WORK_SETUPS, per: SALARY_PERIODS, edu: EDUCATION_LEVELS, sex: SEX_OPTIONS, civil: CIVIL_STATUSES, doc: DOC_KINDS })) for (const k of list) used.add(`job.${g}.${k}`);
   for (const k of POSTER_TYPES) { used.add(`job.poster.${k}`); used.add(`job.poster.${k}_hint`); }
@@ -164,6 +169,42 @@ describe("i18n", () => {
   for (const s of ["queued", "sent", "failed"]) used.add(`sms.status.${s}`);
   for (const s of ["order_paid", "order_cancelled", "manual", "count"]) used.add(`inv.reason.${s}`);
   used.add("admin.tab.plans");
+  for (const tool of SELLER_TOOLS) {
+    used.add(`sell.tool.${tool.key}.title`);
+    used.add(`sell.tool.${tool.key}.desc`);
+    used.add(`guide.${tool.key}.tip`);
+    for (let i = 1; i <= tool.guideSteps; i++) used.add(`guide.${tool.key}.${i}`);
+  }
+  for (let n = 1; n <= 4; n++) { used.add(`sell.step${n}_title`); used.add(`sell.step${n}_body`); }
+  for (const b of BADGES) { used.add(`badge.${b}`); used.add(`badge.${b}.desc`); used.add(`badges.needs.${b}`); used.add(`badges.note_ph.${b}`); }
+  for (const k of FEATURED_KINDS) { used.add(`featured.row.${k}`); used.add(`featured.kind.${k}`); }
+  for (const k of ["feed", "friends", "followers", "mine"]) used.add(`updates.tab.${k}`);
+  for (const k of ["update", "listing", "job"]) used.add(`updates.kind.${k}`);
+  for (const k of ["new_friend", "new_comment", "new_review", "badge_approved", "badge_rejected"]) used.add(`notif.${k}`);
+  for (const k of ["rate_employer", "rate_applicant"]) used.add(`rate.${k}`);
+  used.add("admin.tab.badges");
+  for (const k of LINK_KINDS) used.add(`links.kind.${k}`);
+  for (const k of ["requested", "quoted", "payment_submitted", "paid", "payment_rejected", "packed", "shipped", "delivered", "completed", "cancelled", "disputed", "pending_confirmation"]) used.add(`sys.order.${k}`);
+  for (const k of ["applied", "shortlisted", "interview", "rejected", "hired", "withdrawn", "hire_confirmed"]) used.add(`sys.job.${k}`);
+  for (const k of ["sold", "bought", "hired", "hires"]) used.add(`tx.${k}`);
+  used.add("notif.hire_confirmed");
+  for (const k of ["product", "service"]) used.add(`rq.kind.${k}`);
+  for (const k of ["open", "closed", "fulfilled", "expired"]) used.add(`rq.status.${k}`);
+  for (const k of ["all", "for_me", "mine", "offers"]) used.add(`rq.tab.${k}`);
+  for (const k of ["sent", "accepted", "declined", "withdrawn"]) used.add(`rq.offer_status.${k}`);
+  for (const k of ["new_offer", "offer_accepted", "offer_declined"]) used.add(`notif.${k}`);
+  used.add("sys.request.accepted");
+  for (const k of ["any", "motorcycle", "sedan", "mpv_suv", "pickup", "l300_h100", "closed_van", "truck"]) used.add(`dl.vehicle.${k}`);
+  for (const k of ["open", "assigned", "picked_up", "delivered", "completed", "cancelled"]) used.add(`dl.status.${k}`);
+  for (const k of ["sent", "accepted", "declined", "withdrawn"]) used.add(`dl.offer_status.${k}`);
+  for (const k of ["pending", "approved", "needs_more", "rejected", "suspended"]) { used.add(`dl.rider_status.${k}`); used.add(`dl.rider_status.${k}.desc`); }
+  for (const k of ["approved", "needs_more", "rejected", "suspended"]) { used.add(`dl.admin.do.${k}`); used.add(`notif.rider_${k}`); }
+  for (const k of ["license_front", "license_back", "or_cr", "plate_front", "plate_back", "other"]) { used.add(`dl.doc.${k}`); used.add(`dl.doc.${k}.hint`); }
+  for (const k of ["invalid", "bad_phone", "need_city", "need_area", "bad_plate", "need_docs", "already_offered", "auth"]) used.add(`dl.err.${k}`);
+  for (const k of ["length_cm", "width_cm", "height_cm", "pickup_title", "dropoff_title", "how1_title", "how2_title", "how3_title", "how1", "how2", "how3", "reg_step1", "reg_step2", "reg_step3", "safety1", "safety2", "safety3", "safety4"]) used.add(`dl.${k}`);
+  for (const k of ["offer", "hired", "picked_up", "delivered", "released", "completed", "cancelled", "invite"]) used.add(`notif.delivery_${k}`);
+  for (const k of ["assigned", "picked_up", "delivered"]) used.add(`sys.delivery.${k}`);
+  used.add("badge.verified_rider"); used.add("badge.verified_rider.desc");
   for (const s of ["restock_self", "restock_follow_up", "low_stock", "plan_activated"]) used.add(`notif.${s}`);
   const concrete = [...used].filter((k) => !k.includes("${"));
 
@@ -392,5 +433,109 @@ describe("plans config", () => {
     expect(isProError({ message: "Your plan allows 3 affiliate links. Upgrade your FLAME membership for more." })).toBe(true);
     expect(isProError({ code: "42501", message: "denied" })).toBe(false);
     expect(isProError(null)).toBe(false);
+  });
+});
+
+describe("seller calculators", () => {
+  it("costs a batch and prices one piece", () => {
+    const r = costing({ materials: [{ label: "garlic", amount: 300 }, { label: "oil", amount: 200 }], labor: 200, overhead: 50, packaging: 250, yieldUnits: 20, markupPct: 50 })!;
+    expect(r.batchCost).toBe(1000);
+    expect(r.unitCost).toBe(50);
+    expect(r.price).toBe(75);
+    expect(r.profitPerUnit).toBe(25);
+    expect(r.marginPct).toBeCloseTo(33.33, 2);
+    expect(r.wholesalePrice).toBe(62.5);
+  });
+  it("needs a yield and ignores negative or blank costs", () => {
+    expect(costing({ materials: [], labor: 0, overhead: 0, packaging: 0, yieldUnits: 0, markupPct: 50 })).toBeNull();
+    expect(costing({ materials: [{ label: "x", amount: -5 }, { label: "y", amount: NaN }], labor: 10, overhead: 0, packaging: 0, yieldUnits: 2, markupPct: 0 })!.unitCost).toBe(5);
+  });
+  it("finds the break-even point and a profit target", () => {
+    const r = breakEven({ fixedCosts: [{ label: "rent", amount: 10000 }, { label: "salary", amount: 15000 }], price: 75, variableCost: 50, workDays: 25, targetProfit: 5000 })!;
+    expect(r.fixedTotal).toBe(25000);
+    expect(r.contribution).toBe(25);
+    expect(r.units).toBe(1000);
+    expect(r.revenue).toBe(75000);
+    expect(r.unitsPerDay).toBe(40);
+    expect(r.targetUnits).toBe(1200);
+  });
+  it("has no break-even when every sale loses money", () => {
+    expect(breakEven({ fixedCosts: [{ label: "rent", amount: 100 }], price: 50, variableCost: 50, workDays: 26, targetProfit: 0 })).toBeNull();
+  });
+});
+
+describe("staff time record", () => {
+  const shift = { shift_start: "08:00:00", shift_end: "17:00:00" };
+  it("reads clock times in Philippine time", () => {
+    expect(phClock("2026-10-14T00:05:00Z")).toBe("08:05");
+  });
+  it("computes worked, late and undertime minutes", () => {
+    expect(summarizeLog({ time_in: "2026-10-14T00:15:00Z", time_out: "2026-10-14T08:30:00Z" }, shift)).toEqual({ worked: 495, late: 15, undertime: 30, open: false });
+    expect(summarizeLog({ time_in: "2026-10-14T23:55:00Z", time_out: null }, shift)).toEqual({ worked: 0, late: 0, undertime: 0, open: true });
+    expect(summarizeLog({ time_in: "2026-10-14T01:00:00Z", time_out: "2026-10-14T09:00:00Z" }, { shift_start: null, shift_end: null }).late).toBe(0);
+  });
+  it("totals a period and counts distinct days", () => {
+    const logs = [
+      { work_date: "2026-10-14", time_in: "2026-10-14T00:00:00Z", time_out: "2026-10-14T04:00:00Z" },
+      { work_date: "2026-10-14", time_in: "2026-10-14T05:00:00Z", time_out: "2026-10-14T09:00:00Z" },
+      { work_date: "2026-10-15", time_in: "2026-10-15T00:10:00Z", time_out: "2026-10-15T09:00:00Z" },
+    ];
+    const s = summarizePeriod(logs, shift);
+    expect(s.days).toBe(2);
+    expect(s.worked).toBe(480 + 530);
+    expect(s.late).toBe(10 + 300);
+    expect(formatMinutes(485)).toBe("8h 05m");
+    expect(formatMinutes(9)).toBe("9m");
+  });
+  it("picks the payroll cut-off", () => {
+    expect(cutoffFor("2026-10-14")).toEqual({ from: "2026-10-01", to: "2026-10-15" });
+    expect(cutoffFor("2026-02-20")).toEqual({ from: "2026-02-16", to: "2026-02-28" });
+    expect(cutoffFor("2028-02-29")).toEqual({ from: "2028-02-16", to: "2028-02-29" });
+  });
+});
+
+describe("profile social links", () => {
+  it("accepts real accounts and normalizes them", () => {
+    expect(normalizeLink("facebook_page", "facebook.com/MyStore")).toBe("https://facebook.com/MyStore");
+    expect(normalizeLink("website", "https://kusina.ph/menu")).toBe("https://kusina.ph/menu");
+    expect(normalizeLink("whatsapp", "0917 123 4567")).toBe("+639171234567");
+    expect(normalizeLink("viber", "+63 917-123-4567")).toBe("+639171234567");
+    expect(normalizeLink("telegram", "https://t.me/kusina_ph")).toBe("@kusina_ph");
+    expect(normalizeLink("shopee", "https://shopee.ph/kusina")).toBe("https://shopee.ph/kusina");
+  });
+  it("rejects fake or dangerous links", () => {
+    expect(normalizeLink("facebook_page", "https://facebook.com.evil.test/page")).toBeNull();
+    expect(normalizeLink("instagram", "https://example.com/insta")).toBeNull();
+    expect(normalizeLink("website", "javascript:alert(1)")).toBeNull();
+    expect(normalizeLink("other", "data:text/html,<script>")).toBeNull();
+    expect(normalizeLink("whatsapp", "call me")).toBeNull();
+    expect(linkHref("website", "javascript:alert(1)")).toBeNull();
+  });
+  it("opens chat apps directly", () => {
+    expect(linkHref("whatsapp", "+639171234567")).toBe("https://wa.me/639171234567");
+    expect(linkHref("viber", "+639171234567")).toBe("viber://chat?number=%2B639171234567");
+    expect(linkHref("telegram", "@kusina_ph")).toBe("https://t.me/kusina_ph");
+  });
+});
+
+describe("Help & FAQ content", () => {
+  it("has every question and answer in both languages, and links only to real pages", async () => {
+    const { FAQ, FAQ_DISCLAIMER } = await import("@/lib/faq");
+    const root = path.resolve(__dirname, "..");
+    expect(FAQ_DISCLAIMER.en.length).toBeGreaterThan(100);
+    expect(FAQ_DISCLAIMER.fil.length).toBeGreaterThan(100);
+    for (const s of FAQ) {
+      expect(s.title.en && s.title.fil).toBeTruthy();
+      for (const it of s.items) {
+        expect(it.q.en && it.q.fil).toBeTruthy();
+        expect(it.a.en.length).toBe(it.a.fil.length); // same structure in both languages
+        for (const line of [...it.a.en, ...it.a.fil]) {
+          for (const m of line.matchAll(/\]\((\/[^)#?\s]*)/g)) {
+            const page = path.join(root, "app", m[1], "page.tsx");
+            expect(statSync(page, { throwIfNoEntry: false }), `FAQ links to ${m[1]}, which has no page`).toBeTruthy();
+          }
+        }
+      }
+    }
   });
 });

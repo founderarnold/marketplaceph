@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { ALL_ROLES, isFullAdmin, isStaff } from "@/lib/roles";
 
 /** Every admin write goes through RLS (is_admin()) and is recorded in audit_logs by DB triggers. */
 async function adminClient() {
@@ -12,7 +13,7 @@ async function adminClient() {
   const id = data?.claims?.sub as string | undefined;
   if (!id) redirect("/login?next=/admin");
   const { data: me } = await supabase.from("profiles").select("role").eq("id", id).single();
-  if (!me || (me.role !== "admin" && me.role !== "moderator")) redirect("/");
+  if (!me || !isStaff(me.role)) redirect("/");
   return { supabase, id, role: me.role };
 }
 
@@ -26,7 +27,7 @@ export async function setListingStatus(listingId: string, fd: FormData) {
 
 export async function setStoreVerification(storeId: string, fd: FormData) {
   const { supabase, role } = await adminClient();
-  if (role !== "admin") return;
+  if (!isFullAdmin(role)) return;
   const level = z.coerce.number().int().min(0).max(3).parse(fd.get("level"));
   await supabase.from("stores").update({ verification_level: level }).eq("id", z.uuid().parse(storeId));
   revalidatePath("/admin");
@@ -34,15 +35,15 @@ export async function setStoreVerification(storeId: string, fd: FormData) {
 
 export async function setUserRole(userId: string, fd: FormData) {
   const { supabase, role } = await adminClient();
-  if (role !== "admin") return;
-  const next = z.enum(["user", "moderator", "admin"]).parse(fd.get("role"));
+  if (!isFullAdmin(role)) return;
+  const next = z.enum(ALL_ROLES).parse(fd.get("role"));
   await supabase.from("profiles").update({ role: next }).eq("id", z.uuid().parse(userId));
   revalidatePath("/admin");
 }
 
 export async function addCategory(fd: FormData) {
   const { supabase, role } = await adminClient();
-  if (role !== "admin") return;
+  if (!isFullAdmin(role)) return;
   const parsed = z
     .object({
       slug: z.string().trim().regex(/^[a-z0-9-]{2,40}$/),
@@ -57,7 +58,7 @@ export async function addCategory(fd: FormData) {
 
 export async function toggleCategory(categoryId: string, active: boolean) {
   const { supabase, role } = await adminClient();
-  if (role !== "admin") return;
+  if (!isFullAdmin(role)) return;
   await supabase.from("categories").update({ is_active: active }).eq("id", z.uuid().parse(categoryId));
   revalidateTag("categories", "max");
   revalidatePath("/admin");
@@ -65,7 +66,7 @@ export async function toggleCategory(categoryId: string, active: boolean) {
 
 export async function addBannedKeyword(fd: FormData) {
   const { supabase, role } = await adminClient();
-  if (role !== "admin") return;
+  if (!isFullAdmin(role)) return;
   const parsed = z.object({ keyword: z.string().trim().min(3).max(60), reason: z.string().trim().min(3).max(200) }).parse(Object.fromEntries(fd));
   await supabase.from("banned_keywords").insert(parsed);
   revalidatePath("/admin");
@@ -73,7 +74,7 @@ export async function addBannedKeyword(fd: FormData) {
 
 export async function removeBannedKeyword(id: string) {
   const { supabase, role } = await adminClient();
-  if (role !== "admin") return;
+  if (!isFullAdmin(role)) return;
   await supabase.from("banned_keywords").delete().eq("id", z.uuid().parse(id));
   revalidatePath("/admin");
 }

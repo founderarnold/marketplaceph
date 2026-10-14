@@ -1,4 +1,4 @@
-import { Check, MessageCircle } from "lucide-react";
+import { Bike, Check, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -27,7 +27,7 @@ export default function OrderPage(props: PageProps<"/orders/[id]">) {
 }
 
 const card = "space-y-2 rounded-2xl border border-border bg-white p-4";
-const when = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : null);
+const when = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }) : null);
 
 async function Order({ params }: Pick<PageProps<"/orders/[id]">, "params">) {
   const { id } = await params;
@@ -75,6 +75,7 @@ async function Order({ params }: Pick<PageProps<"/orders/[id]">, "params">) {
     supabase.from("reviews").select("id").eq("order_id", id).eq("reviewer_id", me).maybeSingle(),
     supabase.from("public_profiles").select("display_name").eq("id", o.buyer_id).maybeSingle(),
   ]);
+  const { data: riderBookings } = role === "viewer" ? { data: [] } : await supabase.from("delivery_requests").select("id, status").eq("order_id", id).order("created_at", { ascending: false }).limit(5);
   const dispute = disputes?.[0] ?? null;
   const { data: evidence } = dispute ? await supabase.from("dispute_evidence").select("id, uploader_id, storage_path, created_at").eq("dispute_id", dispute.id) : { data: [] };
 
@@ -124,6 +125,18 @@ async function Order({ params }: Pick<PageProps<"/orders/[id]">, "params">) {
         </p>
         {o.conversation_id && role !== "viewer" && (
           <Link href={`/messages/${o.conversation_id}`} className={buttonClass("outline", "sm", "w-fit gap-2")}><MessageCircle size={16} aria-hidden /> {t("order.open_chat")}</Link>
+        )}
+        {role !== "viewer" && (
+          <div className="flex flex-wrap items-center gap-2">
+            {!["cancelled", "completed", "delivered"].includes(o.status) && (
+              <Link href={`/delivery/new?order=${o.id}`} className={buttonClass("outline", "sm", "w-fit gap-2")}><Bike size={16} aria-hidden /> {t("dl.book_for_order")}</Link>
+            )}
+            {(riderBookings ?? []).map((b) => (
+              <Link key={b.id} href={`/delivery/${b.id}`} className="text-sm font-semibold text-brand hover:underline">
+                {t("dl.booking")} #{b.id.slice(0, 6).toUpperCase()} · {t(`dl.status.${b.status}`)} →
+              </Link>
+            ))}
+          </div>
         )}
       </section>
 

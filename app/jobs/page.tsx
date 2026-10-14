@@ -1,4 +1,7 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { Search } from "lucide-react";
+import { todayPH } from "@/lib/format";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JOB_CARD_SELECT, JobCard, type JobCardData } from "@/components/jobs/job-card";
@@ -16,7 +19,7 @@ export const metadata: Metadata = {
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 const PAGE = 20;
 
-export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
+async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   const sp = await searchParams;
   const { t } = await getT();
   const q = first(sp.q).trim().slice(0, 80);
@@ -30,7 +33,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
     .from("job_posts")
     .select(JOB_CARD_SELECT, { count: "exact" })
     .eq("status", "active")
-    .or(`deadline.is.null,deadline.gte.${new Date().toISOString().slice(0, 10)}`)
+    .or(`deadline.is.null,deadline.gte.${todayPH()}`)
     .order("created_at", { ascending: false })
     .range((page - 1) * PAGE, page * PAGE - 1);
   if (q) query = query.or(`title.ilike.%${q.replace(/[%,()]/g, " ")}%,company_name.ilike.%${q.replace(/[%,()]/g, " ")}%`);
@@ -91,5 +94,13 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
         </nav>
       )}
     </div>
+  );
+}
+
+export default function JobsPage(props: PageProps<"/jobs">) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <JobsPageContent {...props} />
+    </Suspense>
   );
 }

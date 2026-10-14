@@ -16,7 +16,7 @@ export function ListingCard({ l, t, priority }: { l: ListingCardData; t: TFuncti
       href={`/listing/${l.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white transition-shadow hover:shadow-md"
     >
-      <div className="relative aspect-square bg-muted">
+      <div className="relative aspect-square overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={firstThumb(l.listing_images)}
@@ -26,7 +26,7 @@ export function ListingCard({ l, t, priority }: { l: ListingCardData; t: TFuncti
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority === "high" ? "high" : undefined}
           decoding="async"
-          className={cn("h-full w-full object-cover", soldOut && "opacity-60 grayscale")}
+          className={cn("absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105", soldOut && "opacity-60 grayscale")}
         />
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           <StockBadge status={l.stock_status} t={t} />
@@ -35,7 +35,7 @@ export function ListingCard({ l, t, priority }: { l: ListingCardData; t: TFuncti
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="text-lg font-extrabold text-brand-dark">{priceLabel(l, t)}</p>
-        <p className="line-clamp-2 text-sm font-medium text-foreground">{l.title}</p>
+        <p className="line-clamp-2 min-h-10 text-sm font-medium text-foreground">{l.title}</p>
         {l.moq > 1 && (
           <p className="text-xs text-muted-foreground">
             {t("listing.moq")}: {l.moq} {l.unit}

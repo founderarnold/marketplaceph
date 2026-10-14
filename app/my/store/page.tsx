@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -5,10 +7,11 @@ import { StoreProfileForm } from "@/components/sell/store-profile-form";
 import { buttonClass } from "@/components/ui/button";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "Edit store" };
 
-export default async function EditStorePage() {
+async function EditStorePageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -32,7 +35,16 @@ export default async function EditStorePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-3">
       <Link href={`/store/${store.slug}`} className="text-sm font-semibold text-brand hover:underline">{t("my.view_store")}</Link>
+      <ToolGuide toolKey="store_profile" t={t} />
       <StoreProfileForm userId={userId} store={store} />
     </div>
+  );
+}
+
+export default function EditStorePage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <EditStorePageContent />
+    </Suspense>
   );
 }

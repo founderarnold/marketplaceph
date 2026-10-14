@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { useT } from "@/lib/i18n/client";
 import { normalizePhonePH, safeNext } from "@/lib/phone";
+import type { AuthProviders } from "@/lib/auth-providers";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 type Mode = "phone" | "email";
 
-// Phone OTP and Google need provider setup in Supabase first, so they stay hidden until these flags are "true".
-const PHONE_LOGIN = process.env.NEXT_PUBLIC_PHONE_LOGIN === "true";
-const GOOGLE_LOGIN = process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "true";
 
-export function LoginForm() {
+/** Phone OTP and Google show only when they are switched on AND enabled in Supabase (see lib/auth-providers.ts). */
+export function LoginForm({ providers }: { providers: AuthProviders }) {
+  const GOOGLE_LOGIN = providers.google;
+  const PHONE_LOGIN = providers.phone;
   const { t } = useT();
   const router = useRouter();
   const next = safeNext(useSearchParams().get("next"));
@@ -69,9 +71,20 @@ export function LoginForm() {
       const res = isSignup
         ? await supabase.auth.signUp({ email, password })
         : await supabase.auth.signInWithPassword({ email, password });
-      if (res.error) return setError(isSignup ? res.error.message : t("auth.bad_credentials"));
+      if (res.error) return setError(isSignup ? friendlyAuthError(res.error, t) : res.error.status === 429 ? t("auth.too_many") : t("auth.bad_credentials"));
       if (isSignup && !res.data.session) return setInfo(t("auth.check_email"));
       done();
+    });
+  }
+
+  // Emails a reset link; it signs the user in through /auth/callback and lands on the set-a-new-password page.
+  function forgot() {
+    setError(null);
+    if (!email.includes("@")) return setError(t("auth.forgot_need_email"));
+    start(async () => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/auth/callback?next=/account/password` });
+      if (error) return setError(friendlyAuthError(error, t));
+      setInfo(t("auth.forgot_sent", { email }));
     });
   }
 
@@ -89,7 +102,7 @@ export function LoginForm() {
     <div className="space-y-5 rounded-3xl border border-border bg-white p-6">
       <div>
         <h1 className="text-2xl font-extrabold text-brand-dark">{t("auth.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("auth.subtitle")}</p>
+        {mode === "phone" && <p className="text-sm text-muted-foreground">{t("auth.subtitle")}</p>}
       </div>
 
       {PHONE_LOGIN && (
@@ -180,9 +193,16 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={pending}>
             {isSignup ? t("auth.signup") : t("auth.login")}
           </Button>
-          <button type="button" className="text-sm text-brand underline" onClick={() => setIsSignup((s) => !s)}>
-            {isSignup ? t("auth.have_account") : t("auth.no_account")}
-          </button>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button type="button" className="text-sm text-brand underline" onClick={() => setIsSignup((s) => !s)}>
+              {isSignup ? t("auth.have_account") : t("auth.no_account")}
+            </button>
+            {!isSignup && (
+              <button type="button" className="text-sm text-muted-foreground underline" onClick={forgot} disabled={pending}>
+                {t("auth.forgot")}
+              </button>
+            )}
+          </div>
         </form>
       )}
 

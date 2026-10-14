@@ -14,10 +14,18 @@ import { FavoriteButton, ReportButton, ShareButton, ViewPing } from "@/component
 import { Button, buttonClass } from "@/components/ui/button";
 import { formatPeso, priceLabel, yearsInBusinessBadge } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
-import { firstImage, imageUrl } from "@/lib/images";
+import { firstImage, imageUrl, thumbUrl } from "@/lib/images";
+import { Gallery } from "@/components/listing/gallery";
+import { SignInButton } from "@/components/auth/auth-modal";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { AffiliatePanel } from "@/components/affiliates/affiliate-panel";
+import { CommentsSection } from "@/components/social/comments";
+import { loadProfileLinks, ProfileLinks } from "@/components/social/profile-links";
+import { FriendButton } from "@/components/social/friend-button";
+import { ApprovedBadges, FriendStats, TxStats } from "@/components/social/social-ui";
+import { loadFriendInfo, loadTxCounts, loadUserBadges } from "@/lib/social-data";
+import { timeAgo } from "@/lib/format";
 
 async function getListingMeta(id: string) {
   "use cache";
@@ -93,7 +101,15 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
     storeFav = !!favs?.some((f) => f.store_id === store.id);
   }
 
-  const { trust, badges, flaggedAt } = await loadStoreTrust(supabase, store.id);
+  const [{ trust, badges, flaggedAt }, friend, ownerBadges, { data: itemReviews }] = await Promise.all([
+    loadStoreTrust(supabase, store.id),
+    loadFriendInfo(supabase, store.owner_id, userId),
+    loadUserBadges(supabase, store.owner_id, store.year_started),
+    supabase.rpc("listing_reviews", { p_listing: l.id, p_limit: 20 }),
+  ]);
+  const [sellerLinks, sellerTx] = await Promise.all([loadProfileLinks(supabase, store.owner_id), loadTxCounts(supabase, store.owner_id)]);
+  const reviewsList = itemReviews ?? [];
+  const itemAvg = reviewsList.length ? reviewsList.reduce((a, x) => a + x.rating, 0) / reviewsList.length : null;
   const [{ data: listShip }, { data: storeShip }] = await Promise.all([
     supabase.from("listing_shipping_methods").select("shipping_methods ( name, kind )").eq("listing_id", l.id),
     supabase.from("store_shipping_methods").select("shipping_methods ( name, kind )").eq("store_id", store.id),
@@ -108,21 +124,11 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
   return (
     <article className="grid gap-6 md:grid-cols-2">
       <ViewPing listingId={l.id} />
-      <div>
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto rounded-2xl" aria-label="Photos">
-          {(images.length ? images : [{ path: "", position: 0 }]).map((img, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={i}
-              src={imageUrl(img.path || null)}
-              alt={`${l.title} ${i + 1}`}
-              loading={i === 0 ? "eager" : "lazy"}
-              className="aspect-square w-full shrink-0 snap-center rounded-2xl bg-muted object-cover"
-            />
-          ))}
-        </div>
-        {images.length > 1 && <p className="mt-1 text-center text-xs text-muted-foreground">{t("listing.swipe")}</p>}
-      </div>
+      <Gallery
+        urls={images.length ? images.map((i) => imageUrl(i.path)) : [imageUrl(null)]}
+        thumbs={images.map((i) => thumbUrl(i.path))}
+        alt={l.title}
+      />
 
       <div className="space-y-4">
         <FlagBanner flaggedAt={flaggedAt} t={t} />
@@ -136,7 +142,12 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
           <h1 className="mt-1 text-xl font-bold">{l.title}</h1>
           <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin size={14} aria-hidden /> {where || "—"}
-            {catName && <span> · {catName}</span>}
+            {catName && l.categories && (
+              <>
+                {" · "}
+                <Link href={`/search?category=${l.categories.slug}`} className="font-medium text-brand hover:underline">{catName}</Link>
+              </>
+            )}
           </p>
         </div>
 
@@ -192,15 +203,28 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
           </section>
         )}
         {isOwner ? (
-          <Link href="/my/listings" className={buttonClass("outline", "lg", "w-full")}>
-            {t("listing.manage")}
-          </Link>
+          <div className="grid grid-cols-2 gap-2">
+            {l.status !== "removed" && (
+              <Link href={`/sell/edit/${l.id}`} className={buttonClass("accent", "lg", "w-full")}>
+                {t("my.edit")}
+              </Link>
+            )}
+            <Link href="/my/listings" className={buttonClass("outline", "lg", l.status === "removed" ? "col-span-2 w-full" : "w-full")}>
+              {t("listing.manage")}
+            </Link>
+          </div>
         ) : (
-          <form action={startConversation.bind(null, store.id, l.id)}>
-            <Button variant="accent" size="lg" className="w-full" disabled={l.status !== "active"}>
+          userId ? (
+            <form action={startConversation.bind(null, store.id, l.id)}>
+              <Button variant="accent" size="lg" className="w-full" disabled={l.status !== "active"}>
+                <MessageCircle size={20} aria-hidden /> {t("listing.message_seller")}
+              </Button>
+            </form>
+          ) : (
+            <SignInButton className={buttonClass("accent", "lg", "w-full")}>
               <MessageCircle size={20} aria-hidden /> {t("listing.message_seller")}
-            </Button>
-          </form>
+            </SignInButton>
+          )
         )}
 
         <div className="flex gap-2">
@@ -239,6 +263,7 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
                 <VerificationBadge level={store.verification_level} t={t} />
                 {years && <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-strong">{t("store.years", { n: years })}</span>}
                 <EarnedBadges codes={badges} t={t} />
+                <ApprovedBadges badges={ownerBadges.badges} yearsSince={ownerBadges.yearsSince} t={t} />
               </div>
               {trust && (trust.completed_orders > 0 || trust.review_count > 0) && (
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
@@ -254,15 +279,54 @@ async function ListingDetail({ params }: Pick<PageProps<"/listing/[id]">, "param
             </div>
             <FavoriteButton storeId={store.id} initialSaved={storeFav} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t("store.member_since", { date: new Date(store.created_at).toLocaleDateString("en-PH", { month: "short", year: "numeric" }) })}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <span className="space-y-0.5">
+              <FriendStats info={friend} t={t} />
+              <TxStats counts={sellerTx} t={t} className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground" />
+              <span className="block text-xs text-muted-foreground">
+                {t("store.member_since", { date: new Date(store.created_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", year: "numeric" }) })}
+              </span>
+            </span>
+            {!isOwner && <FriendButton targetUserId={store.owner_id} initialAdded={friend.added} signedIn={!!userId} size="sm" />}
+          </div>
+          <ProfileLinks links={sellerLinks} t={t} title className="mt-3" />
         </section>
 
         <div className="space-y-2 border-t border-border pt-3">
           <p className="rounded-xl bg-brand-soft p-3 text-xs text-brand-dark">{t("safety.tip")}</p>
           {!isOwner && <ReportButton targetType="listing" targetId={l.id} userId={userId} />}
         </div>
+      </div>
+
+      <div className="space-y-6 md:col-span-2">
+        <section aria-labelledby="item-reviews" className="space-y-3">
+          <h2 id="item-reviews" className="flex flex-wrap items-center gap-2 font-bold text-brand-dark">
+            {t("rate.item_title")}
+            {itemAvg != null && (
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground">
+                {itemAvg.toFixed(1)} <Stars value={itemAvg} size={14} /> ({reviewsList.length})
+              </span>
+            )}
+          </h2>
+          {reviewsList.length === 0 ? (
+            <p className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">{t("rate.item_empty")}</p>
+          ) : (
+            <ul className="grid gap-2 md:grid-cols-2">
+              {reviewsList.map((rv, i) => (
+                <li key={i} className="rounded-2xl border border-border bg-white p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">{rv.reviewer_name}</span>
+                    <time className="text-xs text-muted-foreground">{timeAgo(rv.created_at)}</time>
+                  </div>
+                  <Stars value={rv.rating} size={14} />
+                  {rv.comment && <p className="mt-1 whitespace-pre-line text-sm">{rv.comment}</p>}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-xs text-muted-foreground">{t("rate.only_buyers")}</p>
+        </section>
+        <CommentsSection supabase={supabase} kind="listing" targetId={l.id} ownerId={store.owner_id} me={userId} t={t} />
       </div>
     </article>
   );

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { moderateJobPost, setApplicationStatus, setPostStatus, withdrawApplication, type JobResult } from "@/app/actions/jobs";
+import { confirmHire, moderateJobPost, setApplicationStatus, setPostStatus, withdrawApplication, type JobResult } from "@/app/actions/jobs";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/client";
 import { EMPLOYER_STATUSES } from "@/lib/jobs";
@@ -66,6 +66,18 @@ export function WithdrawButton({ id }: { id: string }) {
   return (
     <span>
       <Button size="sm" variant="ghost" disabled={pending} onClick={() => { if (confirm(t("job.app.confirm_withdraw"))) run(() => withdrawApplication(id)); }}>{t("job.app.withdraw")}</Button>
+      {error && <span role="alert" className="ml-2 text-xs text-danger">{error}</span>}
+    </span>
+  );
+}
+
+export function ConfirmHireButton({ id }: { id: string }) {
+  const { t } = useT();
+  const { pending, error, run } = useRun();
+  return (
+    <span className="block space-y-1 rounded-xl border border-success/40 bg-success-soft p-3">
+      <span className="block text-sm text-success">{t("job.confirm.prompt")}</span>
+      <Button size="sm" disabled={pending} onClick={() => { if (confirm(t("job.confirm.sure"))) run(() => confirmHire(id)); }}>{t("job.confirm.button")}</Button>
       {error && <span role="alert" className="ml-2 text-xs text-danger">{error}</span>}
     </span>
   );

@@ -60,8 +60,8 @@ async function Checker({ searchParams }: Pick<PageProps<"/check">, "searchParams
               <ShieldAlert className="mt-0.5 shrink-0" aria-hidden />
               <div>
                 <p className="font-bold">{t("check.flagged", { label: r.label })}</p>
-                <p className="text-sm">{t("flag.body", { date: new Date(r.flagged_at).toLocaleDateString("en-PH", { month: "long", year: "numeric" }) })}</p>
-                <p className="mt-1 text-xs">{t("check.flag_expires", { date: new Date(r.expires_at).toLocaleDateString("en-PH", { month: "short", year: "numeric" }) })}</p>
+                <p className="text-sm">{t("flag.body", { date: new Date(r.flagged_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "long", year: "numeric" }) })}</p>
+                <p className="mt-1 text-xs">{t("check.flag_expires", { date: new Date(r.expires_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", year: "numeric" }) })}</p>
               </div>
             </div>
           ))}

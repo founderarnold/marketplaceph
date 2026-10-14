@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DocumentsManager } from "@/components/jobs/documents-manager";
@@ -8,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "My job profile" };
 
-export default async function JobProfilePage() {
+async function JobProfilePageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
@@ -32,5 +34,13 @@ export default async function JobProfilePage() {
       <JobProfileForm profile={profile as JobProfile | null} locations={locations} defaultName={me?.display_name ?? ""} />
       <DocumentsManager userId={userId} docs={docs ?? []} />
     </div>
+  );
+}
+
+export default function JobProfilePage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <JobProfilePageContent />
+    </Suspense>
   );
 }

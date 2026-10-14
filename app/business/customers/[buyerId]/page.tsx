@@ -46,7 +46,7 @@ async function Customer({ params }: Pick<PageProps<"/business/customers/[buyerId
           {[
             [t("crm.total_spent"), peso(c.total_spent)],
             [t("crm.orders"), String(c.orders_count)],
-            [t("crm.first"), new Date(c.first_order_at).toLocaleDateString("en-PH", { month: "short", year: "numeric" })],
+            [t("crm.first"), new Date(c.first_order_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", year: "numeric" })],
             [t("crm.last_order"), timeAgo(c.last_order_at)],
           ].map(([k, v]) => <div key={k} className="rounded-xl bg-muted p-2"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="font-bold">{v}</dd></div>)}
         </dl>

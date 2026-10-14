@@ -155,6 +155,15 @@ export async function withdrawApplication(id: string): Promise<JobResult> {
   return error ? { ok: false, error: friendly(error.message) } : { ok: true };
 }
 
+/** The applicant confirms the hiring the employer recorded: it then counts as a completed job transaction for both. */
+export async function confirmHire(id: string): Promise<JobResult> {
+  const { supabase } = await requireUser("/jobs/applications");
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: "invalid" };
+  const { error } = await supabase.rpc("confirm_hire", { p_app: id });
+  revalidatePath("/jobs/applications");
+  return error ? { ok: false, error: friendly(error.message) } : { ok: true };
+}
+
 export async function setApplicationStatus(id: string, status: string, note: string): Promise<JobResult> {
   const p = z.object({ id: z.uuid(), status: z.enum(EMPLOYER_STATUSES), note: z.string().max(500) }).safeParse({ id, status, note });
   if (!p.success) return { ok: false, error: "invalid" };

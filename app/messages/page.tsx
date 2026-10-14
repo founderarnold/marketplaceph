@@ -1,27 +1,35 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { imageUrl } from "@/lib/images";
 import { createClient } from "@/lib/supabase/server";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "Messages" };
 
-export default async function InboxPage() {
+async function InboxPageContent() {
   const { t } = await getT();
   const supabase = await createClient();
   const { data: claims } = await supabase.auth.getClaims();
   const me = claims?.claims?.sub as string;
 
+  // Name my conversations explicitly (as buyer, or as owner of my stores) so the database uses its indexes
+  // instead of checking every conversation on the site against the access rule.
+  const { data: myStores } = await supabase.from("stores").select("id").eq("owner_id", me);
+  const storeIds = (myStores ?? []).map((s) => s.id);
   const { data: convos } = await supabase
     .from("conversations")
     .select("id, buyer_id, last_message_at, stores!inner ( name, slug, logo_url, owner_id ), listings ( title )")
+    .or(storeIds.length ? `buyer_id.eq.${me},store_id.in.(${storeIds.join(",")})` : `buyer_id.eq.${me}`)
     .order("last_message_at", { ascending: false })
     .limit(50);
 
   const ids = (convos ?? []).map((c) => c.id);
   const { data: recent } = ids.length
-    ? await supabase.from("messages").select("conversation_id, sender_id, body, created_at, read_at").in("conversation_id", ids).order("created_at", { ascending: false }).limit(400)
+    ? await supabase.from("messages").select("conversation_id, sender_id, body, created_at, read_at, is_system, system_kind").in("conversation_id", ids).order("created_at", { ascending: false }).limit(400)
     : { data: [] };
 
   // Buyers' display names (public view; no phone/email exposed).
@@ -32,6 +40,7 @@ export default async function InboxPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="text-2xl font-extrabold text-brand-dark">{t("nav.messages")}</h1>
+      <ToolGuide toolKey="messages" t={t} open={(convos ?? []).length === 0} />
       {(convos ?? []).length === 0 ? (
         <p className="rounded-2xl bg-muted p-8 text-center text-muted-foreground">{t("chat.empty")}</p>
       ) : (
@@ -53,7 +62,7 @@ export default async function InboxPage() {
                       <time className="shrink-0 text-xs text-muted-foreground">{timeAgo(c.last_message_at)}</time>
                     </div>
                     {c.listings && <p className="truncate text-xs text-brand">{c.listings.title}</p>}
-                    <p className={`truncate text-sm ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{last?.body ?? "—"}</p>
+                    <p className={`truncate text-sm ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{last?.is_system && last.system_kind ? t(`sys.${last.system_kind}`) : (last?.body ?? "—")}</p>
                   </div>
                   {unread > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-brand-dark">{unread}</span>}
                 </Link>
@@ -63,5 +72,13 @@ export default async function InboxPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <InboxPageContent />
+    </Suspense>
   );
 }

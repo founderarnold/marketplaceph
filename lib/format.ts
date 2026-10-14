@@ -31,10 +31,13 @@ export function timeAgo(iso: string, now = Date.now()): string {
   if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24);
   if (d < 30) return `${d}d`;
-  return new Date(iso).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+  return new Date(iso).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" });
 }
 
 /** Current time in ms. Server components that run per request use this (keeps the purity lint rule quiet; they are not re-rendered). */
 export function nowMs() {
   return Date.now();
 }
+
+/** Today's date (YYYY-MM-DD) in the Philippines, regardless of the server's time zone. */
+export const todayPH = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });

@@ -204,6 +204,19 @@ The tree is defined in `scripts/build-taxonomy-migration.mjs` (run `node scripts
 3. In Vercel set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (server-only) `CRON_SECRET` (any long random string; protects the daily reminder job) and `FLAME_SYNC_SECRET` (24+ random characters shared with FLAME PH for membership sync).
 4. Create the first admin by setting `profiles.role = 'admin'` for your user in the SQL editor.
 
+## Google sign-in
+
+The sign-in popup and `/login` show **Continue with Google** only when `NEXT_PUBLIC_GOOGLE_LOGIN=true` **and** the Supabase project has the Google provider enabled (checked live via `/auth/v1/settings`, see `lib/auth-providers.ts`). Until then, people sign up with email (and phone, if enabled) and never see a broken Google button.
+
+1. **Google Cloud Console** → APIs & Services → OAuth consent screen: set it up (External, app name MarketplacePH, your support email, `marketplaceph.com` as an authorized domain) and publish it.
+2. Credentials → Create credentials → **OAuth client ID** → Web application. Authorized redirect URIs:
+   - Production: `https://<project-ref>.supabase.co/auth/v1/callback`
+   - Local: `http://127.0.0.1:54321/auth/v1/callback`
+3. **Production:** Supabase dashboard → Authentication → Sign In / Providers → Google → enable, paste the Client ID and Client secret. Under URL Configuration, set the Site URL to `https://marketplaceph.com` and add `https://marketplaceph.com/auth/callback` to the redirect URLs.
+4. **Local:** put `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=...` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=...` in `supabase/.env` (gitignored), set `enabled = true` under `[auth.external.google]` in `supabase/config.toml`, then `npm run db:stop && npm run db:start`.
+
+The button appears within a few minutes of enabling the provider (the provider check is cached briefly).
+
 ## Known limitations (Phase 1)
 
 - Phone OTP uses Supabase **test numbers** only; real SMS needs a provider.

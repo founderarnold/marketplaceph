@@ -1,7 +1,7 @@
 "use client";
 
 import { Construction, X } from "lucide-react";
-import Link from "next/link";
+import { SignInButton } from "@/components/auth/auth-modal";
 import { useSyncExternalStore } from "react";
 import { useT } from "@/lib/i18n/client";
 
@@ -42,9 +42,9 @@ export function AnnouncementBar({ signedIn }: { signedIn: boolean }) {
           <b>{t("announce.title")}</b> {t("announce.body")}
         </span>
         {!signedIn && (
-          <Link href="/login" className="rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-brand-dark hover:brightness-95">
+          <SignInButton mode="signup" className="rounded-full bg-accent px-3 py-0.5 text-xs font-bold text-brand-dark hover:brightness-95">
             {t("announce.cta")}
-          </Link>
+          </SignInButton>
         )}
       </p>
       <button

@@ -70,7 +70,7 @@ export async function Plans({ isAdmin }: { isAdmin: boolean }) {
             <li key={s.user_id} className={`${card} flex flex-wrap items-center gap-2`}>
               <span className="min-w-0 flex-1 font-semibold">{nm.get(s.user_id) ?? s.user_id.slice(0, 8)}</span>
               <Badge tone={live(s) ? "success" : "neutral"}>{live(s) ? tierByKey(s.plan).name : s.status}</Badge>
-              <span className="text-xs text-muted-foreground">{s.source === "flame" ? "FLAME sync · " : ""}{s.current_period_end ? new Date(s.current_period_end).toLocaleDateString("en-PH") : t("plan.no_end")}{s.note ? ` · ${s.note}` : ""}</span>
+              <span className="text-xs text-muted-foreground">{s.source === "flame" ? "FLAME sync · " : ""}{s.current_period_end ? new Date(s.current_period_end).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }) : t("plan.no_end")}{s.note ? ` · ${s.note}` : ""}</span>
               {isAdmin && (
                 <>
                   <form action={grantPlan.bind(null, s.user_id)} className="flex gap-1">

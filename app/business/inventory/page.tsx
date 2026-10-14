@@ -1,13 +1,16 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import type { Metadata } from "next";
 import { NoStore } from "@/components/business/pro-note";
 import { StockRow } from "@/components/business/forms";
 import { businessContext } from "@/lib/business";
 import { timeAgo } from "@/lib/format";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "Inventory" };
 
-export default async function InventoryPage() {
+async function InventoryPageContent() {
   const { supabase, store, t } = await businessContext();
   if (!store) return <NoStore t={t} />;
 
@@ -31,6 +34,7 @@ export default async function InventoryPage() {
         <h1 className="text-2xl font-extrabold text-brand-dark">{t("biz.nav.inventory")}</h1>
         <p className="text-sm text-muted-foreground">{t("inv.intro")}</p>
       </div>
+      <ToolGuide toolKey="inventory" t={t} />
       {low.length > 0 && (
         <p className="flex items-center gap-2 rounded-2xl bg-danger-soft p-3 font-semibold text-danger" role="alert">
           <AlertTriangle size={18} aria-hidden /> {t("inv.low_banner", { n: low.length })}
@@ -57,5 +61,13 @@ export default async function InventoryPage() {
         </details>
       )}
     </div>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <InventoryPageContent />
+    </Suspense>
   );
 }

@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SupplierForm } from "@/components/business/forms";
@@ -9,7 +11,7 @@ import { timeAgo } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Suppliers" };
 
-export default async function SuppliersPage() {
+async function SuppliersPageContent() {
   const { supabase, t } = await businessContext();
   const { data } = await supabase.rpc("supplier_list");
   const list = data ?? [];
@@ -50,5 +52,13 @@ export default async function SuppliersPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function SuppliersPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <SuppliersPageContent />
+    </Suspense>
   );
 }

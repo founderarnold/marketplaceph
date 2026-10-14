@@ -170,6 +170,56 @@ export async function setListingVisibility(listingId: string, status: "active" |
   return { ok: !error };
 }
 
+/** Edit an existing listing: same rules as posting. Photos and price tiers are replaced as a whole. */
+export async function updateListing(listingId: string, input: ListingInput): Promise<{ error?: string }> {
+  const { supabase, userId } = await requireUser();
+  const parsed = listingSchema.safeParse(input);
+  if (!idSchema.safeParse(listingId).success || !parsed.success) return { error: "invalid" };
+  const v = parsed.data;
+  // New photos must come from the caller's own upload folder; photos the listing already has may be kept as they are.
+  const { data: current } = await supabase.from("listing_images").select("path").eq("listing_id", listingId);
+  const kept = new Set((current ?? []).map((i) => i.path));
+  if (v.images.some((p) => !p.startsWith(`${userId}/`) && !kept.has(p))) return { error: "invalid" };
+
+  // RLS limits updates to the owner; the select makes "not yours / not found" an explicit error instead of a silent no-op.
+  const { data: updated, error } = await supabase
+    .from("listings")
+    .update({
+      category_id: v.category_id,
+      kind: v.kind,
+      title: v.title,
+      description: v.description,
+      price_type: v.price_type,
+      price_min: v.price_type === "message" ? null : v.price_min,
+      price_max: v.price_type === "range" ? v.price_max : null,
+      unit: v.unit,
+      moq: v.moq,
+      stock_status: v.stock_status,
+      condition: v.condition,
+      quantity_on_hand: v.quantity_on_hand,
+      region_code: v.region_code,
+      province_code: v.province_code,
+      city_code: v.city_code,
+    })
+    .eq("id", listingId)
+    .neq("status", "removed")
+    .select("id");
+  if (error) return { error: error.message.includes("cannot be listed") ? error.message : "failed" };
+  if (!updated?.length) return { error: "failed" };
+
+  const del = await supabase.from("listing_images").delete().eq("listing_id", listingId);
+  const ins = del.error ? del : await supabase.from("listing_images").insert(v.images.map((path, position) => ({ listing_id: listingId, path, position })));
+  await supabase.from("listing_price_tiers").delete().eq("listing_id", listingId);
+  if (v.tiers.length) {
+    await supabase.from("listing_price_tiers").insert(v.tiers.map((t) => ({ listing_id: listingId, min_qty: t.min_qty, unit_price: t.unit_price })));
+  }
+  if (ins.error) return { error: "failed" };
+  revalidateTag("listings", "max");
+  revalidateTag(`listing-${listingId}`, "max");
+  revalidatePath("/my/listings");
+  redirect(`/listing/${listingId}`);
+}
+
 export async function deleteListing(listingId: string) {
   const { supabase } = await requireUser();
   if (!idSchema.safeParse(listingId).success) return { ok: false };

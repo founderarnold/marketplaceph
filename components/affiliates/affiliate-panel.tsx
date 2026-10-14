@@ -1,5 +1,6 @@
 import { Megaphone } from "lucide-react";
 import Link from "next/link";
+import { SignInButton } from "@/components/auth/auth-modal";
 import { CopyLink, RequestAffiliateButton } from "@/components/affiliates/affiliate-forms";
 import { affiliateUrl } from "@/lib/affiliate";
 import { getT } from "@/lib/i18n/server";
@@ -26,7 +27,7 @@ export async function AffiliatePanel({ listingId, pct, userId, isOwner }: { list
       {isOwner ? (
         <Link href="/business/affiliates" className="text-sm font-semibold text-brand underline">{t("aff.manage")}</Link>
       ) : !userId ? (
-        <Link href={`/login?next=/listing/${listingId}`} className="text-sm font-semibold text-brand underline">{t("aff.login_to_promote")}</Link>
+        <SignInButton className="text-sm font-semibold text-brand underline">{t("aff.login_to_promote")}</SignInButton>
       ) : !link || link.status === "revoked" ? (
         <RequestAffiliateButton listingId={listingId} pct={pct} />
       ) : link.status === "pending" ? (

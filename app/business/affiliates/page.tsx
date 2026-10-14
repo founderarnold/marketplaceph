@@ -1,3 +1,5 @@
+import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyLink, DecideButtons, PaidButton, RevokeButton } from "@/components/affiliates/affiliate-forms";
@@ -5,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { affiliateUrl } from "@/lib/affiliate";
 import { businessContext, peso } from "@/lib/business";
 import { timeAgo } from "@/lib/format";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "Affiliates" };
 
 const card = "rounded-2xl border border-border bg-white p-3 text-sm";
 const tone = (s: string) => (s === "approved" || s === "paid" ? "success" : s === "pending" || s === "earned" ? "accent" : "neutral") as "success" | "accent" | "neutral";
 
-export default async function AffiliatesPage() {
+async function AffiliatesPageContent() {
   const { supabase, userId, tier, t } = await businessContext();
   const [{ data: mine }, { data: quota }, { data: incoming }, { data: commissions }] = await Promise.all([
     supabase.rpc("affiliate_dashboard"),
@@ -47,6 +50,7 @@ export default async function AffiliatesPage() {
         <h1 className="text-2xl font-extrabold text-brand-dark">{t("aff.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("aff.intro")}</p>
       </div>
+      <ToolGuide toolKey="affiliates" t={t} />
 
       {/* ───── As an affiliate ───── */}
       <section className="space-y-3" aria-labelledby="mine-h">
@@ -135,5 +139,13 @@ export default async function AffiliatesPage() {
         </ul>
       </section>
     </div>
+  );
+}
+
+export default function AffiliatesPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <AffiliatesPageContent />
+    </Suspense>
   );
 }

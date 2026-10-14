@@ -6,6 +6,7 @@ import { ProBadge, ProNote } from "@/components/business/pro-note";
 import { ExportButtons, RangePicker, StatGrid } from "@/components/business/ui";
 import { businessContext, daysAgoIso, isoDay, peso } from "@/lib/business";
 import { parseRange } from "@/lib/export";
+import { ToolGuide } from "@/components/sell/tool-guide";
 
 export const metadata: Metadata = { title: "Finance" };
 
@@ -56,6 +57,7 @@ async function Finance({ searchParams }: Pick<PageProps<"/business/finance">, "s
         <h1 className="text-2xl font-extrabold text-brand-dark">{t("biz.nav.finance")}</h1>
         <p className="flex gap-2 rounded-2xl bg-brand-soft p-3 text-sm text-brand-dark"><Info size={18} className="mt-0.5 shrink-0" aria-hidden /> {t("fin.disclaimer")}</p>
       </div>
+      <ToolGuide toolKey="expenses" t={t} />
       <RangePicker base="/business/finance" from={from} to={to} presets={presets} t={t} />
       {locked && <ProNote t={t} need="long_ranges" feature={t("rep.long_locked")} />}
 
@@ -72,11 +74,12 @@ async function Finance({ searchParams }: Pick<PageProps<"/business/finance">, "s
         <EntryForm kind="expense" categories={EXPENSE_CATS} />
       </div>
 
-      <section className="space-y-3" aria-labelledby="pl-h">
+      <section id="pl" className="scroll-mt-32 space-y-3" aria-labelledby="pl-h">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 id="pl-h" className="flex items-center gap-2 text-lg font-bold text-brand-dark">{t("fin.pl")} <ProBadge t={t} need="finance_pl" /></h2>
           <ExportButtons kind="finance" from={from} to={to} rank={rank} t={t} />
         </div>
+        <ToolGuide toolKey="pl" t={t} />
         {plOk ? (
           <div className="grid gap-3 md:grid-cols-2">
             {[
@@ -98,7 +101,7 @@ async function Finance({ searchParams }: Pick<PageProps<"/business/finance">, "s
         )}
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2" aria-labelledby="ent-h">
+      <section id="expenses" className="grid scroll-mt-32 gap-4 md:grid-cols-2" aria-labelledby="ent-h">
         <h2 id="ent-h" className="sr-only">{t("fin.entries")}</h2>
         {([["income", inc.data ?? [], t("fin.income")], ["expense", exp.data ?? [], t("fin.expenses")]] as const).map(([kind, rows, title]) => (
           <div key={kind} className="space-y-2">
@@ -107,7 +110,7 @@ async function Finance({ searchParams }: Pick<PageProps<"/business/finance">, "s
               <ul className="space-y-1.5">
                 {rows.map((r) => (
                   <li key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-sm">
-                    <span className="min-w-0 flex-1"><b>{r.category}</b> · {new Date(r.entry_date).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}{"vendor" in r && r.vendor ? ` · ${r.vendor}` : ""}{r.note ? <span className="block truncate text-muted-foreground">{r.note}</span> : null}</span>
+                    <span className="min-w-0 flex-1"><b>{r.category}</b> · {new Date(r.entry_date).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", day: "numeric" })}{"vendor" in r && r.vendor ? ` · ${r.vendor}` : ""}{r.note ? <span className="block truncate text-muted-foreground">{r.note}</span> : null}</span>
                     <b>{peso(r.amount)}</b>
                     <EntryDelete kind={kind} id={r.id} />
                   </li>

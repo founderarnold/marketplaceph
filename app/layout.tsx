@@ -1,13 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Suspense } from "react";
+import { AuthModal } from "@/components/auth/auth-modal";
+import { getAuthProviders } from "@/lib/auth-providers";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { Footer, Header } from "@/components/layout/header";
 import { RegisterSW } from "@/components/layout/register-sw";
+import { SiteChrome } from "@/components/layout/site-chrome";
 import { LocaleProvider } from "@/lib/i18n/client";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { isStaff as isStaffRole } from "@/lib/roles";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], display: "swap" });
@@ -38,25 +42,27 @@ async function Shell({ children }: { children: React.ReactNode }) {
   const { locale, t } = await getT();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  const unread = data?.claims
-    ? ((await supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null)).count ?? 0)
-    : 0;
-  const cartCount = data?.claims ? ((await supabase.from("cart_items").select("id", { count: "exact", head: true })).count ?? 0) : 0;
-  const me = data?.claims?.sub as string | undefined;
-  const msgUnread = me
-    ? ((await supabase.from("messages").select("id", { count: "exact", head: true }).is("read_at", null).neq("sender_id", me)).count ?? 0) +
-      ((await supabase.from("job_messages").select("id", { count: "exact", head: true }).is("read_at", null).neq("sender_id", me)).count ?? 0)
-    : 0;
-  const role = data?.claims ? (await supabase.from("profiles").select("role").eq("id", data.claims.sub as string).maybeSingle()).data?.role : null;
-  const isStaff = role === "admin" || role === "moderator";
+  // All header badges, role and plan tier in ONE indexed database call (see migration 20261017000001).
+  const counts = data?.claims ? (await supabase.rpc("my_header_counts")).data?.[0] : undefined;
+  const unread = counts?.notifications ?? 0;
+  const cartCount = counts?.cart ?? 0;
+  const msgUnread = counts?.messages ?? 0;
+  const staff = isStaffRole(counts?.role);
+  // Membership tier rank, so the Sell menu can mark which paid tools are still locked (null = signed out).
+  const rank = data?.claims ? (counts?.tier ?? 0) : null;
   return (
     <LocaleProvider locale={locale}>
-      <Header signedIn={!!data?.claims} unread={unread} cartCount={cartCount} isStaff={isStaff} msgUnread={msgUnread} t={t} />
+      <SiteChrome>
+        <Header signedIn={!!data?.claims} unread={unread} cartCount={cartCount} isStaff={staff} msgUnread={msgUnread} rank={rank} t={t} />
+      </SiteChrome>
       {/* min-height keeps the footer below the fold while page content streams in (prevents layout shift) */}
       <main className="mx-auto min-h-[85svh] w-full max-w-6xl flex-1 px-4 py-4 pb-24 md:pb-8">{children}</main>
-      <Footer t={t} />
-      <AnnouncementBar signedIn={!!data?.claims} />
-      <BottomNav unread={msgUnread} />
+      <SiteChrome>
+        <Footer t={t} />
+        <AnnouncementBar signedIn={!!data?.claims} />
+        <BottomNav unread={msgUnread} />
+      </SiteChrome>
+      {!data?.claims && <AuthModal providers={await getAuthProviders()} />}
       <RegisterSW />
     </LocaleProvider>
   );
@@ -65,7 +71,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
 function ShellFallback() {
   return (
     <>
-      <div className="h-[104px] border-b border-border bg-white md:h-[62px]" aria-hidden />
+      <div className="h-[160px] border-b border-border bg-white md:h-[108px]" aria-hidden />
       <div className="mx-auto min-h-[85svh] w-full max-w-6xl flex-1 px-4 py-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (

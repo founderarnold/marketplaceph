@@ -175,10 +175,23 @@ from src
 join public.stores s on s.id = ('10000000-0000-4000-8000-' || lpad(src.store_n::text, 12, '0'))::uuid
 join public.categories c on c.slug = src.cat;
 
--- Placeholder images (served from /public/seed). Real sellers upload to storage.
+-- Placeholder images (served from /public/seed), chosen by the listing's major category. Real sellers upload to storage.
 insert into public.listing_images (listing_id, path, position)
-select l.id, '/seed/' || c.slug || '.svg', 0
-from public.listings l join public.categories c on c.id = l.category_id;
+select l.id, '/seed/' || (select case
+      when s like 'food%' then 'food-beverage'
+      when s like 'fashion%' then 'fashion-apparel'
+      when s like 'agri%' then 'agriculture'
+      when s like 'construction%' then 'construction-hardware'
+      when s like 'gift%' or s like 'craft%' then 'crafts-gifts'
+      when s like 'mobile%' or s like 'electronic%' or s like 'computer%' then 'electronics'
+      when s like 'packaging%' then 'packaging-printing'
+      when s like 'health%' or s like 'beauty%' then 'health-beauty'
+      when s like 'home%' or s like 'furniture%' then 'home-living'
+      when s like 'school%' or s like 'office%' then 'school-office'
+      when s like 'auto%' or s like 'vehicle%' then 'auto-motor'
+      when s like 'advertising%' or s like '%service%' then 'services'
+      else 'placeholder' end from (select coalesce(p.slug, c.slug) as s) x) || '.svg', 0
+from public.listings l join public.categories c on c.id = l.category_id left join public.categories p on p.id = c.parent_id;
 
 -- Wholesale tiers for a few listings
 insert into public.listing_price_tiers (listing_id, min_qty, unit_price)

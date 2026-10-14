@@ -479,3 +479,32 @@ describe("reminders", () => {
     expect((await (await as("seller3@marketplaceph.test")).from("sms_outbox").select("id")).data).toEqual([]);
   });
 });
+
+/* ───────── Staff daily time record ───────── */
+describe("staff DTR", () => {
+  afterAll(async () => {
+    if (!reachable) return;
+    await svc().from("staff_members").delete().in("owner_id", [ids.seller1, ids.seller2]);
+  });
+
+  guarded("needs FLAME Starter to add staff or log time", async () => {
+    const free = await as("seller1@marketplaceph.test"); // Apprentice
+    const { error } = await free.from("staff_members").insert({ owner_id: ids.seller1, name: "Juan Dela Cruz" });
+    expect(error?.code).toBe("P0003");
+  });
+
+  guarded("owners log time for their own staff only; one open log per person", async () => {
+    const pro = await as("seller2@marketplaceph.test"); // Pro
+    const { data: m, error } = await pro.from("staff_members").insert({ owner_id: ids.seller2, name: "Maria Santos", shift_start: "08:00" }).select("id").single();
+    expect(error).toBeNull();
+    const now = new Date().toISOString();
+    expect((await pro.from("staff_time_logs").insert({ owner_id: ids.seller2, staff_id: m!.id, work_date: today(), time_in: now })).error).toBeNull();
+    // a second open log for the same person is refused
+    expect((await pro.from("staff_time_logs").insert({ owner_id: ids.seller2, staff_id: m!.id, work_date: today(), time_in: now })).error).not.toBeNull();
+
+    // other users can't see or use this staff list
+    const buyer = await as("buyer@marketplaceph.test"); // Micro: has the tier, but not the owner
+    expect((await buyer.from("staff_members").select("id").eq("id", m!.id)).data).toEqual([]);
+    expect((await buyer.from("staff_time_logs").insert({ owner_id: ids.buyer, staff_id: m!.id, work_date: today(), time_in: now })).error).not.toBeNull();
+  });
+});

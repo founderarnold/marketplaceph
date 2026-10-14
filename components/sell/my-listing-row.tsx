@@ -78,6 +78,9 @@ export function MyListingRow({ l }: { l: MyListing }) {
               onBlur={() => start(async () => void (await updateListingStock(l.id, stock, qty === "" ? null : Number(qty))))}
               className="h-10 w-24 rounded-xl border border-border px-2 text-sm"
             />
+            <Link href={`/sell/edit/${l.id}`} className="inline-flex min-h-10 items-center rounded-xl bg-brand px-3 text-sm font-semibold text-white hover:bg-brand-dark">
+              {t("my.edit")}
+            </Link>
             <button
               type="button"
               disabled={pending}

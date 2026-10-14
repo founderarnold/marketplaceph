@@ -1,5 +1,10 @@
-import { Calendar, FileText, Globe, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Calendar, FileText, MapPin, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
+import { SignInButton } from "@/components/auth/auth-modal";
+import { FriendButton } from "@/components/social/friend-button";
+import { loadProfileLinks, ProfileLinks } from "@/components/social/profile-links";
+import { ApprovedBadges, FriendStats, TxStats } from "@/components/social/social-ui";
+import { loadFriendInfo, loadTxCounts, loadUserBadges } from "@/lib/social-data";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
@@ -84,6 +89,12 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
     const { data } = await supabase.from("favorites").select("id").eq("user_id", userId).eq("store_id", store.id).maybeSingle();
     saved = !!data;
   }
+  const [friend, ownerBadges, ownerLinks] = await Promise.all([
+    loadFriendInfo(supabase, store.owner_id, userId),
+    loadUserBadges(supabase, store.owner_id, store.year_started),
+    loadProfileLinks(supabase, store.owner_id),
+  ]);
+  const tx = await loadTxCounts(supabase, store.owner_id);
 
   const all = listings ?? [];
   const inStock = all.filter((l) => l.stock_status !== "out_of_stock");
@@ -111,6 +122,7 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
               {years && <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-strong">{t("store.years", { n: years })}</span>}
               {featured && <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">★ {t("store.featured")}</span>}
               <EarnedBadges codes={badges} t={t} />
+              <ApprovedBadges badges={ownerBadges.badges} yearsSince={ownerBadges.yearsSince} t={t} />
             </div>
           </div>
         </div>
@@ -121,40 +133,49 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
           </li>
           <li className="flex items-center gap-2">
             <Calendar size={16} aria-hidden />
-            {t("store.member_since", { date: new Date(store.created_at).toLocaleDateString("en-PH", { month: "short", year: "numeric" }) })}
+            {t("store.member_since", { date: new Date(store.created_at).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", month: "short", year: "numeric" }) })}
           </li>
           {store.contact_phone && (
             <li className="flex items-center gap-2">
-              <Phone size={16} aria-hidden /> {store.contact_phone}
-            </li>
-          )}
-          {store.website_url && (
-            <li className="flex items-center gap-2">
-              <Globe size={16} aria-hidden />
-              <a href={store.website_url} rel="noopener noreferrer nofollow" target="_blank" className="underline">
-                {t("store.website")}
-              </a>
-            </li>
-          )}
-          {store.facebook_url && (
-            <li className="flex items-center gap-2">
-              <Globe size={16} aria-hidden />
-              <a href={store.facebook_url} rel="noopener noreferrer nofollow" target="_blank" className="underline">
-                {t("store.facebook")}
-              </a>
+              <Phone size={16} aria-hidden />
+              <a href={`tel:${store.contact_phone.replace(/[^d+]/g, "")}`} className="font-medium text-brand underline">{store.contact_phone}</a>
             </li>
           )}
         </ul>
+        {/* The owner's social & contact links, plus the store's own Facebook / website (shown once even if both list it). */}
+        <ProfileLinks
+          links={ownerLinks}
+          extra={[
+            ...(store.facebook_url ? [{ kind: "facebook_page", value: store.facebook_url, label: null }] : []),
+            ...(store.website_url ? [{ kind: "website", value: store.website_url, label: null }] : []),
+          ]}
+          t={t}
+          title
+          className="mt-3"
+        />
         {store.description && <p className="mt-3 whitespace-pre-line text-sm">{store.description}</p>}
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {userId !== store.owner_id && (
+          {userId === store.owner_id && (
+            <>
+              <Link href="/my/store" className={buttonClass("primary", "md", "h-11")}>{t("store.edit_link")}</Link>
+              <Link href="/sell/new" className={buttonClass("accent", "md", "h-11")}>{t("nav.post_free")}</Link>
+              <Link href="/my/listings" className={buttonClass("outline", "md", "h-11")}>{t("my.title")}</Link>
+            </>
+          )}
+          {userId && userId !== store.owner_id && (
             <form action={startConversation.bind(null, store.id, null)}>
               <button className={buttonClass("accent", "md", "h-11 gap-2")}>
                 <MessageCircle size={20} aria-hidden /> {t("store.message")}
               </button>
             </form>
           )}
+          {!userId && (
+            <SignInButton className={buttonClass("accent", "md", "h-11 gap-2")}>
+              <MessageCircle size={20} aria-hidden /> {t("store.message")}
+            </SignInButton>
+          )}
+          {userId !== store.owner_id && <FriendButton targetUserId={store.owner_id} initialAdded={friend.added} signedIn={!!userId} />}
           {userId !== store.owner_id && <FavoriteButton storeId={store.id} initialSaved={saved} label />}
           <ShareButton title={store.name} />
           <Link href={`/store/${store.slug}/sheet`} className="btn inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 font-semibold">
@@ -164,6 +185,7 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
         <p className="mt-3 rounded-xl bg-brand-soft p-3 text-xs text-brand-dark">{t("store.trust_note")}</p>
       </header>
 
+      <p className="-mt-3 flex flex-wrap gap-x-4 gap-y-1 px-1"><FriendStats info={friend} t={t} /><TxStats counts={tx} t={t} /></p>
       <StoreTrustCard trust={trust} t={t} />
 
       <section aria-labelledby="instock">

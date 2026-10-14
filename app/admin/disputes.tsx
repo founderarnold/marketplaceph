@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 const card = "rounded-2xl border border-border bg-white p-3 text-sm";
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : "—");
+const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }) : "—");
 
 /** Admin → Disputes: mediate order disputes. Files open only through logged, 60-second signed links. */
 export async function Disputes({ isAdmin }: { isAdmin: boolean }) {
