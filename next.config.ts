@@ -21,7 +21,7 @@ const csp = [
   // profile pictures (e.g. Google) can point elsewhere, and images can't run code. Scripts stay locked down above.
   `img-src 'self' data: blob: https: ${supabase.origin}`,
   "font-src 'self'",
-  `connect-src 'self' ${supabase.origin} ${supabaseWs}`,
+  `connect-src 'self' ${supabase.origin} ${supabaseWs} https://api.ads.flameph.org`,
   "worker-src 'self'",
   "manifest-src 'self'",
   "object-src 'none'",

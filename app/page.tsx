@@ -16,6 +16,7 @@ import { FeaturedMembers } from "@/components/home/featured-members";
 import { imageUrl } from "@/lib/images";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { FlameAdSlot } from "@/components/ads/flame-ad-slot";
 
 // Soft tile backgrounds for the category cards, cycled so neighbouring tiles differ.
 const TINTS = ["bg-brand-soft text-brand", "bg-accent-soft text-accent-strong", "bg-success-soft text-success", "bg-[#f3e8ff] text-[#6d28d9]"];
@@ -45,6 +46,8 @@ async function HomeContent() {
         </h1>
         <HeroSearch popular={popular} />
       </section>
+
+      <FlameAdSlot slot="HOME_AFTER_HERO" className="-mt-4" />
 
       {/* ── 2. Welcome strip with the trust shortcuts ── */}
       <section aria-label={t("home.welcome")} className="-mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">

@@ -4,6 +4,7 @@ import { CategoryDirectory } from "@/components/listing/category-directory";
 import { CATEGORY_TABS, buildTree, type CategoryTab } from "@/lib/categories";
 import { getCategories } from "@/lib/data";
 import { getT } from "@/lib/i18n/server";
+import { FlameAdSlot } from "@/components/ads/flame-ad-slot";
 
 export const metadata: Metadata = {
   title: "All categories",
@@ -29,6 +30,7 @@ async function Directory({ searchParams }: Pick<PageProps<"/categories">, "searc
         <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{t("cat.page_title")}</h1>
         <p className="text-muted-foreground">{t("cat.page_sub")}</p>
       </header>
+      <FlameAdSlot slot="CATEGORY_TOP" category={tab || "all-categories"} />
       <CategoryDirectory majors={majors} locale={locale} initialTab={(CATEGORY_TABS as readonly string[]).includes(tab ?? "") ? (tab as CategoryTab) : "all"} />
     </div>
   );

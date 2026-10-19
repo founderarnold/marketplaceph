@@ -10,6 +10,7 @@ import { LISTING_CARD_SELECT, type ListingCardData } from "@/lib/domain";
 import { getT } from "@/lib/i18n/server";
 import { applyFilters, PAGE_SIZE, parseSearchParams } from "@/lib/search";
 import { createClient } from "@/lib/supabase/server";
+import { FlameAdSlot } from "@/components/ads/flame-ad-slot";
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -84,6 +85,7 @@ async function Results({ searchParams }: Pick<PageProps<"/search">, "searchParam
         </nav>
       )}
       <SearchFiltersForm filters={filters} categories={categories} locations={locations} />
+      <FlameAdSlot slot="SEARCH_TOP" category={filters.category ?? undefined} region={filters.region ?? undefined} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground" aria-live="polite">
           {t("search.count", { n: total })}

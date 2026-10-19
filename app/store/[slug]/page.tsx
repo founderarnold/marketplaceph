@@ -22,6 +22,7 @@ import { FEATURE_MIN_RANK } from "@/lib/plans";
 import { getT } from "@/lib/i18n/server";
 import { imageUrl } from "@/lib/images";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { FlameAdSlot } from "@/components/ads/flame-ad-slot";
 
 async function getStoreMeta(slug: string) {
   "use cache";
@@ -186,6 +187,7 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
       </header>
 
       <p className="-mt-3 flex flex-wrap gap-x-4 gap-y-1 px-1"><FriendStats info={friend} t={t} /><TxStats counts={tx} t={t} /></p>
+      <FlameAdSlot slot="BUSINESS_PROFILE" region={store.psgc_regions?.short_name?.toLowerCase().replace(/[^a-z0-9]+/g,"-")} />
       <StoreTrustCard trust={trust} t={t} />
 
       <section aria-labelledby="instock">
