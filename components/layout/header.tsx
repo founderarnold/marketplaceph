@@ -31,7 +31,7 @@ export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, m
     { href: "/check", label: t("nav.check") },
   ];
   return (
-    <header className="sticky top-0 z-30 bg-white shadow-sm">
+    <header className="sticky top-0 z-30 overflow-x-clip bg-white shadow-sm">
       <div className="mx-auto flex max-w-6xl items-center gap-1 px-2 py-2 sm:gap-2 md:gap-4 md:px-4">
         <MobileMenu signedIn={signedIn} />
         <Link href="/" aria-label="MarketplacePH" className="shrink-0">
