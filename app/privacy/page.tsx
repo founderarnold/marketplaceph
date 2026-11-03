@@ -48,7 +48,7 @@ export default function PrivacyPage() {
       <ul className={ul}>
         <li><b>Everyone:</b> what you publish on purpose: your store page, listings, reviews and public job posts.</li>
         <li><b>The other person in a deal:</b> a buyer and seller see each other’s chat, order and delivery details; an employer sees the job documents you choose to share when you apply.</li>
-        <li><b>Our service providers</b>, only to run the site: Supabase (database, storage and sign-in), Vercel (website hosting) and Google (if you use “Continue with Google”). They are bound to protect your data.</li>
+        <li><b>Our service providers</b>, only to run the site: Supabase (database, storage and sign-in), Vercel (website hosting) Google (if you use “Continue with Google”) and Meta/Facebook (if you use “Continue with Facebook”; only your name and email). They are bound to protect your data.</li>
         <li><b>Authorities</b>, when the law requires it.</li>
       </ul>
 

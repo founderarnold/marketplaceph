@@ -209,6 +209,7 @@
   "auth.check_email": "Check your email to confirm your account.",
   "auth.or": "or",
   "auth.google": "Continue with Google",
+  "auth.facebook": "Continue with Facebook",
   "auth.google_unavailable": "Google sign-in isn't set up yet.",
   "auth.privacy": "By continuing you agree to our terms. We only collect what we need (Data Privacy Act RA 10173).",
   "account.display_name": "Display name",

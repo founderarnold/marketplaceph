@@ -11,6 +11,7 @@ import type { AuthProviders } from "@/lib/auth-providers";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { FacebookButton } from "./facebook-button";
 
 
 const OPEN_EVENT = "mph-auth-open";
@@ -180,6 +181,7 @@ export function AuthModal({ providers }: { providers: AuthProviders }) {
 
           {step === "start" ? (
             <>
+              <FacebookButton next={next} />
               {GOOGLE_LOGIN && (
                 <Button type="button" variant="outline" className="w-full border-slate-300" onClick={google} disabled={pending}>
                   <GoogleMark /> {t("auth.google")}
@@ -190,11 +192,9 @@ export function AuthModal({ providers }: { providers: AuthProviders }) {
                   <Smartphone size={18} className="text-brand" aria-hidden /> {t("auth.phone_continue")}
                 </Link>
               )}
-              {(GOOGLE_LOGIN || PHONE_LOGIN) && (
-                <div className="flex items-center gap-3 text-xs uppercase text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
-                </div>
-              )}
+              <div className="flex items-center gap-3 text-xs uppercase text-muted-foreground">
+                <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
+              </div>
               <form
                 className="space-y-3"
                 onSubmit={(e) => {

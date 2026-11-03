@@ -209,6 +209,7 @@
   "auth.check_email": "Tingnan ang email mo para kumpirmahin ang account.",
   "auth.or": "o",
   "auth.google": "Magpatuloy gamit ang Google",
+  "auth.facebook": "Magpatuloy gamit ang Facebook",
   "auth.google_unavailable": "Hindi pa naka-set up ang Google sign-in.",
   "auth.privacy": "Sa pagpapatuloy, sumasang-ayon ka sa aming terms. Kinukuha lang namin ang kailangan (Data Privacy Act RA 10173).",
   "account.display_name": "Pangalan",

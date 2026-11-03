@@ -9,6 +9,7 @@ import { normalizePhonePH, safeNext } from "@/lib/phone";
 import type { AuthProviders } from "@/lib/auth-providers";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase/client";
+import { FacebookButton } from "./facebook-button";
 import { cn } from "@/lib/utils";
 
 type Mode = "phone" | "email";
@@ -223,15 +224,14 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
         </p>
       )}
 
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
+      </div>
+      <FacebookButton next={next} />
       {GOOGLE_LOGIN && (
-        <>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
-          </div>
-          <Button type="button" variant="outline" className="w-full" onClick={google} disabled={pending}>
-            {t("auth.google")}
-          </Button>
-        </>
+        <Button type="button" variant="outline" className="w-full" onClick={google} disabled={pending}>
+          {t("auth.google")}
+        </Button>
       )}
       <p className="text-xs text-muted-foreground">{t("auth.privacy")}</p>
     </div>
