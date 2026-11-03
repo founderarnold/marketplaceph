@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     images: [{ url: "/brand/logo-wordmark.webp", width: 720, height: 329, alt: "MarketplacePH Online Store" }],
   },
   twitter: { card: "summary_large_image" },
+  other: { "facebook-domain-verification": "hlfdj81u1zrmojcc7aoshqsys0hwzl" },
 };
 
 export const viewport: Viewport = { themeColor: "#0b4fd1", width: "device-width", initialScale: 1 };
