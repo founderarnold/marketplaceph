@@ -163,6 +163,7 @@ export function Footer({ t }: { t: TFunction }) {
           <p className="font-semibold text-brand-dark">{t("brand.tagline")}</p>
           <p className="text-xs">{t("footer.disclaimer")}</p>
           <p className="text-xs">© MarketplacePH · FLAME PH MSME Ecosystem</p>
+          <p className="text-xs">Operated by Marketplaceph Online Store</p>
         </div>
       </div>
     </footer>
