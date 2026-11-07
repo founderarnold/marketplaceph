@@ -1,5 +1,12 @@
 # Changelog
 
+## UX overhaul (branch ux-overhaul)
+
+### Added
+- **Business Home** for signed-in members at `/`: shortcuts rail, post box, quick actions, feed chips (`?feed=network|products|requests|jobs`), "Today" panel and setup checklist. Uses existing data only; visitors still see the public homepage.
+- **Buy menu** in the header; the browse bar is now All categories, Jobs, Buy, Sell, Delivery, Check seller. "Looking for" is now "Buyer requests". Updates moved to the footer and the Business Home.
+- `/login?mode=signup` opens Create account; the login page shows Facebook and Google first, then phone/email. Sign-in logic, Facebook (via flameph.org), Google and the one FLAME PH account are unchanged.
+
 ## [Unreleased] - Category architecture
 
 - 30 major Buy/Sell categories with about 670 sub-categories in four tabs (Shop Products, Find Suppliers, Find Services, Negosyo Opportunities); home explorer, /categories directory with search, breadcrumbs and sub-category chips in search, grouped category pickers when posting and filtering.

@@ -1,9 +1,10 @@
-import { Bell, Bike, BriefcaseBusiness, CircleUserRound, LayoutGrid, MessageCircle, Plus, Megaphone, ShoppingCart, Users } from "lucide-react";
+import { Bell, Bike, BriefcaseBusiness, CircleUserRound, LayoutGrid, MessageCircle, Plus, ShieldCheck, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SignInButton } from "@/components/auth/auth-modal";
 import { AccountMenu } from "@/components/layout/account-menu";
 import { LanguageToggle } from "@/components/layout/language-toggle";
+import { BuyMenu } from "@/components/layout/buy-menu";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { SearchBar } from "@/components/layout/search-bar";
 import { SellMenu } from "@/components/layout/sell-menu";
@@ -23,13 +24,6 @@ const iconLink = "relative grid h-11 w-11 place-items-center rounded-xl text-bra
  * row 2 = a slim navigation bar for browsing, with the one call to action (Post for FREE) on the right.
  */
 export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, msgUnread = 0, rank = null, t }: { signedIn: boolean; unread?: number; cartCount?: number; isStaff?: boolean; msgUnread?: number; rank?: number | null; t: TFunction }) {
-  const links = [
-    { href: "/search?in_stock=1&sort=price_asc", label: t("nav.ready_stock") },
-    { href: "/categories?tab=suppliers", label: t("cat.tab.suppliers") },
-    { href: "/categories?tab=services", label: t("cat.tab.services") },
-    { href: "/categories?tab=negosyo", label: t("nav.negosyo") },
-    { href: "/check", label: t("nav.check") },
-  ];
   return (
     <header className="sticky top-0 z-30 overflow-x-clip bg-white shadow-sm">
       <div className="mx-auto flex max-w-6xl items-center gap-1 px-2 py-2 sm:gap-2 md:gap-4 md:px-4">
@@ -98,14 +92,7 @@ export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, m
               </Link>
             </li>
             <li className="shrink-0">
-              <Link href="/search" className="flex h-9 items-center whitespace-nowrap rounded-lg px-2.5 text-white/90 hover:bg-white/15 hover:text-white">
-                {t("nav.shop")}
-              </Link>
-            </li>
-            <li className="shrink-0">
-              <Link href="/looking-for" className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 font-semibold text-white hover:bg-white/15">
-                <Megaphone size={16} className="text-accent" aria-hidden /> {t("nav.looking_for")}
-              </Link>
+              <BuyMenu />
             </li>
             <li className="shrink-0">
               <SellMenu rank={rank} />
@@ -116,17 +103,10 @@ export function Header({ signedIn, unread = 0, cartCount = 0, isStaff = false, m
               </Link>
             </li>
             <li className="shrink-0">
-              <Link href="/updates" className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-white/90 hover:bg-white/15 hover:text-white">
-                <Users size={16} aria-hidden /> {t("nav.updates")}
+              <Link href="/check" className="flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-white/90 hover:bg-white/15 hover:text-white">
+                <ShieldCheck size={16} className="text-accent" aria-hidden /> {t("nav.check")}
               </Link>
             </li>
-            {links.map((l) => (
-              <li key={l.href} className="shrink-0">
-                <Link href={l.href} className="flex h-9 items-center whitespace-nowrap rounded-lg px-2.5 text-white/90 hover:bg-white/15 hover:text-white">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
           </ul>
           <Link href="/sell/new" className="my-1 hidden h-9 shrink-0 items-center gap-1 rounded-full bg-accent px-4 text-sm font-bold text-brand-dark hover:bg-[#ea6a0c] md:inline-flex">
             <Plus size={16} aria-hidden /> {t("nav.post_free")}
@@ -143,11 +123,11 @@ export function Footer({ t }: { t: TFunction }) {
       <div className="mx-auto max-w-6xl space-y-6 px-4">
         <nav aria-label={t("footer.label")} className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
           {[
-            { title: t("footer.buy"), links: [["/search", t("nav.shop")], ["/looking-for", t("nav.looking_for")], ["/categories", t("nav.all_categories")], ["/search?in_stock=1&sort=price_asc", t("nav.ready_stock")], ["/check", t("nav.check_full")]] },
+            { title: t("footer.buy"), links: [["/search", t("nav.shop")], ["/looking-for", t("nav.looking_for")], ["/categories", t("nav.all_categories")], ["/search?in_stock=1&sort=price_asc", t("nav.ready_stock")], ["/check", t("nav.check")]] },
             { title: t("nav.delivery"), links: [["/delivery/new", t("dl.book_cta")], ["/delivery", t("dl.riders_title")], ["/delivery/register", t("dl.register_cta")]] },
             { title: t("footer.sell"), links: [["/sell/new", t("nav.post_free")], ["/my/listings", t("nav.my_store")], ["/business", t("nav.business")], ["/sell/verify", t("footer.verify")], ["/business/plan", t("footer.plans")]] },
             { title: t("nav.jobs"), links: [["/jobs", t("home.seeker_cta")], ["/jobs/post", t("home.employer_cta")], ["/jobs/profile", t("nav.job_profile")]] },
-            { title: t("brand.name"), links: [["/faq", t("faq.title")], ["/flame", t("nav.flame")], ["/account", t("nav.account")], ["/privacy", t("footer.privacy")], ["/terms", t("footer.terms")]] },
+            { title: t("brand.name"), links: [["/faq", t("faq.title")], ["/updates", t("nav.updates")], ["/flame", t("nav.flame")], ["/account", t("nav.account")], ["/privacy", t("footer.privacy")], ["/terms", t("footer.terms")]] },
           ].map((col) => (
             <div key={col.title}>
               <p className="mb-2 font-bold text-brand-dark">{col.title}</p>

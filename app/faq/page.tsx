@@ -75,6 +75,23 @@ async function FaqContent() {
 
       <Disclaimer title={t("faq.disclaimer_title")} text={FAQ_DISCLAIMER[L]} />
 
+      <section aria-labelledby="short-h" className="rounded-2xl border border-border bg-white p-4">
+        <h2 id="short-h" className="font-extrabold text-brand-dark">{t("faq.short_title")}</h2>
+        <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+          {[
+            ["start", t("faq.short_free")],
+            ["buying", t("faq.short_buy")],
+            ["selling", t("faq.short_sell")],
+            ["legit", t("faq.short_check")],
+            ["riders", t("faq.short_rider")],
+          ].map(([id, label]) => (
+            <li key={id}>
+              <a href={`#${id}`} className="flex min-h-11 items-center rounded-xl bg-brand-soft px-3 text-sm font-semibold text-brand-dark hover:bg-brand hover:text-white">{label}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <nav aria-label={t("faq.topics")} className="flex flex-wrap gap-2">
         {FAQ.map((s) => (
           <a key={s.id} href={`#${s.id}`} className="rounded-full border border-border bg-white px-3 py-1.5 text-sm font-semibold text-brand-dark hover:border-brand hover:text-brand">
@@ -107,7 +124,7 @@ async function FaqContent() {
       <section className="space-y-3 rounded-2xl bg-brand-soft p-4 text-sm text-brand-dark">
         <p className="font-bold">{t("faq.still_need")}</p>
         <div className="flex flex-wrap gap-2">
-          <Link href="/check" className="inline-flex min-h-10 items-center rounded-xl bg-white px-4 font-semibold hover:bg-muted">{t("nav.check_full")}</Link>
+          <Link href="/check" className="inline-flex min-h-10 items-center rounded-xl bg-white px-4 font-semibold hover:bg-muted">{t("nav.check")}</Link>
           <Link href="/my/cases" className="inline-flex min-h-10 items-center rounded-xl bg-white px-4 font-semibold hover:bg-muted">{t("faq.my_reports")}</Link>
           <Link href="/terms" className="inline-flex min-h-10 items-center rounded-xl bg-white px-4 font-semibold hover:bg-muted">{t("footer.terms")}</Link>
           <Link href="/privacy" className="inline-flex min-h-10 items-center rounded-xl bg-white px-4 font-semibold hover:bg-muted">{t("footer.privacy")}</Link>

@@ -47,7 +47,7 @@ async function AccountPageContent() {
           ["/sell/verify", t("verify.title")],
           ["/my/cases", t("cases.title")],
           ["/notifications", t("notif.title")],
-          ["/check", t("nav.check_full")],
+          ["/check", t("nav.check")],
           [`/buyer/${id}`, t("sheet.buyer_title")],
         ].map(([href, label]) => (
           <Link key={href} href={href} className="flex min-h-12 items-center rounded-xl border border-border bg-white px-4 font-semibold text-brand-dark hover:bg-muted">

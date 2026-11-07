@@ -2,6 +2,7 @@ import { PageSkeleton } from "@/components/layout/page-skeleton";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SetupChecklist } from "@/components/business/setup-checklist";
 import { MyListingRow, type MyListing } from "@/components/sell/my-listing-row";
 import { buttonClass } from "@/components/ui/button";
 import { getT } from "@/lib/i18n/server";
@@ -57,6 +58,7 @@ async function MyListingsPageContent() {
         </Link>
       </div>
       <ToolGuide toolKey="my_store" t={t} open={rows.length === 0} />
+      <SetupChecklist supabase={supabase} storeId={store.id} t={t} />
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">
         {cap ? t("plan.usage_listings", { used, limit: cap }) : t("plan.usage_listings_unlimited", { used })}
         {cap && used >= cap - 2 && (

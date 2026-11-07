@@ -17,6 +17,7 @@ import { imageUrl } from "@/lib/images";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { FlameAdSlot } from "@/components/ads/flame-ad-slot";
+import { BusinessHome, parseFeed } from "@/components/home/business-home";
 
 // Soft tile backgrounds for the category cards, cycled so neighbouring tiles differ.
 const TINTS = ["bg-brand-soft text-brand", "bg-accent-soft text-accent-strong", "bg-success-soft text-success", "bg-[#f3e8ff] text-[#6d28d9]"];
@@ -46,8 +47,6 @@ async function HomeContent() {
         </h1>
         <HeroSearch popular={popular} />
       </section>
-
-      <FlameAdSlot slot="HOME_AFTER_HERO" className="-mt-4" />
 
       {/* ── 2. Welcome strip with the trust shortcuts ── */}
       <section aria-label={t("home.welcome")} className="-mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
@@ -179,6 +178,8 @@ async function HomeContent() {
         </div>
       </section>
 
+      {requests.length > 0 && (
+        <>
       {/* ── Buyers are looking for: the newest open requests, so sellers find customers ── */}
       <section aria-labelledby="looking-h" className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
@@ -199,6 +200,8 @@ async function HomeContent() {
           <p className="rounded-2xl bg-muted p-5 text-center text-sm text-muted-foreground">{t("rq.home_empty")}</p>
         )}
       </section>
+        </>
+      )}
 
       {/* ── Featured members: sellers, employers, applicants, buyers ── */}
       <FeaturedMembers
@@ -266,6 +269,9 @@ async function HomeContent() {
         ))}
       </section>
 
+      {/* Sponsored: below the main content so it never competes with search and the three main actions */}
+      <FlameAdSlot slot="HOME_AFTER_HERO" />
+
       {/* ── 7. Why us ── */}
       <section className="grid gap-3 md:grid-cols-3" aria-label={t("home.why")}>
         {[
@@ -286,10 +292,20 @@ async function HomeContent() {
   );
 }
 
-export default function Home() {
+export default function Home(props: PageProps<"/">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <HomeContent />
+      <HomeGate searchParams={props.searchParams} />
     </Suspense>
   );
+}
+
+/** Signed-in members get the Business Home; visitors keep the public homepage above. */
+async function HomeGate({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getClaims();
+  const userId = auth?.claims?.sub as string | undefined;
+  if (!userId) return <HomeContent />;
+  const sp = await searchParams;
+  return <BusinessHome userId={userId} feed={parseFeed(Array.isArray(sp.feed) ? sp.feed[0] : sp.feed)} />;
 }

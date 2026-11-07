@@ -111,7 +111,7 @@ export function MobileMenu({ signedIn }: { signedIn: boolean }) {
       icon: Users,
       items: [
         { href: "/updates", label: t("nav.updates") },
-        { href: "/check", label: t("nav.check_full") },
+        { href: "/check", label: t("nav.check") },
         { href: "/flame", label: t("nav.flame") },
         { href: "/faq", label: t("faq.title") },
       ],

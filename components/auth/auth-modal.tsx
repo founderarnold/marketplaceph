@@ -30,7 +30,7 @@ export function openAuth(mode: Mode = "signin") {
 export function SignInButton({ mode = "signin", className, children }: { mode?: Mode; className?: string; children: React.ReactNode }) {
   return (
     <Link
-      href="/login"
+      href={mode === "signup" ? "/login?mode=signup" : "/login"}
       className={className}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey) return;

@@ -29,7 +29,7 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
   const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState(useSearchParams().get("mode") === "signup");
   const [error, setError] = useState<string | null>(null);
   const search = useSearchParams();
   const oauthFailed = search.get("error") === "oauth";
@@ -102,9 +102,42 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
 
   return (
     <div className="space-y-5 rounded-3xl border border-border bg-white p-6">
+      <div role="group" aria-label={t("auth.title")} className="grid grid-cols-2 rounded-xl bg-muted p-1 text-sm font-semibold">
+        {([false, true] as const).map((signup) => (
+          <button
+            key={String(signup)}
+            type="button"
+            aria-pressed={isSignup === signup}
+            onClick={() => { setIsSignup(signup); setError(null); setInfo(null); }}
+            className={cn("rounded-lg py-2", isSignup === signup ? "bg-white text-brand shadow-sm" : "text-muted-foreground")}
+          >
+            {signup ? t("nav.create_account") : t("nav.sign_in")}
+          </button>
+        ))}
+      </div>
+
       <div>
-        <h1 className="text-2xl font-extrabold text-brand-dark">{t("auth.title")}</h1>
-        {mode === "phone" && <p className="text-sm text-muted-foreground">{t("auth.subtitle")}</p>}
+        <h1 className="text-2xl font-extrabold text-brand-dark">{isSignup ? t("auth.modal_title_signup") : t("auth.title")}</h1>
+        {mode === "phone" && !isSignup && <p className="text-sm text-muted-foreground">{t("auth.subtitle")}</p>}
+      </div>
+
+      {isSignup && (
+        <ul className="space-y-1.5 text-sm font-semibold text-brand-dark">
+          {[t("auth.modal_chip1"), t("auth.modal_chip2"), t("auth.modal_chip3")].map((label) => (
+            <li key={label} className="flex items-center gap-2"><span className="h-4 w-1 rounded-full bg-accent" aria-hidden /> {label}</li>
+          ))}
+        </ul>
+      )}
+
+      <FacebookButton next={next} />
+      {GOOGLE_LOGIN && (
+        <Button type="button" variant="outline" className="w-full" onClick={google} disabled={pending}>
+          {t("auth.google")}
+        </Button>
+      )}
+
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
       </div>
 
       {PHONE_LOGIN && (
@@ -224,15 +257,6 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
         </p>
       )}
 
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" /> {t("auth.or")} <span className="h-px flex-1 bg-border" />
-      </div>
-      <FacebookButton next={next} />
-      {GOOGLE_LOGIN && (
-        <Button type="button" variant="outline" className="w-full" onClick={google} disabled={pending}>
-          {t("auth.google")}
-        </Button>
-      )}
       <p className="text-xs text-muted-foreground">{t("auth.privacy")}</p>
     </div>
   );

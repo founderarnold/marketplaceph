@@ -70,6 +70,20 @@ async function Delivery({ searchParams }: Pick<PageProps<"/delivery">, "searchPa
         </div>
       </section>
 
+      <section aria-labelledby="dl-how" className="space-y-2">
+        <h2 id="dl-how" className={h2}>{t("dl.how_title")}</h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          {([["cust", "dl.how_cust_title"], ["rider", "dl.how_rider_title"]] as const).map(([k, title]) => (
+            <div key={k} className="rounded-2xl border border-border bg-white p-4">
+              <h3 className="font-bold text-brand-dark">{t(title)}</h3>
+              <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+                {[1, 2, 3].map((n) => <li key={n}>{t(`dl.how_${k}_${n}`)}</li>)}
+              </ol>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="grid gap-3 sm:grid-cols-3">
         {[
           { icon: PackageCheck, key: "1" },
