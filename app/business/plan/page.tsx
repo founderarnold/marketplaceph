@@ -9,6 +9,13 @@ import { TIERS, featuresAddedAt, yearlySaving } from "@/lib/plans";
 
 export const metadata: Metadata = { title: "Plans" };
 
+/** Six tiers shown in three groups so the choice is easier: start free, grow, run a business. */
+const GROUPS = [
+  { key: "free", ranks: [0] },
+  { key: "grow", ranks: [1, 2] },
+  { key: "biz", ranks: [3, 4, 5] },
+] as const;
+
 /** FLAME PH membership tiers: what you have, what each tier adds, and a request form (billing is handled manually for now). */
 async function PlanPageContent() {
   const { supabase, userId, tier, periodEnd, t } = await businessContext();
@@ -31,11 +38,15 @@ async function PlanPageContent() {
       <section className={`rounded-2xl p-4 ${tier.rank > 0 ? "bg-success-soft" : "bg-muted"}`} aria-labelledby="cur-h">
         <p id="cur-h" className="text-lg font-extrabold text-brand-dark">{t("plan.current")}: {tier.name}</p>
         {tier.rank > 0 && <p className="text-sm">{periodEnd ? t("plan.until", { date: new Date(periodEnd).toLocaleDateString("en-PH", { timeZone: "Asia/Manila", dateStyle: "long" }) }) : t("plan.no_end")}</p>}
+        {tier.rank < 5 && <a href="#sub-h" className="mt-2 inline-flex min-h-11 items-center rounded-xl bg-accent px-4 text-sm font-bold text-brand-dark hover:bg-[#ea6a0c]">{t("pro.subscribe")}</a>}
         <p className="mt-1 text-sm">{limit ? t("plan.usage_listings", { used, limit }) : t("plan.usage_listings_unlimited", { used })} · {t("plan.usage_affiliates", { used: affUsed, limit: tier.affiliateLinks })}</p>
       </section>
 
-      <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {TIERS.map((x) => {
+      {GROUPS.map((g) => (
+        <section key={g.key} aria-labelledby={`grp-${g.key}`} className="space-y-2">
+          <h2 id={`grp-${g.key}`} className="text-xl font-extrabold text-brand-dark">{t(`plan.group_${g.key}`)}</h2>
+          <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {TIERS.filter((x) => (g.ranks as readonly number[]).includes(x.rank)).map((x) => {
           const mine = x.rank === tier.rank;
           return (
             <li key={x.key} className={`space-y-2 rounded-2xl border bg-white p-4 ${mine ? "border-2 border-brand" : "border-border"}`}>
@@ -54,7 +65,9 @@ async function PlanPageContent() {
             </li>
           );
         })}
-      </ul>
+          </ul>
+        </section>
+      ))}
 
       <section className="space-y-3 rounded-2xl border border-accent/50 bg-accent-soft p-4" aria-labelledby="sub-h">
         <h2 id="sub-h" className="font-bold text-brand-dark">{t("plan.subscribe_title")}</h2>

@@ -339,6 +339,66 @@ export const FAQ: FaqSection[] = [
     ],
   },
   {
+    id: "riders",
+    title: { en: "Delivery riders", fil: "Mga delivery rider" },
+    items: [
+      {
+        q: { en: "How do I book a rider?", fil: "Paano mag-book ng rider?" },
+        a: {
+          en: [
+            "Go to [Delivery](/delivery) and tap \"Book a rider\", then fill in the parcel details. Riders closest to the pickup are shown first. Riders send you their fee and you choose who to hire.",
+            "Agree on who pays the fee (sender or receiver) before pickup.",
+          ],
+          fil: [
+            "Pumunta sa [Delivery](/delivery) at pindutin ang \"Mag-book ng rider\", saka ilagay ang detalye ng parcel. Unang makikita ang mga rider na pinakamalapit sa pickup. Magpapadala sila ng singil nila at ikaw ang pipili kung sino ang kukunin.",
+            "Pag-usapan kung sino ang magbabayad ng fee (sender o receiver) bago ang pickup.",
+          ],
+        },
+      },
+      {
+        q: { en: "What does \"Verified rider\" mean?", fil: "Ano ang ibig sabihin ng \"Verified rider\"?" },
+        a: {
+          en: [
+            "The MarketplacePH team checked the rider's license, OR/CR and plate number. Always check that the plate number of the vehicle matches the one shown in your booking.",
+          ],
+          fil: [
+            "Na-check ng team ng MarketplacePH ang lisensya, OR/CR at plate number ng rider. Laging tiyakin na tugma ang plate number ng sasakyan sa nasa booking mo.",
+          ],
+        },
+      },
+      {
+        q: { en: "How do I become a rider?", fil: "Paano maging rider?" },
+        a: {
+          en: [
+            "[Register as a rider](/delivery/register). Once the team checks your papers you get the Verified rider badge and can receive delivery jobs from sellers and buyers near you.",
+            "Your license number and documents are never shown publicly. Customers see your first name, vehicle type and area. Your mobile number and plate are shown only to customers who hire you.",
+            "If you change vehicle or renew your license, update your details. Your badge is paused until the team checks the new papers.",
+          ],
+          fil: [
+            "[Mag-register bilang rider](/delivery/register). Kapag na-check ng team ang papeles mo, makukuha mo ang Verified rider badge at makakatanggap ka ng delivery jobs mula sa sellers at buyers malapit sa iyo.",
+            "Hindi kailanman ipinapakita sa publiko ang lisensya at dokumento mo. Makikita ng customers ang first name, uri ng sasakyan at area mo. Ang mobile number at plate mo ay makikita lang ng customer na kumuha sa iyo.",
+            "Kung nagpalit ka ng sasakyan o nag-renew ng lisensya, i-update ang detalye mo. Naka-pause ang badge mo hanggang ma-check ng team ang bagong papeles.",
+          ],
+        },
+      },
+      {
+        q: { en: "How do I stay safe when sending a parcel?", fil: "Paano maging ligtas sa pagpapadala ng parcel?" },
+        a: {
+          en: [
+            "- Do not send cash, gadgets or documents you can't afford to lose without a trusted rider.",
+            "- Take a photo of the parcel and the rider at pickup.",
+            "- Agree on the fee before pickup.",
+          ],
+          fil: [
+            "- Huwag magpadala ng cash, gadget o dokumentong hindi mo kayang mawala sa rider na hindi mo pinagkakatiwalaan.",
+            "- Kunan ng litrato ang parcel at ang rider sa pickup.",
+            "- Pag-usapan ang fee bago ang pickup.",
+          ],
+        },
+      },
+    ],
+  },
+  {
     id: "legit",
     title: { en: "Checking if someone is legit", fil: "Pag-check kung lehitimo ang isang tao" },
     items: [

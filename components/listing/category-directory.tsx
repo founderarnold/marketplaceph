@@ -61,6 +61,7 @@ export function CategoryDirectory({ majors, locale, initialTab }: { majors: Majo
         <div className="space-y-2 rounded-2xl bg-muted p-8 text-center">
           <p className="font-semibold">{t("cat.none")}</p>
           <button type="button" onClick={() => { setQ(""); setTab("all"); }} className="text-sm font-semibold text-brand underline">{t("cat.reset")}</button>
+          <Link href="/looking-for/new" className="inline-flex min-h-11 items-center rounded-xl bg-accent px-5 text-sm font-bold text-brand-dark hover:bg-[#ea6a0c]">{t("rq.post_need")}</Link>
         </div>
       ) : (
         <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
