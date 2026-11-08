@@ -29,12 +29,19 @@ export async function getLocations(): Promise<Locations> {
   "use cache";
   cacheLife("days");
   const sb = createPublicClient();
-  const [regions, provinces, cities] = await Promise.all([
+  // The API returns at most 1,000 rows per request and the country has about 1,650 cities and municipalities,
+  // so the cities are read in pages until none are left.
+  const cities: Locations["cities"] = [];
+  for (let from = 0; from < 5000; from += 1000) {
+    const { data } = await sb.from("psgc_cities").select("code, region_code, province_code, name").order("name").order("code").range(from, from + 999);
+    cities.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  const [regions, provinces] = await Promise.all([
     sb.from("psgc_regions").select("code, name, short_name").order("name"),
-    sb.from("psgc_provinces").select("code, region_code, name").order("name"),
-    sb.from("psgc_cities").select("code, region_code, province_code, name").order("name"),
+    sb.from("psgc_provinces").select("code, region_code, name").order("name").limit(1000),
   ]);
-  return { regions: regions.data ?? [], provinces: provinces.data ?? [], cities: cities.data ?? [] };
+  return { regions: regions.data ?? [], provinces: provinces.data ?? [], cities };
 }
 
 export async function getLatestListings(limit = 12): Promise<ListingCardData[]> {
