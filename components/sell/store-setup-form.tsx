@@ -24,7 +24,7 @@ export function StoreSetupForm({ locations }: { locations: Locations }) {
         <Input name="name" required minLength={2} maxLength={80} placeholder={t("store.name_ph")} defaultValue={v.name} />
       </Field>
       <Field label={t("store.type")} hint={t("store.type_hint")}>
-        <Select name="seller_type" required defaultValue={v.seller_type ?? ""}>
+        <Select key={`t-${v.seller_type ?? ""}`} name="seller_type" required defaultValue={v.seller_type ?? ""}>
           <option value="" disabled>
             —
           </option>
@@ -36,6 +36,7 @@ export function StoreSetupForm({ locations }: { locations: Locations }) {
         </Select>
       </Field>
       <LocationSelect
+        key={`l-${v.region_code ?? ""}-${v.province_code ?? ""}-${v.city_code ?? ""}`}
         locations={locations}
         required
         defaultValue={{ region: v.region_code, province: v.province_code, city: v.city_code }}
