@@ -40,6 +40,7 @@ async function InboxPageContent() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="text-2xl font-extrabold text-brand-dark">{t("nav.messages")}</h1>
+      <p className="text-sm text-muted-foreground">{t("chat.inbox_hint")}</p>
       <ToolGuide toolKey="messages" t={t} open={(convos ?? []).length === 0} />
       {(convos ?? []).length === 0 ? (
         <p className="rounded-2xl bg-muted p-8 text-center text-muted-foreground">{t("chat.empty")}</p>
@@ -62,7 +63,7 @@ async function InboxPageContent() {
                       <time className="shrink-0 text-xs text-muted-foreground">{timeAgo(c.last_message_at)}</time>
                     </div>
                     {c.listings && <p className="truncate text-xs text-brand">{c.listings.title}</p>}
-                    <p className={`truncate text-sm ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{last?.is_system && last.system_kind ? t(`sys.${last.system_kind}`) : (last?.body ?? "—")}</p>
+                    <p className={`truncate text-sm ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{last?.is_system && last.system_kind ? t(`sys.${last.system_kind}`) : (last?.body ?? t("chat.no_msgs"))}</p>
                   </div>
                   {unread > 0 && <span className="grid h-6 min-w-6 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-brand-dark">{unread}</span>}
                 </Link>
@@ -71,6 +72,10 @@ async function InboxPageContent() {
           })}
         </ul>
       )}
+      <div className="flex flex-wrap gap-2 text-sm font-semibold">
+        <Link href="/" className="rounded-xl bg-brand px-3 py-2 text-white hover:bg-brand-dark">{t("chat.inbox_browse")}</Link>
+        <Link href="/orders" className="rounded-xl border border-border bg-white px-3 py-2 text-brand hover:bg-muted">{t("chat.go_orders")}</Link>
+      </div>
     </div>
   );
 }

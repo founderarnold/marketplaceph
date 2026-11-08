@@ -17,8 +17,9 @@ async function ctx() {
   return { supabase, userId: (data?.claims?.sub as string | undefined) ?? null };
 }
 /** Database guard messages are written for people ("Daily comment limit reached"); internals are not. */
-function fail(e: { message?: string } | null): R {
+function fail(e: { message?: string; code?: string } | null): R {
   const m = e?.message ?? "";
+  console.error("social action failed:", e?.code ?? "", m); // database rule text only; no keys or tokens
   if (/violates|constraint|permission denied|row-level|schema cache|function public\.|JWT/i.test(m) || !m) return { ok: false, error: "failed" };
   return { ok: false, error: m };
 }

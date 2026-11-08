@@ -89,7 +89,11 @@ export function ChatThread({
         ? await supabase.from("job_messages").insert({ thread_id: conversationId, sender_id: me, body }).select(cols).single()
         : await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: me, body }).select(cols).single();
     setSending(false);
-    if (error) return setError(error.message.includes("too fast") ? t("chat.too_fast") : t("common.error"));
+    if (error) {
+      console.error("chat send failed", error.code, error.message);
+      // Rules written for people (too fast, account restricted) are shown as they are; anything else shows a short code.
+      return setError(error.message.includes("too fast") ? t("chat.too_fast") : error.code === "P0001" ? error.message : t("chat.err_code", { code: error.code || "?" }));
+    }
     setText("");
     setMessages((prev) => (prev.some((x) => x.id === data.id) ? prev : [...prev, data]));
   }
@@ -97,6 +101,7 @@ export function ChatThread({
   return (
     <div className="flex h-[calc(100dvh-16rem)] min-h-80 flex-col rounded-2xl border border-border bg-white md:h-[60vh]">
       <ul ref={list} className="flex-1 space-y-2 overflow-y-auto p-3" aria-live="polite">
+        {messages.length === 0 && <li className="rounded-xl bg-muted p-4 text-center text-sm text-muted-foreground">{t("chat.empty_thread")}</li>}
         {messages.map((m) => {
           const mine = m.sender_id === me;
           if (m.is_system && m.system_kind) {
@@ -132,6 +137,15 @@ export function ChatThread({
         <p role="alert" className="px-3 pb-1 text-xs font-medium text-danger">
           {error}
         </p>
+      )}
+      {kind !== "job" && !messages.some((m) => m.sender_id === me) && (
+        <div className="flex flex-wrap gap-2 px-3 pb-2" aria-label={t("chat.qr_label")}>
+          {(["chat.qr1", "chat.qr2", "chat.qr3", "chat.qr4"] as const).map((k) => (
+            <button key={k} type="button" onClick={() => setText(t(k))} className="rounded-full border border-brand/30 bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand-dark hover:bg-brand-soft/70">
+              {t(k)}
+            </button>
+          ))}
+        </div>
       )}
       <form onSubmit={send} className="flex gap-2 border-t border-border p-2">
         <input

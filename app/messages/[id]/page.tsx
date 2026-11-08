@@ -85,7 +85,26 @@ async function Thread({ params }: Pick<PageProps<"/messages/[id]">, "params">) {
         </Link>
       )}
       <ChatThread conversationId={convo.id} me={me} initial={(msgs ?? []).reverse()} />
-      <p className="rounded-xl bg-brand-soft p-3 text-xs text-brand-dark">{t("safety.tip")}</p>
+      {!iAmSeller && (
+        <section aria-labelledby="next-h" className="rounded-2xl border border-border bg-white p-3">
+          <h2 id="next-h" className="text-sm font-bold text-brand-dark">{t("chat.next_title")}</h2>
+          <ol className="mt-2 space-y-1.5 text-sm">
+            {(["chat.next1", "chat.next2", "chat.next3", "chat.next4"] as const).map((k, i) => (
+              <li key={k} className="flex gap-2">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-white">{i + 1}</span>
+                <span>{t(k)}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+      <nav aria-label={t("chat.next_title")} className="flex flex-wrap gap-2 text-sm font-semibold">
+        {listing && <Link href={`/listing/${listing.id}`} className="rounded-xl border border-border bg-white px-3 py-2 text-brand hover:bg-muted">{t("chat.go_item")}</Link>}
+        <Link href="/orders" className="rounded-xl border border-border bg-white px-3 py-2 text-brand hover:bg-muted">{t("chat.go_orders")}</Link>
+        <Link href="/messages" className="rounded-xl border border-border bg-white px-3 py-2 text-brand hover:bg-muted">{t("chat.go_inbox")}</Link>
+        <Link href="/" className="rounded-xl bg-brand px-3 py-2 text-white hover:bg-brand-dark">{t("chat.go_browse")}</Link>
+      </nav>
+      <p className="rounded-xl bg-brand-soft p-3 text-xs text-brand-dark">{t("safety.tip")} {t("safe.body")}</p>
     </div>
   );
 }
