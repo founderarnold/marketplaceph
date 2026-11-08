@@ -42,7 +42,8 @@ export function createPublicClient() {
  * The key comes from the SUPABASE_SERVICE_ROLE_KEY environment variable (never committed).
  */
 export function createAdminClient() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // A pasted key can carry a hidden line break or space, which the server rejects as an invalid header. Strip them.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.replace(/\s+/g, "");
   if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
   return createPlainClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
     auth: { persistSession: false, autoRefreshToken: false },

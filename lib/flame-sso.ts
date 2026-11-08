@@ -55,7 +55,7 @@ export function verifyToken(token: string): Claims | null {
 export async function signInByEmail(admin: SupabaseClient, session: SupabaseClient, email: string, name?: string): Promise<boolean> {
   // Failures are logged with the step and the provider's message (never the token or keys) so a failed sign-in can be diagnosed.
   const fail = (step: string, e: { message?: string; status?: number; code?: string } | null | undefined) =>
-    console.error(`flame-sso: ${step} failed:`, e?.status ?? "", e?.code ?? "", e?.message ?? "no hashed_token returned");
+    console.error(`flame-sso: ${step} failed:`, e?.status ?? "", e?.code ?? "", e ? "" : "no hashed_token returned"); // never log e.message: it can echo the secret key
   const created = await admin.auth.admin.createUser({ email, email_confirm: true, user_metadata: name ? { full_name: name } : {} });
   if (created.error && !/already|registered|exists/i.test(created.error.message)) {
     fail("createUser", created.error);
