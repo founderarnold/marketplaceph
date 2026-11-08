@@ -105,13 +105,10 @@ export function AuthModal({ providers }: { providers: AuthProviders }) {
   const next = path.startsWith("/login") ? "/" : path;
 
   function google() {
-    start(async () => {
-      const { error } = await createClient().auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
-      });
-      if (error) setError(t("auth.google_unavailable"));
-    });
+    // Google sign-in runs on flameph.org (the FLAME PH account hub, with the branded Google screen), then returns here signed in.
+    const back = new URL(next, location.origin).toString();
+    const authorize = `/sso/authorize?client=marketplaceph&return=${encodeURIComponent(back)}`;
+    location.assign(`https://www.flameph.org/login?auto=google&next=${encodeURIComponent(authorize)}`);
   }
 
   function forgot() {
