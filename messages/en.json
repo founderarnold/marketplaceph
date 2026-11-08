@@ -487,6 +487,8 @@
   "cart.how_note": "You won't pay now. The seller replies with the final price and shipping, then you pay them directly.",
   "cart.err_moq": "Minimum order is {n} {unit}.",
   "cart.err_oos": "This item is out of stock.",
+  "safe.title": "Safety reminder",
+  "safe.body": "Pay by cash on delivery (COD) or hand-to-hand when you meet (kaliwaan). Avoid advance payments. They are how most scams work. Refunds and returns are agreed only between you and the other person. MarketplacePH is not part of the sale.",
   "checkout.title": "Request your order",
   "checkout.intro": "Tell {store} where to send it. They'll confirm stock, final prices and shipping before you pay.",
   "checkout.delivery": "Delivery details",

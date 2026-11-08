@@ -28,11 +28,11 @@ export const FAQ: FaqSection[] = [
         q: { en: "How much does it cost?", fil: "Magkano ang bayad?" },
         a: {
           en: [
-            "Creating an account, posting items and services, posting jobs, applying for jobs and messaging are free.",
+            "Creating an account, posting items and services, posting jobs, applying for jobs and messaging are free, with no commission on your sales. Only the optional FLAME plans cost money.",
             "Optional FLAME plans unlock extra business tools such as costing, break-even, staff time records and a mini website. See [Plans](/business/plan).",
           ],
           fil: [
-            "Libre ang paggawa ng account, pag-post ng item at serbisyo, pag-post ng trabaho, pag-apply at pag-message.",
+            "Libre ang paggawa ng account, pag-post ng item at serbisyo, pag-post ng trabaho, pag-apply at pag-message, at walang komisyon sa benta mo. Ang opsyonal na FLAME plans lang ang may bayad.",
             "May opsyonal na FLAME plans para sa dagdag na business tools gaya ng costing, break-even, staff time record at mini website. Tingnan ang [Plans](/business/plan).",
           ],
         },
@@ -62,7 +62,7 @@ export const FAQ: FaqSection[] = [
           en: [
             "- Add the item to your cart (check the minimum order) and tap Checkout. Enter where to deliver.",
             "- The seller reviews your request and sends the final price, including shipping. You'll see it in Messages and in [My orders](/orders).",
-            "- Pay using the seller's listed payment option, then upload a screenshot of your payment with the reference number.",
+            "- Pay the safe way: cash on delivery (COD) or hand-to-hand when you meet (kaliwaan). Avoid advance payments. If you and the seller still agree on another option, upload a screenshot with the reference number.",
             "- The seller confirms the payment was received, packs your order (with photos) and ships it.",
             "- When it arrives, tap \"I received it\". The transaction is complete, and you can leave a review.",
             "Every step appears in your chat with the seller, so you always know what's next.",
@@ -70,7 +70,7 @@ export const FAQ: FaqSection[] = [
           fil: [
             "- Ilagay ang item sa cart (tingnan ang minimum order) at pindutin ang Checkout. Ilagay kung saan ide-deliver.",
             "- Susuriin ng seller ang request at ipapadala ang final na presyo, kasama ang shipping. Makikita mo ito sa Messages at sa [My orders](/orders).",
-            "- Magbayad gamit ang payment option ng seller, saka i-upload ang screenshot ng bayad na may reference number.",
+            "- Magbayad sa ligtas na paraan: COD (cash on delivery) o kaliwaan kapag nagkita. Iwasan ang advance payment. Kung may ibang napagkasunduan kayo ng seller, i-upload ang screenshot na may reference number.",
             "- Kukumpirmahin ng seller na natanggap ang bayad, ipa-pack ang order (may litrato) at ipapadala.",
             "- Pagdating, pindutin ang \"I received it\". Tapos na ang transaksyon at puwede ka nang mag-review.",
             "Lumalabas ang bawat hakbang sa chat ninyo ng seller, kaya alam mo palagi ang susunod.",
@@ -91,14 +91,49 @@ export const FAQ: FaqSection[] = [
         },
       },
       {
+        q: { en: "How should I pay safely?", fil: "Paano magbayad nang ligtas?" },
+        a: {
+          en: [
+            "Pay by cash on delivery (COD) or hand-to-hand when you meet (kaliwaan). Do not pay in advance. Advance payments are how most online scams work.",
+            "If a seller insists on payment before you can see or receive the item, think twice. Check the seller first in [Check muna bago bayad](/check).",
+          ],
+          fil: [
+            "Magbayad sa COD (cash on delivery) o kaliwaan kapag nagkita. Huwag mag-advance payment. Ito ang karaniwang paraan ng online scam.",
+            "Kung pilit ang seller na magbayad ka muna bago mo makita o matanggap ang item, mag-isip muna. I-check muna ang seller sa [Check muna bago bayad](/check).",
+          ],
+        },
+      },
+      {
+        q: { en: "Can I get a refund or return an item?", fil: "Puwede bang mag-refund o mag-return?" },
+        a: {
+          en: [
+            "MarketplacePH has no refund or return rule. Refunds and returns are always agreed between the buyer and the seller. Ask about the return terms before you order, and keep the chat as proof.",
+          ],
+          fil: [
+            "Walang refund o return rule ang MarketplacePH. Ang refund at return ay laging pinag-uusapan ng buyer at seller. Itanong ang return terms bago umorder, at itago ang chat bilang patunay.",
+          ],
+        },
+      },
+      {
+        q: { en: "What if the seller stops replying?", fil: "Paano kung hindi na sumasagot ang seller?" },
+        a: {
+          en: [
+            "This is why we say: don't pay in advance. With COD or kaliwaan you only pay when you have the item. If you already paid, keep your payment proof and chat, message the seller again, then tap Report on the store or open a dispute from the order page.",
+          ],
+          fil: [
+            "Kaya paalala namin: huwag mag-advance payment. Sa COD o kaliwaan, magbabayad ka lang kapag nasa iyo na ang item. Kung nakabayad ka na, itago ang patunay ng bayad at chat, mag-message ulit sa seller, saka pindutin ang Report sa store o mag-open ng dispute sa order page.",
+          ],
+        },
+      },
+      {
         q: { en: "What if something goes wrong with my order?", fil: "Paano kung may problema sa order ko?" },
         a: {
           en: [
-            "Talk to the seller in Messages first. If you can't settle it, open a dispute from the order page and attach photos or proof; the MarketplacePH team will look at what both sides submitted.",
+            "Talk to the seller in Messages first. If you can't settle it, open a dispute from the order page and attach photos or proof; the MarketplacePH team will look at what both sides submitted. A report is reviewed within 72 hours, and the other side has 72 hours to respond.",
             "Keep all chats, payment screenshots and delivery photos. They are your proof.",
           ],
           fil: [
-            "Kausapin muna ang seller sa Messages. Kung hindi maayos, mag-open ng dispute sa order page at maglakip ng litrato o patunay; titingnan ng MarketplacePH team ang isinumite ng dalawang panig.",
+            "Kausapin muna ang seller sa Messages. Kung hindi maayos, mag-open ng dispute sa order page at maglakip ng litrato o patunay; titingnan ng MarketplacePH team ang isinumite ng dalawang panig. Sinusuri ang report sa loob ng 72 oras, at may 72 oras ang kabilang panig para sumagot.",
             "Itago ang lahat ng chat, screenshot ng bayad at litrato ng delivery. Ito ang patunay mo.",
           ],
         },
@@ -347,11 +382,11 @@ export const FAQ: FaqSection[] = [
         a: {
           en: [
             "Go to [Delivery](/delivery) and tap \"Book a rider\", then fill in the parcel details. Riders closest to the pickup are shown first. Riders send you their fee and you choose who to hire.",
-            "Agree on who pays the fee (sender or receiver) before pickup.",
+            "Agree on who pays the fee (sender or receiver) before pickup. MarketplacePH takes no fee from riders or bookings; riders set their own fee.",
           ],
           fil: [
             "Pumunta sa [Delivery](/delivery) at pindutin ang \"Mag-book ng rider\", saka ilagay ang detalye ng parcel. Unang makikita ang mga rider na pinakamalapit sa pickup. Magpapadala sila ng singil nila at ikaw ang pipili kung sino ang kukunin.",
-            "Pag-usapan kung sino ang magbabayad ng fee (sender o receiver) bago ang pickup.",
+            "Pag-usapan kung sino ang magbabayad ng fee (sender o receiver) bago ang pickup. Walang kinukuhang fee ang MarketplacePH sa riders o bookings; ang rider ang nagtatakda ng singil nila.",
           ],
         },
       },
@@ -370,14 +405,25 @@ export const FAQ: FaqSection[] = [
         q: { en: "How do I become a rider?", fil: "Paano maging rider?" },
         a: {
           en: [
-            "[Register as a rider](/delivery/register). Once the team checks your papers you get the Verified rider badge and can receive delivery jobs from sellers and buyers near you.",
+            "[Register as a rider](/delivery/register). You will need your driver's license, the vehicle's OR/CR and its plate number. Once the team checks your papers you get the Verified rider badge and can receive delivery jobs from sellers and buyers near you.",
             "Your license number and documents are never shown publicly. Customers see your first name, vehicle type and area. Your mobile number and plate are shown only to customers who hire you.",
             "If you change vehicle or renew your license, update your details. Your badge is paused until the team checks the new papers.",
           ],
           fil: [
-            "[Mag-register bilang rider](/delivery/register). Kapag na-check ng team ang papeles mo, makukuha mo ang Verified rider badge at makakatanggap ka ng delivery jobs mula sa sellers at buyers malapit sa iyo.",
+            "[Mag-register bilang rider](/delivery/register). Kakailanganin mo ang driver's license, OR/CR ng sasakyan at plate number. Kapag na-check ng team ang papeles mo, makukuha mo ang Verified rider badge at makakatanggap ka ng delivery jobs mula sa sellers at buyers malapit sa iyo.",
             "Hindi kailanman ipinapakita sa publiko ang lisensya at dokumento mo. Makikita ng customers ang first name, uri ng sasakyan at area mo. Ang mobile number at plate mo ay makikita lang ng customer na kumuha sa iyo.",
             "Kung nagpalit ka ng sasakyan o nag-renew ng lisensya, i-update ang detalye mo. Naka-pause ang badge mo hanggang ma-check ng team ang bagong papeles.",
+          ],
+        },
+      },
+      {
+        q: { en: "What if a rider damages or loses my parcel?", fil: "Paano kung nasira o nawala ng rider ang parcel?" },
+        a: {
+          en: [
+            "Talk to the rider and settle it between you. MarketplacePH is not a party to the delivery. Keep your booking details and the pickup photos as proof, and report the rider if they won't cooperate.",
+          ],
+          fil: [
+            "Kausapin ang rider at pag-usapan ninyo kung paano aayusin. Hindi bahagi ng delivery ang MarketplacePH. Itago ang booking details at litrato sa pickup bilang patunay, at i-report ang rider kung ayaw makipagtulungan.",
           ],
         },
       },
@@ -420,6 +466,27 @@ export const FAQ: FaqSection[] = [
             "- Hanapin ang pangalan, numero o GCash name nila sa [Check muna bago bayad](/check).",
             "- Para sa negosyo, puwedeng i-check ang DTI business name sa bnrs.dti.gov.ph, at para sa pagkain, gamot at kosmetiko, ang FDA list sa verification.fda.gov.ph.",
             "- Siguraduhing tugma sa seller o store ang pangalan ng GCash, Maya o bank account.",
+          ],
+        },
+      },
+      {
+        q: { en: "How do badges get approved?", fil: "Paano naa-approve ang badges?" },
+        a: {
+          en: [
+            "Badges are requested from [My badges](/account/badges) and approved by the MarketplacePH team. These are the usual checks:",
+            "- Verified buyer: a real name and contact, a working mobile number or email, and several completed purchases with no unresolved disputes.",
+            "- Credible employer: a real business name and address or links, and completed hires with no unresolved reports. Agencies must show a valid DOLE or DMW license.",
+            "- Good applicant: a complete profile, and good reviews or references from past work.",
+            "- Verified years in business: proof such as a DTI or SEC registration, business permit or other papers that show how long the business has operated.",
+            "A badge can be removed if reports show it is no longer deserved.",
+          ],
+          fil: [
+            "Ire-request ang badges sa [My badges](/account/badges) at ina-approve ng MarketplacePH team. Ito ang karaniwang sinusuri:",
+            "- Verified buyer: totoong pangalan at contact, gumaganang mobile number o email, at ilang natapos na pagbili na walang hindi naayos na dispute.",
+            "- Credible employer: totoong pangalan ng negosyo at address o links, at mga natapos na hiring na walang hindi naayos na report. Dapat magpakita ng valid na DOLE o DMW license ang agency.",
+            "- Good applicant: kumpletong profile, at magagandang review o reference mula sa dating trabaho.",
+            "- Verified years in business: patunay gaya ng DTI o SEC registration, business permit o ibang papeles na nagpapakita kung gaano katagal na ang negosyo.",
+            "Puwedeng tanggalin ang badge kung ipinapakita ng mga report na hindi na ito nararapat.",
           ],
         },
       },
