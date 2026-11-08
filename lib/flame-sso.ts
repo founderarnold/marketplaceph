@@ -53,11 +53,21 @@ export function verifyToken(token: string): Claims | null {
 
 /** Signs the visitor in as the account with this verified email, creating it if needed. */
 export async function signInByEmail(admin: SupabaseClient, session: SupabaseClient, email: string, name?: string): Promise<boolean> {
+  // Failures are logged with the step and the provider's message (never the token or keys) so a failed sign-in can be diagnosed.
+  const fail = (step: string, e: { message?: string; status?: number; code?: string } | null | undefined) =>
+    console.error(`flame-sso: ${step} failed:`, e?.status ?? "", e?.code ?? "", e?.message ?? "no hashed_token returned");
   const created = await admin.auth.admin.createUser({ email, email_confirm: true, user_metadata: name ? { full_name: name } : {} });
-  if (created.error && !/already|registered|exists/i.test(created.error.message)) return false;
+  if (created.error && !/already|registered|exists/i.test(created.error.message)) {
+    fail("createUser", created.error);
+    return false;
+  }
   const link = await admin.auth.admin.generateLink({ type: "magiclink", email });
   const hash = link.data?.properties?.hashed_token;
-  if (link.error || !hash) return false;
+  if (link.error || !hash) {
+    fail("generateLink", link.error);
+    return false;
+  }
   const { error } = await session.auth.verifyOtp({ token_hash: hash, type: "magiclink" });
+  if (error) fail("verifyOtp", error);
   return !error;
 }
