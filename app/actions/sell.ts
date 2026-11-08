@@ -17,7 +17,7 @@ async function requireUser() {
   return { supabase, userId };
 }
 
-const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
+const emptyToNull = (v: unknown) => (v === undefined || (typeof v === "string" && v.trim() === "") ? null : v);
 const optionalText = (max: number) => z.preprocess(emptyToNull, z.string().trim().max(max).nullable());
 
 function slugify(name: string) {
