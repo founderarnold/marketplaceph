@@ -79,6 +79,9 @@ async function Checkout({ params }: Pick<PageProps<"/checkout/[storeId]">, "para
         <h1 className="text-2xl font-extrabold text-brand-dark">{t("checkout.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("checkout.intro", { store: store.name })}</p>
       </div>
+      <aside role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        <b>{t("safe.title")}:</b> {t("safe.body")}
+      </aside>
       <section className="rounded-2xl border border-border bg-white p-4">
         <ul className="space-y-1 text-sm">
           {rows.map((r) => {

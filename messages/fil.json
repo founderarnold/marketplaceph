@@ -487,6 +487,8 @@
   "cart.how_note": "Hindi ka pa magbabayad ngayon. Sasagot ang seller ng huling presyo at shipping, tapos direkta ka nang magbabayad sa kanila.",
   "cart.err_moq": "Ang minimum order ay {n} {unit}.",
   "cart.err_oos": "Walang stock ang item na ito.",
+  "safe.title": "Paalala para sa kaligtasan",
+  "safe.body": "Magbayad sa COD (cash on delivery) o kaliwaan kapag nagkita. Iwasan ang advance payment. Ito ang karaniwang paraan ng scam. Ang refund at return ay pinag-uusapan lang ninyo ng kausap mo. Hindi bahagi ng bentahan ang MarketplacePH.",
   "checkout.title": "I-request ang order mo",
   "checkout.intro": "Sabihin kay {store} kung saan ipapadala. Kukumpirmahin nila ang stock, huling presyo at shipping bago ka magbayad.",
   "checkout.delivery": "Detalye ng delivery",

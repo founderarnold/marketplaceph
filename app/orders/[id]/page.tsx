@@ -113,6 +113,9 @@ async function Order({ params }: Pick<PageProps<"/orders/[id]">, "params">) {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <Link href="/orders" className="text-sm font-semibold text-brand hover:underline">← {t("deal.title")}</Link>
+      <aside role="note" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        <b>{t("safe.title")}:</b> {t("safe.body")}
+      </aside>
 
       <section className={card}>
         <div className="flex flex-wrap items-center justify-between gap-2">
