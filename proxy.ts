@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { LINK_COOKIE, SESSION_CHECK_SECONDS, SSO_COOKIE, hostCookie, hubCall, readLink, signLink } from "@/lib/flame-sso";
 
 // Routes that need a signed-in user. (Real authorization is enforced by RLS and in server code;
 // this is only an optimistic redirect.)
@@ -27,14 +28,42 @@ export async function proxy(request: NextRequest) {
 
   // Refreshes the session cookie when needed.
   const { data } = await supabase.auth.getClaims();
-  const signedIn = !!data?.claims;
+  let signedIn = !!data?.claims;
 
   const path = request.nextUrl.pathname;
+
+  // Logout everywhere (Phase 10A): a member who signed in with FLAME PH is re-checked with flameph.org every 5 minutes.
+  // Logged out anywhere, account suspended, or the shared sign-in switched off: the session here ends.
+  // If flameph.org can't be reached, the check is simply tried again on the next page.
+  const linkValue = request.cookies.get(LINK_COOKIE)?.value;
+  if (signedIn && linkValue && request.method === "GET" && !path.startsWith("/auth/")) {
+    const link = readLink(linkValue);
+    const now = Math.floor(Date.now() / 1000);
+    if (!link || link.uid !== data?.claims?.sub) {
+      response.cookies.set(LINK_COOKIE, "", { ...hostCookie, maxAge: 0 });
+    } else if (now - link.chk > SESSION_CHECK_SECONDS) {
+      const status = await hubCall<{ active?: boolean }>("/api/sso/status", "sso-status", { sub: link.sub, since: link.since });
+      if (status && status.active === false) {
+        await supabase.auth.signOut({ scope: "local" });
+        signedIn = false;
+        const res = NextResponse.redirect(request.nextUrl);
+        for (const c of response.cookies.getAll()) res.cookies.set(c);
+        res.cookies.set(LINK_COOKIE, "", { ...hostCookie, maxAge: 0 });
+        res.cookies.set(SSO_COOKIE, "off", { ...hostCookie, maxAge: 60 * 60 * 24 * 30 });
+        return res;
+      }
+      if (status?.active) {
+        const fresh = signLink({ ...link, chk: now });
+        if (fresh) response.cookies.set(LINK_COOKIE, fresh, { ...hostCookie, maxAge: 60 * 60 * 24 * 30 });
+      }
+    }
+  }
 
   // One FLAME PH account: a visitor who isn't signed in here is checked once with flameph.org, which signs them in
   // here if they're signed in there. The cookie stops repeat checks (and stays "off" after they log out).
   if (!signedIn && wantsSsoCheck(request)) {
-    const res = NextResponse.redirect(`https://www.flameph.org/sso/authorize?client=marketplaceph&silent=1&return=${encodeURIComponent(request.nextUrl.href)}`);
+    // Through /auth/flame/start, which keeps the one-time browser check (Phase 10A).
+    const res = NextResponse.redirect(new URL(`/auth/flame/start?silent=1&next=${encodeURIComponent(path + request.nextUrl.search)}`, request.url));
     res.cookies.set("flame_sso", "checked", { maxAge: 60 * 60 * 6, path: "/", sameSite: "lax", secure: true, httpOnly: true });
     return res;
   }
@@ -51,7 +80,7 @@ export async function proxy(request: NextRequest) {
 const BOT = /bot|crawl|spider|slurp|facebookexternalhit|embedly|preview|lighthouse|headless/i;
 
 function wantsSsoCheck(request: NextRequest) {
-  const secret = process.env.SSO_SECRET;
+  const secret = process.env.SSO_SECRET_MARKETPLACEPH || process.env.SSO_SECRET;
   return (
     !!secret && secret.length >= 32 &&
     request.method === "GET" &&
