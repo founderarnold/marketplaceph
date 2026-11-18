@@ -4,14 +4,13 @@ import { useT } from "@/lib/i18n/client";
 
 /**
  * Facebook sign-in runs on flameph.org (the FLAME PH account hub, whose Facebook app is approved). The hub signs the
- * visitor in with Facebook, then /sso/authorize sends them back here through /auth/flame, signed in.
+ * visitor in with Facebook, then sends them back here through /auth/flame, signed in.
  */
 export function FacebookButton({ next, className }: { next: string; className?: string }) {
   const { t } = useT();
   function go() {
-    const back = new URL(next, location.origin).toString();
-    const authorize = `/sso/authorize?client=marketplaceph&return=${encodeURIComponent(back)}`;
-    location.assign(`https://www.flameph.org/login?auto=facebook&next=${encodeURIComponent(authorize)}`);
+    // /auth/flame/start keeps a one-time check in this browser before going to flameph.org (Phase 10A).
+    location.assign(`/auth/flame/start?auto=facebook&next=${encodeURIComponent(next)}`);
   }
   return (
     <button
