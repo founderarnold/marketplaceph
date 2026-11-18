@@ -15,6 +15,7 @@ import { SellerTypeBadge, VerificationBadge } from "@/components/listing/badges"
 import { FavoriteButton, ReportButton, ShareButton } from "@/components/listing/engage-buttons";
 import { ListingGrid } from "@/components/listing/listing-card";
 import { EarnedBadges, FlagBanner, ReviewList, StoreTrustCard } from "@/components/trust/trust-ui";
+import { FlameBadgeChip } from "@/components/trust/flame-badge";
 import { loadReviews, loadStoreTrust } from "@/lib/trust";
 import { LISTING_CARD_SELECT, type ListingCardData } from "@/lib/domain";
 import { yearsInBusinessBadge } from "@/lib/format";
@@ -124,6 +125,7 @@ async function Storefront({ params }: Pick<PageProps<"/store/[slug]">, "params">
               {featured && <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">★ {t("store.featured")}</span>}
               <EarnedBadges codes={badges} t={t} />
               <ApprovedBadges badges={ownerBadges.badges} yearsSince={ownerBadges.yearsSince} t={t} />
+              <Suspense fallback={null}><FlameBadgeChip ownerId={store.owner_id} /></Suspense>
             </div>
           </div>
         </div>

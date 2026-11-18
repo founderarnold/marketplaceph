@@ -1,12 +1,13 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * One account across the FLAME PH ecosystem, with flameph.org as the hub. Visitors who are signed in on flameph.org
- * are signed in here automatically, and signing in here also signs them in on flameph.org. Messages are short-lived
- * tokens signed with SSO_SECRET, the same long random value set in every FLAME PH site's Vercel project.
- * Accounts are matched by verified email. Everything is off until SSO_SECRET is set.
+ * are signed in here automatically, and signing in here also signs them in on flameph.org. Since Phase 10A the address
+ * carries only one-time tickets bound to the visitor's browser, and everything else goes server-to-server, signed
+ * with this site's own key (SSO_SECRET_MARKETPLACEPH; the old shared SSO_SECRET until that is set).
+ * Accounts are matched by verified email. Everything is off until a key is set.
  */
 
 export const SSO_CLIENT = "marketplaceph";
@@ -15,41 +16,99 @@ export const HUB_URL = "https://www.flameph.org";
 /** Cookie that stops repeat checks with the hub: "checked" for a while after asking, "off" after logging out. */
 export const SSO_COOKIE = "flame_sso";
 
-type Claims = { iss: string; aud: string; email: string; name?: string; iat: number; exp: number };
-
-const secret = () => {
-  const s = process.env.SSO_SECRET;
-  return s && s.length >= 32 ? s : null;
-};
+const strong = (s: string | undefined) => (s && s.length >= 32 ? s : null);
+/** This site's own key (Phase 10A). Until it is set, the old shared SSO_SECRET still works. */
+const secret = () => strong(process.env.SSO_SECRET_MARKETPLACEPH) ?? strong(process.env.SSO_SECRET);
 export const ssoEnabled = () => secret() !== null;
 
 const mac = (key: string, data: string) => createHmac("sha256", key).update(data).digest();
+const b64 = (v: string | Buffer) => Buffer.from(v).toString("base64url");
+export const randomToken = (bytes = 24) => randomBytes(bytes).toString("base64url");
+export const sha256 = (v: string) => createHash("sha256").update(v).digest("hex");
+const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
-export function signToken(email: string, name?: string, ttlSeconds = 120): string | null {
+/**
+ * Phase 10A: the visitor's browser keeps a random `state` and `nonce` here while they go to flameph.org. The hub sends
+ * back only a one-time ticket plus `state`; this server swaps the ticket at the hub and the hub hands back `nonce`.
+ * Both must match this cookie, so a ticket that started in someone else's browser can never sign this visitor in.
+ * Host-only (__Host-, no Domain), so no other site or subdomain can read or plant it.
+ */
+export const AUTH_COOKIE = "__Host-flame_auth";
+/** Who flameph.org says this member is, and when this session started: checked with the hub every 5 minutes. */
+export const LINK_COOKIE = "__Host-flame_link";
+/** Proof for signing in on flameph.org after signing in here (see /auth/flame/push). */
+export const PUSH_COOKIE = "__Host-flame_push";
+export const hostCookie = { path: "/", sameSite: "lax" as const, secure: true, httpOnly: true };
+export const SESSION_CHECK_SECONDS = 300;
+
+/** A signed message to the hub: right key, a purpose, a single-use id, 2 minutes to live. Never a sign-in token. */
+export function signSiteCall(purpose: string, claims: Record<string, unknown>, ttlSeconds = 120): string | null {
   const key = secret();
   if (!key) return null;
   const now = Math.floor(Date.now() / 1000);
-  const body = Buffer.from(JSON.stringify({ iss: SSO_CLIENT, aud: SSO_HUB, email: email.toLowerCase(), name, iat: now, exp: now + ttlSeconds })).toString("base64url");
-  return `v1.${body}.${mac(key, body).toString("base64url")}`;
+  const body = b64(JSON.stringify({ ...claims, iss: SSO_CLIENT, aud: SSO_HUB, typ: purpose, jti: randomToken(18), iat: now, exp: now + ttlSeconds }));
+  return `v1.${body}.${b64(mac(key, `${purpose}.${body}`))}`;
 }
 
-export function verifyToken(token: string): Claims | null {
+/** Calls the hub server-to-server. Returns the JSON answer, or null on any failure (4 second limit). */
+export async function hubCall<T = Record<string, unknown>>(path: string, purpose: string, claims: Record<string, unknown>): Promise<T | null> {
+  const token = signSiteCall(purpose, claims);
+  if (!token) return null;
+  try {
+    const r = await fetch(`${HUB_URL}${path}`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client: SSO_CLIENT, token }),
+      cache: "no-store", signal: AbortSignal.timeout(4000),
+    });
+    return r.ok ? ((await r.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A notice from the hub (for example "drop this member's badge"), signed with this site's key. */
+export function verifyHubMessage(purpose: string, token: string): Record<string, unknown> | null {
   const key = secret();
-  const [v, body, sig] = token.split(".");
+  const [v, body, sig] = (token ?? "").split(".");
   if (!key || v !== "v1" || !body || !sig) return null;
-  const want = mac(key, body);
+  const want = mac(key, `${purpose}.${body}`);
   const got = Buffer.from(sig, "base64url");
   if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
   try {
-    const c = JSON.parse(Buffer.from(body, "base64url").toString()) as Claims;
+    const c = JSON.parse(Buffer.from(body, "base64url").toString()) as Record<string, unknown>;
     const now = Math.floor(Date.now() / 1000);
-    if (c.iss !== SSO_HUB || c.aud !== SSO_CLIENT || !(c.exp > now) || c.iat > now + 30) return null;
-    if (typeof c.email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) return null;
+    if (c.iss !== SSO_HUB || c.aud !== SSO_CLIENT || c.typ !== purpose || typeof c.exp !== "number" || !(c.exp > now) || (c.iat as number) > now + 30) return null;
     return c;
   } catch {
     return null;
   }
 }
+
+/** The link cookie: { sub, uid, since, chk }, signed with this site's key so it can't be edited. */
+export type Link = { sub: string; uid: string; since: number; chk: number };
+export function signLink(l: Link): string | null {
+  const key = secret();
+  if (!key) return null;
+  const body = b64(JSON.stringify(l));
+  return `${body}.${b64(mac(key, `link.${body}`))}`;
+}
+export function readLink(value: string | undefined): Link | null {
+  const key = secret();
+  const [body, sig] = (value ?? "").split(".");
+  if (!key || !body || !sig || !same(sig, b64(mac(key, `link.${body}`)))) return null;
+  try {
+    const l = JSON.parse(Buffer.from(body, "base64url").toString()) as Link;
+    return typeof l.sub === "string" && typeof l.uid === "string" && typeof l.since === "number" && typeof l.chk === "number" ? l : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Reads the browser's `state.nonce` cookie and checks the state the hub sent back. */
+export function checkState(cookie: string | undefined, state: string | null): { nonce: string } | null {
+  const [s, n] = (cookie ?? "").split(".");
+  return s && n && state && same(s, state) ? { nonce: n } : null;
+}
+export const nonceMatches = (a: string, b: unknown) => typeof b === "string" && same(a, b);
 
 /** Signs the visitor in as the account with this verified email, creating it if needed. */
 export async function signInByEmail(admin: SupabaseClient, session: SupabaseClient, email: string, name?: string): Promise<boolean> {
