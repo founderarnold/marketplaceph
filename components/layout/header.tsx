@@ -1,4 +1,5 @@
 import { Bell, Bike, BriefcaseBusiness, CircleUserRound, LayoutGrid, MessageCircle, Plus, ShieldCheck, ShoppingCart } from "lucide-react";
+import { EcosystemStrip } from "@/components/layout/ecosystem-strip";
 import Link from "next/link";
 import { Suspense } from "react";
 import { SignInButton } from "@/components/auth/auth-modal";
@@ -121,6 +122,7 @@ export function Footer({ t }: { t: TFunction }) {
   return (
     <footer className="mt-12 border-t border-border bg-muted pb-8 pt-8 text-sm text-muted-foreground">
       <div className="mx-auto max-w-6xl space-y-6 px-4">
+        <EcosystemStrip t={t} />
         <nav aria-label={t("footer.label")} className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
           {[
             { title: t("footer.buy"), links: [["/search", t("nav.shop")], ["/looking-for", t("nav.looking_for")], ["/categories", t("nav.all_categories")], ["/search?in_stock=1&sort=price_asc", t("nav.ready_stock")], ["/check", t("nav.check")]] },
