@@ -92,9 +92,9 @@ export function LoginForm({ providers }: { providers: AuthProviders }) {
 
   function google() {
     // Google sign-in runs on flameph.org (the FLAME PH account hub, with the branded Google screen), then returns here signed in.
-    const back = new URL(next, location.origin).toString();
-    const authorize = `/sso/authorize?client=marketplaceph&return=${encodeURIComponent(back)}`;
-    location.assign(`https://www.flameph.org/login?auto=google&next=${encodeURIComponent(authorize)}`);
+    // /auth/flame/start keeps a one-time check in this browser before going to flameph.org (Phase 10A).
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    location.assign(`/auth/flame/start?auto=google&next=${encodeURIComponent(next)}`);
   }
 
   return (

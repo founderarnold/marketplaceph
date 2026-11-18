@@ -10,6 +10,7 @@ export function FacebookButton({ next, className }: { next: string; className?: 
   const { t } = useT();
   function go() {
     // /auth/flame/start keeps a one-time check in this browser before going to flameph.org (Phase 10A).
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     location.assign(`/auth/flame/start?auto=facebook&next=${encodeURIComponent(next)}`);
   }
   return (
