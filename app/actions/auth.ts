@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Log out here and everywhere: tell flameph.org server-to-server (every other site then ends this member's session
- * within 5 minutes), then pass through flameph.org with a signed, single-use logout so it logs out there too.
+ * within a minute, at its next page), then pass through flameph.org with a signed, single-use logout so it logs out there too.
  */
 export async function signOut() {
   const supabase = await createClient();
