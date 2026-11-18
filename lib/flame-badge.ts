@@ -21,7 +21,7 @@ export async function loadFlameBadge(ownerId: string): Promise<FlameBadge | null
   const sub = data?.user?.app_metadata?.flame_sub;
   if (typeof sub !== "string") return null;
   const res = await hubCall<{ badges?: { sub: string; shown: boolean; level?: string; verified?: boolean; counted?: number; categories?: Record<string, number>; memberSince?: string | null }[] }>(
-    "/api/ecosystem/badges", "badges", { subs: [sub] },
+    "/api/ecosystem/badges", "badges", { subs: [sub] }, 4000,
   );
   const b = res?.badges?.find((x) => x.sub === sub);
   if (!b?.shown || !b.level) return null;

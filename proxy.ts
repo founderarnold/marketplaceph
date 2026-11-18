@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
     if (!link || link.uid !== data?.claims?.sub) {
       response.cookies.set(LINK_COOKIE, "", { ...hostCookie, maxAge: 0 });
     } else if (now - link.chk > SESSION_CHECK_SECONDS) {
-      const status = await hubCall<{ active?: boolean }>("/api/sso/status", "sso-status", { sub: link.sub, since: link.since });
+      const status = await hubCall<{ active?: boolean }>("/api/sso/status", "sso-status", { sub: link.sub, since: link.since }, 4000);
       if (status && status.active === false) {
         await supabase.auth.signOut({ scope: "local" });
         signedIn = false;

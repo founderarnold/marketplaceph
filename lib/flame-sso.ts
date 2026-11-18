@@ -50,14 +50,17 @@ export function signSiteCall(purpose: string, claims: Record<string, unknown>, t
   return `v1.${body}.${b64(mac(key, `${purpose}.${body}`))}`;
 }
 
-/** Calls the hub server-to-server. Returns the JSON answer, or null on any failure (4 second limit). */
-export async function hubCall<T = Record<string, unknown>>(path: string, purpose: string, claims: Record<string, unknown>): Promise<T | null> {
+/** Calls the hub server-to-server. Returns the JSON answer, or null on any failure within `waitMs`.
+ * Sign-in steps wait up to 10 seconds (the hub can take a few seconds; giving up early wastes the one-time ticket
+ * and leaves the member signed out). Checks made while a page loads pass a shorter wait.
+ */
+export async function hubCall<T = Record<string, unknown>>(path: string, purpose: string, claims: Record<string, unknown>, waitMs = 10000): Promise<T | null> {
   const token = signSiteCall(purpose, claims);
   if (!token) return null;
   try {
     const r = await fetch(`${HUB_URL}${path}`, {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client: SSO_CLIENT, token }),
-      cache: "no-store", signal: AbortSignal.timeout(4000),
+      cache: "no-store", signal: AbortSignal.timeout(waitMs),
     });
     return r.ok ? ((await r.json()) as T) : null;
   } catch {
