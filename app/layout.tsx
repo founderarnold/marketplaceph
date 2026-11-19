@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Suspense } from "react";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { SessionSync } from "@/components/auth/session-sync";
 import { getAuthProviders } from "@/lib/auth-providers";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { AnnouncementBar } from "@/components/layout/announcement-bar";
@@ -64,6 +65,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
         <BottomNav unread={msgUnread} />
       </SiteChrome>
       {!data?.claims && <AuthModal providers={await getAuthProviders()} />}
+      <SessionSync signedIn={!!data?.claims} />
       <RegisterSW />
     </LocaleProvider>
   );

@@ -34,12 +34,12 @@ const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(
  * Host-only (__Host-, no Domain), so no other site or subdomain can read or plant it.
  */
 export const AUTH_COOKIE = "__Host-flame_auth";
-/** Who flameph.org says this member is, and when this session started: checked with the hub every 5 minutes. */
+/** Who flameph.org says this member is, and when this session started: checked with the hub every minute. */
 export const LINK_COOKIE = "__Host-flame_link";
 /** Proof for signing in on flameph.org after signing in here (see /auth/flame/push). */
 export const PUSH_COOKIE = "__Host-flame_push";
 export const hostCookie = { path: "/", sameSite: "lax" as const, secure: true, httpOnly: true };
-export const SESSION_CHECK_SECONDS = 300;
+export const SESSION_CHECK_SECONDS = 60;
 
 /** A signed message to the hub: right key, a purpose, a single-use id, 2 minutes to live. Never a sign-in token. */
 export function signSiteCall(purpose: string, claims: Record<string, unknown>, ttlSeconds = 120): string | null {

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { LINK_COOKIE, SESSION_CHECK_SECONDS, SSO_COOKIE, hostCookie, hubCall, readLink, signLink } from "@/lib/flame-sso";
+import { SESSION_ENDED_COOKIE, sessionEndedCookie } from "@/lib/session-ended";
 
 // Routes that need a signed-in user. (Real authorization is enforced by RLS and in server code;
 // this is only an optimistic redirect.)
@@ -10,6 +11,12 @@ const PROTECTED = ["/sell/new", "/sell/edit", "/sell/verify", "/sell/tools", "/s
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  // Did this browser arrive with a session? If it ends below, the page is told to redraw its header (see SessionSync).
+  const hadSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token") && !c.name.endsWith("-code-verifier"));
+  const ended = <T extends NextResponse>(res: T): T => {
+    if (hadSession) res.cookies.set(SESSION_ENDED_COOKIE, "1", sessionEndedCookie);
+    return res;
+  };
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +39,7 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Logout everywhere (Phase 10A): a member who signed in with FLAME PH is re-checked with flameph.org every 5 minutes.
+  // Logout everywhere (Phase 10A): a member who signed in with FLAME PH is re-checked with flameph.org every minute.
   // Logged out anywhere, account suspended, or the shared sign-in switched off: the session here ends.
   // If flameph.org can't be reached, the check is simply tried again on the next page.
   const linkValue = request.cookies.get(LINK_COOKIE)?.value;
@@ -50,7 +57,7 @@ export async function proxy(request: NextRequest) {
         for (const c of response.cookies.getAll()) res.cookies.set(c);
         res.cookies.set(LINK_COOKIE, "", { ...hostCookie, maxAge: 0 });
         res.cookies.set(SSO_COOKIE, "off", { ...hostCookie, maxAge: 60 * 60 * 24 * 30 });
-        return res;
+        return ended(res);
       }
       if (status?.active) {
         const fresh = signLink({ ...link, chk: now });
@@ -65,16 +72,16 @@ export async function proxy(request: NextRequest) {
     // Through /auth/flame/start, which keeps the one-time browser check (Phase 10A).
     const res = NextResponse.redirect(new URL(`/auth/flame/start?silent=1&next=${encodeURIComponent(path + request.nextUrl.search)}`, request.url));
     res.cookies.set("flame_sso", "checked", { maxAge: 60 * 60 * 6, path: "/", sameSite: "lax", secure: true, httpOnly: true });
-    return res;
+    return ended(res);
   }
 
   if (!signedIn && PROTECTED.some((p) => path === p || path.startsWith(p + "/"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?next=${encodeURIComponent(path + request.nextUrl.search)}`;
-    return NextResponse.redirect(url);
+    return ended(NextResponse.redirect(url));
   }
-  return response;
+  return signedIn ? response : ended(response);
 }
 
 const BOT = /bot|crawl|spider|slurp|facebookexternalhit|embedly|preview|lighthouse|headless/i;
