@@ -1,37 +1,62 @@
 import Link from "next/link";
-import { ModerateButton } from "@/components/jobs/employer-actions";
+import { ModerateButton, PublishButton } from "@/components/jobs/employer-actions";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
+import { hasAdminPlaceholder } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
-/** Admin → Jobs: newest posts first; moderators can remove a post (and restore it). Applicant data is never shown here. */
-export async function JobsAdmin() {
+/**
+ * Admin → Jobs: newest posts first; moderators can remove a post (and restore it). Applicant data is never shown here.
+ * Full admins can also edit hidden drafts (e.g. the starter posts) and publish or unpublish them.
+ */
+export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: boolean; show?: "all" | "drafts" }) {
   const { t } = await getT();
   const supabase = await createClient();
-  const { data: posts } = await supabase
+  let query = supabase
     .from("job_posts")
-    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id")
+    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications")
     .order("created_at", { ascending: false })
-    .limit(60);
+    .limit(show === "drafts" ? 200 : 60);
+  if (show === "drafts") query = query.eq("status", "hidden");
+  const { data: posts } = await query;
   return (
     <section className="space-y-2" aria-labelledby="jobs-h">
       <h2 id="jobs-h" className="font-bold text-brand-dark">{t("job.admin.title")}</h2>
       <p className="rounded-xl bg-brand-soft p-3 text-xs text-brand-dark">{t("job.admin.hint")}</p>
+      {canEdit && (
+        <nav className="flex gap-1 rounded-xl bg-muted p-1 text-sm font-semibold" aria-label={t("job.admin.title")}>
+          {(["all", "drafts"] as const).map((x) => (
+            <Link key={x} href={`/admin?tab=jobs${x === "drafts" ? "&show=drafts" : ""}`} aria-current={show === x ? "page" : undefined}
+              className={cn("inline-flex min-h-11 flex-1 items-center justify-center rounded-lg px-3", show === x ? "bg-white text-brand shadow-sm" : "text-muted-foreground")}>
+              {t(`job.admin.show_${x}`)}
+            </Link>
+          ))}
+        </nav>
+      )}
       {!posts?.length && <p className="rounded-2xl bg-muted p-4 text-center text-muted-foreground">{t("admin.none")}</p>}
       <ul className="space-y-2">
-        {posts?.map((p) => (
-          <li key={p.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-white p-3 text-sm">
-            <span className="min-w-0 flex-1">
-              <Link href={`/jobs/${p.id}`} className="font-semibold text-brand underline">{p.title}</Link>
-              <span className="block text-xs text-muted-foreground">
-                {p.company_name} · {t(`job.poster.${p.poster_type}`)}{p.agency_license_no ? ` · ${p.agency_license_no}` : ""} · {timeAgo(p.created_at)}
+        {posts?.map((p) => {
+          const needsFill = p.status === "hidden" && hasAdminPlaceholder(p.title, p.description, p.qualifications);
+          return (
+            <li key={p.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-white p-3 text-sm">
+              <span className="min-w-0 flex-1 basis-56">
+                <Link href={`/jobs/${p.id}`} className="font-semibold text-brand underline">{p.title}</Link>
+                <span className="block text-xs text-muted-foreground">
+                  {p.company_name} · {t(`job.poster.${p.poster_type}`)}{p.agency_license_no ? ` · ${p.agency_license_no}` : ""} · {timeAgo(p.created_at)}
+                </span>
               </span>
-            </span>
-            <Badge tone={p.status === "active" ? "success" : p.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
-            <ModerateButton id={p.id} removed={p.status === "removed"} />
-          </li>
-        ))}
+              <Badge tone={p.status === "active" ? "success" : p.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
+              {needsFill && <Badge tone="accent">{t("job.admin.needs_fill")}</Badge>}
+              {canEdit && p.status === "hidden" && (
+                <Link href={`/admin/job-post/${p.id}`} className="inline-flex min-h-11 items-center rounded-xl border border-border px-3 font-semibold">{t("job.admin.edit")}</Link>
+              )}
+              {canEdit && (p.status === "hidden" || p.status === "active") && <PublishButton id={p.id} status={p.status} />}
+              <ModerateButton id={p.id} removed={p.status === "removed"} />
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
