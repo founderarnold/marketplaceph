@@ -131,7 +131,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
           </details>
           <div className="grid gap-2 min-[400px]:grid-cols-2">
             <button className={buttonClass("primary", "md", "w-full")}>{t("job2.explore")}</button>
-            <TrackedLink event="signup_start" href="/jobs/profile" className={buttonClass("outline", "md", "w-full")}>{t("job2.build_profile")}</TrackedLink>
+            <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("outline", "md", "w-full")}>{t("job2.build_profile")}</TrackedLink>
           </div>
         </form>
 
@@ -149,7 +149,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
               <p className="text-sm text-muted-foreground">{t("job2.zero_hint")}</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <TrackedLink event="signup_start" href="/jobs/profile" className={buttonClass("primary", "md", "w-full sm:w-auto")}>{t("job2.build_profile")}</TrackedLink>
+              <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("primary", "md", "w-full sm:w-auto")}>{t("job2.build_profile")}</TrackedLink>
               <NotifyMeForm q={q} loc={loc} category={category} signedIn={signedIn} back={qs(1)} />
             </div>
             <div>
