@@ -13,10 +13,14 @@ import { Stars } from "@/components/trust/trust-ui";
 import { JobDocButton } from "@/components/jobs/job-parts";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
-import { timeAgo } from "@/lib/format";
+import { nowMs, timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { ageFrom, salaryLabel } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
+import { InterviewInvite } from "@/components/jobs2/interview-invite";
+import { isOn } from "@/lib/flags";
+import { APPLICATION_STATUSES } from "@/lib/jobs";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Applicants" };
 
@@ -68,6 +72,16 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
     return rs.length ? { avg: rs.reduce((x, r) => x + r.rating, 0) / rs.length, n: rs.length } : null;
   };
   const prof = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+
+  // Jobs 2.0 P6 (jobs2_employer_pipeline): counts and filters by the existing statuses, a stale-applicant reminder,
+  // interview invitations, and no age / sex / civil status on this screen (not job-relevant; see docs/JOBS_2_AUDIT.md S-7).
+  const pipeline = isOn("jobs2_employer_pipeline");
+  const counts = new Map<string, number>();
+  for (const a of apps ?? []) counts.set(a.status, (counts.get(a.status) ?? 0) + 1);
+  const filter = pipeline && typeof sp.status === "string" && (APPLICATION_STATUSES as readonly string[]).includes(sp.status) ? sp.status : null;
+  const shown = (apps ?? []).filter((a) => !filter || a.status === filter);
+  const staleCutoff = new Date(nowMs() - 3 * 86_400_000).toISOString();
+  const stale = pipeline ? (apps ?? []).filter((a) => a.status === "submitted" && a.created_at < staleCutoff).length : 0;
   const doc = new Map((docs ?? []).map((d) => [d.id, d]));
 
   return (
@@ -79,12 +93,23 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
         <p className="text-muted-foreground">{post.company_name} · {t("job.emp.applicants_n", { n: apps?.length ?? 0 })} · <Link href={`/jobs/${post.id}`} className="text-brand underline">{t("job.emp.preview")}</Link></p>
       </header>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.emp.privacy")}</p>
+      {pipeline && (apps?.length ?? 0) > 0 && (
+        <nav aria-label={t("job6.pipeline")} className="space-y-2">
+          <ul className="flex flex-wrap gap-2">
+            <li><Link href={`/jobs/employer/${id}`} aria-current={!filter ? "page" : undefined} className={cn("inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold", !filter ? "border-brand bg-brand text-white" : "border-border bg-white")}>{t("job6.all")} ({apps?.length ?? 0})</Link></li>
+            {APPLICATION_STATUSES.filter((s) => s !== "withdrawn" && counts.get(s)).map((s) => (
+              <li key={s}><Link href={`/jobs/employer/${id}?status=${s}`} aria-current={filter === s ? "page" : undefined} className={cn("inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold", filter === s ? "border-brand bg-brand text-white" : "border-border bg-white")}>{t(`job.status.${s}`)} ({counts.get(s)})</Link></li>
+            ))}
+          </ul>
+          {stale > 0 && <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm font-semibold text-accent-strong">{t("job6.stale", { n: stale })}</p>}
+        </nav>
+      )}
 
       {!apps?.length ? (
         <p className="rounded-2xl bg-muted p-8 text-center text-muted-foreground">{t("job.emp.no_applicants")}</p>
       ) : (
         <ul className="space-y-4">
-          {apps.map((a) => {
+          {shown.map((a) => {
             const p = prof.get(a.applicant_id);
             const age = ageFrom(p?.birthdate);
             const pay = p ? salaryLabel(p.expected_salary_min, p.expected_salary_max, "month", (k) => t(`job.per.${k}`)) : null;
@@ -113,7 +138,7 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
                     {p.contact_email && <li className="flex items-center gap-1.5"><Mail size={14} aria-hidden /> <a href={`mailto:${p.contact_email}`} className="text-brand underline">{p.contact_email}</a></li>}
                     {(p.psgc_cities?.name || p.psgc_provinces?.name) && <li className="flex items-center gap-1.5"><MapPin size={14} aria-hidden /> {[p.psgc_cities?.name, p.psgc_provinces?.name].filter(Boolean).join(", ")}</li>}
                     {p.education_level && <li className="flex items-center gap-1.5"><GraduationCap size={14} aria-hidden /> {t(`job.edu.${p.education_level}`)}</li>}
-                    {age != null && <li>{t("job.emp.age", { n: age })}{p.sex && p.sex !== "prefer_not" ? ` · ${t(`job.sex.${p.sex}`)}` : ""}{p.civil_status ? ` · ${t(`job.civil.${p.civil_status}`)}` : ""}</li>}
+                    {!pipeline && age != null && <li>{t("job.emp.age", { n: age })}{p.sex && p.sex !== "prefer_not" ? ` · ${t(`job.sex.${p.sex}`)}` : ""}{p.civil_status ? ` · ${t(`job.civil.${p.civil_status}`)}` : ""}</li>}
                     {p.experience_years != null && <li>{t("job.emp.years_exp", { n: p.experience_years })}</li>}
                     {pay && <li>{t("job.emp.expects")}: <b>{pay}</b></li>}
                   </ul>
@@ -144,6 +169,7 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
                   <MessageCircle size={16} aria-hidden /> {t("job.msg.message_applicant")}
                 </Link>
                 <ApplicantActions id={a.id} status={a.status} note={a.employer_note} />
+                {pipeline && ["submitted", "viewed", "shortlisted"].includes(a.status) && <InterviewInvite id={a.id} />}
                 {a.status === "hired" && (
                   <p className={a.applicant_confirmed_at ? "text-sm font-semibold text-success" : "text-sm text-muted-foreground"}>
                     {a.applicant_confirmed_at ? `✓ ${t("job.confirm.by_applicant")}` : t("job.confirm.waiting")}

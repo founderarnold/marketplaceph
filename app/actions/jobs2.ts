@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { isOn } from "@/lib/flags";
 import { ATTR_COOKIE, ATTR_DAYS, attributionFrom, decodeAttr, encodeAttr } from "@/lib/jobs-attribution";
+import { REVIEW_DOCS } from "@/lib/jobs-reviews";
 import { JOB_EVENTS, type JobEvent, type JobEventProps } from "@/lib/jobs-events";
 import { EDUCATION_LEVELS, EMPLOYMENT_TYPES, JOB_CATEGORIES } from "@/lib/jobs";
 import { revalidatePath } from "next/cache";
@@ -131,4 +132,37 @@ export async function saveProfileStep(step: WizardStep, input: Record<string, un
   revalidatePath("/jobs/start");
   await recordJobEvent("profile_step_complete");
   return { ok: true, savedAt: new Date().toISOString() };
+}
+
+/* ───────────── P6: employer verification reviews (flag jobs2_employer_pipeline) ───────────── */
+export type ReviewState = { ok?: boolean; error?: "forbidden" | "invalid" | "agency" | "failed" | "off" } | undefined;
+
+/** Full admins record what they checked for an employer. Append-only; the badge itself is granted in Admin → Badges. */
+export async function recordEmployerReview(_prev: ReviewState, fd: FormData): Promise<ReviewState> {
+  if (!isOn("jobs2_employer_pipeline")) return { error: "off" };
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  const me = claims?.claims?.sub as string | undefined;
+  if (!me) return { error: "forbidden" };
+  const { data: prof } = await supabase.from("profiles").select("role").eq("id", me).maybeSingle();
+  if (!prof || !["admin", "founder", "webmaster"].includes(prof.role)) return { error: "forbidden" };
+  const p = z.object({
+    employer_id: z.uuid(),
+    decision: z.enum(["approved", "needs_more", "rejected"]),
+    official_source: z.string().trim().max(120).optional(),
+    reason: z.string().trim().max(500).optional(),
+  }).safeParse(Object.fromEntries(fd));
+  if (!p.success) return { error: "invalid" };
+  const docs = fd.getAll("documents_checked").map(String).filter((d) => (REVIEW_DOCS as readonly string[]).includes(d));
+  const isAgency = fd.get("is_agency") === "on";
+  const licence = fd.get("agency_license_checked") === "on";
+  if (isAgency && p.data.decision === "approved" && !licence) return { error: "agency" };
+  const { error } = await (supabase as unknown as SupabaseClient).from("employer_reviews").insert({
+    employer_id: p.data.employer_id, reviewer_id: me, documents_checked: docs,
+    official_source_checked: fd.get("official_source_checked") === "on", official_source: p.data.official_source || null,
+    is_agency: isAgency, agency_license_checked: licence, decision: p.data.decision, reason: p.data.reason || null,
+  });
+  if (error) return { error: "failed" };
+  revalidatePath("/admin");
+  return { ok: true };
 }
