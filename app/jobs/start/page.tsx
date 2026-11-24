@@ -10,6 +10,7 @@ import { isOn } from "@/lib/flags";
 import { getT } from "@/lib/i18n/server";
 import { READINESS_FIELDS, readiness } from "@/lib/jobs-readiness";
 import { createClient } from "@/lib/supabase/server";
+import { JobsTracker } from "@/components/jobs2/tracker";
 
 export const metadata: Metadata = { title: "Start your job search", robots: { index: false } };
 
@@ -77,6 +78,7 @@ async function Start() {
           </li>
         ))}
       </ol>
+      {r.done === 5 && <JobsTracker name="profile_ready" />}
       {r.next ? (
         <Link href={stepHref(r.next.n)} className={buttonClass("primary", "lg", "w-full")}>{t("job3.continue", { n: r.next.n })}</Link>
       ) : (
