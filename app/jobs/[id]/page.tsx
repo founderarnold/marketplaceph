@@ -16,9 +16,23 @@ import { buttonClass } from "@/components/ui/button";
 import { timeAgo, todayPH } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { salaryLabel } from "@/lib/jobs";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
+import { JobsTracker } from "@/components/jobs2/tracker";
+import { isOn } from "@/lib/flags";
 
-export const metadata: Metadata = { title: "Job details" };
+export async function generateMetadata({ params }: PageProps<"/jobs/[id]">): Promise<Metadata> {
+  if (!isOn("jobs2_landing")) return { title: "Job details" };
+  const { id } = await params;
+  if (!z.uuid().safeParse(id).success) return { title: "Job details" };
+  // Public, cookie-less read: only active posts are visible to anon, so drafts never leak into metadata.
+  const { data } = await createPublicClient().from("job_posts").select("title, company_name, description").eq("id", id).eq("status", "active").maybeSingle();
+  if (!data) return { title: "Job details", alternates: { canonical: `/jobs/${id}` } };
+  return {
+    title: `${data.title} at ${data.company_name}`,
+    description: data.description.replace(/\s+/g, " ").slice(0, 155),
+    alternates: { canonical: `/jobs/${id}` },
+  };
+}
 
 export default function JobPage(props: PageProps<"/jobs/[id]">) {
   return (
@@ -72,6 +86,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
 
   return (
     <article className="grid gap-5 md:grid-cols-[1fr_20rem]">
+      {isOn("jobs2_landing") && <JobsTracker name="job_view" props={{ job_id: job.id, category: job.category }} />}
       <div className="space-y-4">
         {!open && <p className="rounded-xl bg-danger-soft p-3 text-sm font-semibold text-danger">{t("job.closed")}</p>}
         <header className="space-y-2">
