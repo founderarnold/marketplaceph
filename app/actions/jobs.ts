@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   CIVIL_STATUSES, DOC_KINDS, DOC_MIME, EDUCATION_LEVELS, EMPLOYER_STATUSES, EMPLOYMENT_TYPES, JOB_CATEGORIES, MAX_DOC_BYTES, POSTER_TYPES,
-  SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, splitList,
+  SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, hasAdminPlaceholder, splitList,
 } from "@/lib/jobs";
+import { isFullAdmin } from "@/lib/roles";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 export type JobFormState = { error?: string; values?: Record<string, string>; ok?: boolean; id?: string } | undefined;
@@ -174,7 +175,7 @@ export async function setApplicationStatus(id: string, status: string, note: str
 }
 
 /* ───────────── Employer posts ───────────── */
-const postSchema = z
+const postObject = z
   .object({
     poster_type: z.enum(POSTER_TYPES),
     company_name: z.string().trim().min(2).max(100),
@@ -193,8 +194,9 @@ const postSchema = z
     salary_period: z.preprocess(empty, z.enum(SALARY_PERIODS).nullable()),
     vacancies: z.coerce.number().int().min(1).max(1000),
     deadline: z.preprocess(empty, z.iso.date().nullable()),
-  })
-  .refine((v) => v.salary_min == null || v.salary_max == null || v.salary_max >= v.salary_min, { path: ["salary_max"] });
+  });
+const salaryOrder = (v: { salary_min: number | null; salary_max: number | null }) => v.salary_min == null || v.salary_max == null || v.salary_max >= v.salary_min;
+const postSchema = postObject.refine(salaryOrder, { path: ["salary_max"] });
 
 export async function createJobPost(_prev: JobFormState, fd: FormData): Promise<JobFormState> {
   const { supabase, userId } = await requireUser("/jobs/post");
@@ -229,5 +231,50 @@ export async function moderateJobPost(id: string, status: "removed" | "active"):
   const { error } = await supabase.from("job_posts").update({ status }).eq("id", id);
   revalidatePath("/jobs", "layout");
   revalidatePath("/admin");
+  return error ? { ok: false, error: friendly(error.message) } : { ok: true };
+}
+
+/* ───────────── Admin: edit and publish job posts (starter drafts) ───────────── */
+/** Full admins only (admin, founder, webmaster). The database allows wording changes only while a post is hidden. */
+async function requireFullAdmin(next: string) {
+  const { supabase, userId } = await requireUser(next);
+  const { data } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+  return isFullAdmin(data?.role) ? { supabase, userId } : null;
+}
+
+const adminPostSchema = postObject.omit({ poster_type: true, agency_license_no: true }).extend({ id: z.uuid() }).refine(salaryOrder, { path: ["salary_max"] });
+
+export async function adminUpdateJobPost(_prev: JobFormState, fd: FormData): Promise<JobFormState> {
+  const raw = Object.fromEntries(fd);
+  const values = Object.fromEntries(Object.entries(raw).filter(([, v]) => typeof v === "string")) as Record<string, string>;
+  const ctx = await requireFullAdmin("/admin?tab=jobs");
+  if (!ctx) return { error: "forbidden", values };
+  const parsed = adminPostSchema.safeParse(raw);
+  if (!parsed.success) return { error: "invalid", values };
+  const { id, ...row } = parsed.data;
+  const { data: post } = await ctx.supabase.from("job_posts").select("status").eq("id", id).maybeSingle();
+  if (!post) return { error: "invalid", values };
+  if (post.status !== "hidden") return { error: "not_draft", values };
+  const docs = fd.getAll("requirement_docs").map(String).filter((d) => (DOC_KINDS as readonly string[]).includes(d));
+  const { error } = await ctx.supabase.from("job_posts").update({ ...row, requirement_docs: docs }).eq("id", id);
+  if (error) return { error: friendly(error.message), values };
+  revalidatePath("/admin");
+  revalidatePath("/jobs", "layout");
+  return { ok: true, id, values };
+}
+
+/** Publish (active) or unpublish (hidden) a post. A post with "[ADMIN TO FILL" text left in it cannot be published. */
+export async function adminSetJobPostStatus(id: string, status: "active" | "hidden"): Promise<JobResult> {
+  if (!z.uuid().safeParse(id).success || !["active", "hidden"].includes(status)) return { ok: false, error: "invalid" };
+  const ctx = await requireFullAdmin("/admin?tab=jobs");
+  if (!ctx) return { ok: false, error: "forbidden" };
+  if (status === "active") {
+    const { data: post } = await ctx.supabase.from("job_posts").select("title, description, qualifications, status").eq("id", id).maybeSingle();
+    if (!post || post.status === "removed") return { ok: false, error: "invalid" };
+    if (hasAdminPlaceholder(post.title, post.description, post.qualifications)) return { ok: false, error: "placeholder" };
+  }
+  const { error } = await ctx.supabase.from("job_posts").update({ status }).eq("id", id);
+  revalidatePath("/admin");
+  revalidatePath("/jobs", "layout");
   return error ? { ok: false, error: friendly(error.message) } : { ok: true };
 }

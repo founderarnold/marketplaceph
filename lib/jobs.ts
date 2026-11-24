@@ -19,6 +19,10 @@ export const APPLICATION_STATUSES = ["submitted", "viewed", "shortlisted", "inte
 export const EMPLOYER_STATUSES = ["viewed", "shortlisted", "interview", "rejected", "hired"] as const;
 export const POST_STATUSES = ["active", "closed", "hidden", "removed"] as const;
 
+/** Starter job drafts mark text the admin must replace with this; such posts cannot be published (see scripts/starter-jobs.mjs). */
+export const ADMIN_PLACEHOLDER = "[ADMIN TO FILL";
+export const hasAdminPlaceholder = (...texts: (string | null | undefined)[]) => texts.some((x) => !!x && x.includes(ADMIN_PLACEHOLDER));
+
 export const MAX_DOC_BYTES = 5 * 1024 * 1024;
 export const DOC_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
 

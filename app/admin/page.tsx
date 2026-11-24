@@ -68,7 +68,7 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
       {tab === "badges" && <BadgesAdmin isAdmin={isAdmin} />}
       {tab === "riders" && <RidersAdmin isAdmin={isAdmin} show={sp.show === "all" ? "all" : "pending"} />}
       {tab === "plans" && <Plans isAdmin={isAdmin} />}
-      {tab === "jobs" && <JobsAdmin />}
+      {tab === "jobs" && <JobsAdmin canEdit={isAdmin} show={sp.show === "drafts" ? "drafts" : "all"} />}
       {tab === "verification" && <Verification />}
       {tab === "watchlist" && <Watchlist />}
       {tab === "listings" && <Listings />}

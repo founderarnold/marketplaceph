@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { confirmHire, moderateJobPost, setApplicationStatus, setPostStatus, withdrawApplication, type JobResult } from "@/app/actions/jobs";
+import { adminSetJobPostStatus, confirmHire, moderateJobPost, setApplicationStatus, setPostStatus, withdrawApplication, type JobResult } from "@/app/actions/jobs";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/client";
 import { EMPLOYER_STATUSES } from "@/lib/jobs";
@@ -90,5 +90,22 @@ export function ModerateButton({ id, removed }: { id: string; removed: boolean }
     <Button size="sm" variant={removed ? "outline" : "ghost"} disabled={pending} onClick={() => run(() => moderateJobPost(id, removed ? "active" : "removed"))}>
       {removed ? t("job.admin.restore") : t("job.admin.remove")}
     </Button>
+  );
+}
+
+/** Full admins: publish a hidden draft (blocked while "[ADMIN TO FILL" text is left) or unpublish a live post. */
+export function PublishButton({ id, status }: { id: string; status: string }) {
+  const { t } = useT();
+  const { pending, error, run } = useRun();
+  const publish = status !== "active";
+  const message = error === "placeholder" ? t("job.admin.need_fill") : error === "forbidden" ? t("job.admin.forbidden") : error;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <Button size="md" variant={publish ? "primary" : "outline"} disabled={pending}
+        onClick={() => { if (confirm(publish ? t("job.admin.confirm_publish") : t("job.admin.confirm_unpublish"))) run(() => adminSetJobPostStatus(id, publish ? "active" : "hidden")); }}>
+        {publish ? t("job.admin.publish") : t("job.admin.unpublish")}
+      </Button>
+      {message && <span role="alert" className="text-xs text-danger">{message}</span>}
+    </span>
   );
 }
