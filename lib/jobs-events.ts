@@ -1,5 +1,10 @@
 /** Jobs 2.0 funnel events (P2 adds the landing ones; P7 extends the list). Names and props are allow-listed; no PII. */
-export const JOB_EVENTS = ["jobs_landing_view", "job_search", "job_view", "signup_start", "referral_attribution", "profile_step_complete", "resume_generated", "apply_start", "apply_submitted", "apply_failed"] as const;
+export const JOB_EVENTS = [
+  "jobs_landing_view", "job_search", "job_view", "signup_start", "referral_attribution", // P2
+  "profile_step_complete", "resume_generated", "apply_start", "apply_submitted", "apply_failed", // P4, P5
+  "profile_ready", "employer_viewed", "status_changed", "interview", "hire_recorded", "hire_confirmed", "review_submitted", // P7
+  "signup_complete", "flame_link_result", // allowed by the database; not sent yet (would need changes to sign-in code)
+] as const;
 export type JobEvent = (typeof JOB_EVENTS)[number];
 
 /** Result counts are bucketed so an event never reveals an exact, possibly identifying, number. */
@@ -14,4 +19,6 @@ export type JobEventProps = {
   results?: ReturnType<typeof countBucket>;
   job_id?: string;
   source?: string;
+  status?: string;
+  application_id?: string;
 };

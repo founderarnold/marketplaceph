@@ -18,6 +18,7 @@ import { getT } from "@/lib/i18n/server";
 import { ageFrom, salaryLabel } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
 import { InterviewInvite } from "@/components/jobs2/interview-invite";
+import { JobsTracker } from "@/components/jobs2/tracker";
 import { isOn } from "@/lib/flags";
 import { APPLICATION_STATUSES } from "@/lib/jobs";
 import { cn } from "@/lib/utils";
@@ -93,6 +94,7 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
         <p className="text-muted-foreground">{post.company_name} · {t("job.emp.applicants_n", { n: apps?.length ?? 0 })} · <Link href={`/jobs/${post.id}`} className="text-brand underline">{t("job.emp.preview")}</Link></p>
       </header>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.emp.privacy")}</p>
+      <JobsTracker name="employer_viewed" props={{ job_id: post.id }} />
       {pipeline && (apps?.length ?? 0) > 0 && (
         <nav aria-label={t("job6.pipeline")} className="space-y-2">
           <ul className="flex flex-wrap gap-2">

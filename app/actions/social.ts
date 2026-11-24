@@ -1,5 +1,6 @@
 "use server";
 
+import { recordJobEvent } from "@/app/actions/jobs2";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -89,6 +90,7 @@ export async function reviewHiring(applicationId: string, rating: number, commen
   if (!userId) return { ok: false, error: "auth" };
   const { error } = await supabase.from("job_reviews").insert({ application_id: p.data.id, reviewer_id: userId, rating: p.data.rating, comment: p.data.comment || null });
   if (error?.code === "23505") return { ok: false, error: "already_reviewed" };
+  if (!error) await recordJobEvent("review_submitted", { application_id: p.data.id }); // Jobs 2.0 funnel; rating and comment are not sent
   revalidatePath("/jobs/applications");
   revalidatePath("/jobs/employer");
   return error ? fail(error) : { ok: true };

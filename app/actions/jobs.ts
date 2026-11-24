@@ -8,6 +8,7 @@ import {
   SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, splitList,
 } from "@/lib/jobs";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { recordJobEvent } from "@/app/actions/jobs2";
 
 export type JobFormState = { error?: string; values?: Record<string, string>; ok?: boolean; id?: string } | undefined;
 export type JobResult = { ok: boolean; error?: string; id?: string };
@@ -161,6 +162,7 @@ export async function confirmHire(id: string): Promise<JobResult> {
   if (!z.uuid().safeParse(id).success) return { ok: false, error: "invalid" };
   const { error } = await supabase.rpc("confirm_hire", { p_app: id });
   revalidatePath("/jobs/applications");
+  if (!error) await recordJobEvent("hire_confirmed", { application_id: id });
   return error ? { ok: false, error: friendly(error.message) } : { ok: true };
 }
 
@@ -170,6 +172,12 @@ export async function setApplicationStatus(id: string, status: string, note: str
   const { supabase } = await requireUser("/jobs/employer");
   const { error } = await supabase.rpc("set_application_status", { p_app: p.data.id, p_status: p.data.status, p_note: p.data.note });
   revalidatePath("/jobs/employer", "layout");
+  if (!error) {
+    // Jobs 2.0 funnel (no-op unless jobs2_landing is on): status only, never the note.
+    await recordJobEvent("status_changed", { status: p.data.status, application_id: p.data.id });
+    if (p.data.status === "interview") await recordJobEvent("interview", { application_id: p.data.id });
+    if (p.data.status === "hired") await recordJobEvent("hire_recorded", { application_id: p.data.id });
+  }
   return error ? { ok: false, error: friendly(error.message) } : { ok: true };
 }
 
