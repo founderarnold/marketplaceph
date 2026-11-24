@@ -10,6 +10,8 @@ import { buttonClass } from "@/components/ui/button";
 import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { AppTimeline } from "@/components/jobs2/app-timeline";
+import { isOn } from "@/lib/flags";
 
 export const metadata: Metadata = { title: "My applications" };
 
@@ -23,11 +25,12 @@ async function MyApplicationsPageContent() {
   if (!userId) redirect("/login?next=/jobs/applications");
   const { data: apps } = await supabase
     .from("job_applications")
-    .select("id, status, created_at, employer_note, applicant_confirmed_at, job_posts ( id, title, company_name, status )")
+    .select("id, status, created_at, updated_at, employer_note, applicant_confirmed_at, job_posts ( id, title, company_name, status )")
     .eq("applicant_id", userId)
     .order("created_at", { ascending: false });
   const hiredIds = (apps ?? []).filter((a) => a.status === "hired").map((a) => a.id);
   const { data: mine } = hiredIds.length ? await supabase.from("job_reviews").select("application_id").eq("reviewer_id", userId).in("application_id", hiredIds) : { data: [] };
+  const timeline = isOn("jobs2_matching");
   const reviewed = new Set((mine ?? []).map((r) => r.application_id));
 
   return (
@@ -49,6 +52,7 @@ async function MyApplicationsPageContent() {
                 </div>
                 <Badge tone={tone(a.status)}>{t(`job.status.${a.status}`)}</Badge>
               </div>
+              {timeline && <AppTimeline status={a.status} updatedAt={a.updated_at} t={t} />}
               {a.employer_note && <p className="rounded-xl bg-muted p-2 text-sm"><b>{t("job.app.employer_says")}</b> {a.employer_note}</p>}
               <div className="flex flex-wrap items-center gap-2">
                 {a.status !== "withdrawn" && <Link href={`/jobs/messages/${a.id}`} className={buttonClass("outline", "sm", "gap-1.5")}>{t("job.msg.message_employer")}</Link>}

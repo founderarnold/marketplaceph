@@ -15,6 +15,8 @@ import { JobsTracker, TrackedLink } from "@/components/jobs2/tracker";
 import { getLocations } from "@/lib/data";
 import { isOn } from "@/lib/flags";
 import { countBucket } from "@/lib/jobs-events";
+import { MatchReasons } from "@/components/jobs2/match-reasons";
+import { matchReasons, type MatchProfile } from "@/lib/jobs-match";
 
 export async function generateMetadata(): Promise<Metadata> {
   const base: Metadata = {
@@ -87,6 +89,9 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   const jobs = data ?? [];
   const pages = Math.ceil((count ?? 0) / PAGE);
   const qs = (n: number) => `/jobs?${new URLSearchParams({ ...(q && { q }), ...(loc && { loc }), ...(category && { category }), ...(type && { type }), ...(setup && { setup }), page: String(n) })}`;
+
+  // Jobs 2.0 P5 (jobs2_matching): explain why a job may fit the signed-in member. Order and results never change.
+  const reasonsFor = await loadReasons(supabase, jobs.map((j) => j.id));
 
   if (landing) {
     const { data: claims } = await supabase.auth.getClaims();
@@ -166,7 +171,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
             </div>
           </section>
         ) : (
-          <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} />)}</ul>
+          <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} extra={reasonsFor ? <MatchReasons reasons={reasonsFor(j)} t={t} /> : undefined} />)}</ul>
         )}
 
         {pages > 1 && (
@@ -218,7 +223,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
           <Link href="/jobs/post" className={buttonClass("accent", "md")}>{t("job.nav.post")}</Link>
         </div>
       ) : (
-        <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} />)}</ul>
+        <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} extra={reasonsFor ? <MatchReasons reasons={reasonsFor(j)} t={t} /> : undefined} />)}</ul>
       )}
 
       {pages > 1 && (
@@ -230,6 +235,27 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
       )}
     </div>
   );
+}
+
+/** Loads the member's job profile and the extra job fields needed for match reasons; null when off or signed out. */
+async function loadReasons(supabase: Awaited<ReturnType<typeof createClient>>, ids: string[]) {
+  if (!isOn("jobs2_matching") || !ids.length) return null;
+  const { data: claims } = await supabase.auth.getClaims();
+  const me = claims?.claims?.sub as string | undefined;
+  if (!me) return null;
+  const [{ data: profile }, { data: extra }] = await Promise.all([
+    supabase.from("job_profiles").select("desired_roles, skills, job_types, city_code, province_code, expected_salary_min, expected_salary_max").eq("user_id", me).maybeSingle(),
+    supabase.from("job_posts").select("id, owner_id, description, qualifications, city_code, province_code").in("id", ids),
+  ]);
+  if (!profile) return null;
+  const owners = [...new Set((extra ?? []).map((e) => e.owner_id))];
+  const { data: badges } = owners.length ? await supabase.from("user_badges").select("user_id").eq("badge", "credible_employer").in("user_id", owners) : { data: [] };
+  const verified = new Set((badges ?? []).map((b) => b.user_id));
+  const byId = new Map((extra ?? []).map((e) => [e.id, e]));
+  return (j: JobCardData) => {
+    const e = byId.get(j.id);
+    return matchReasons(profile as MatchProfile, { ...j, description: e?.description, qualifications: e?.qualifications, city_code: e?.city_code, province_code: e?.province_code, employer_verified: !!e && verified.has(e.owner_id) });
+  };
 }
 
 export default function JobsPage(props: PageProps<"/jobs">) {

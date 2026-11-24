@@ -21,7 +21,8 @@ export type JobCardData = {
   psgc_provinces: { name: string } | null;
 };
 
-export function JobCard({ job, t }: { job: JobCardData; t: TFunction }) {
+/** `extra` (optional) is shown at the bottom of the card, e.g. Jobs 2.0 match reasons. */
+export function JobCard({ job, t, extra }: { job: JobCardData; t: TFunction; extra?: React.ReactNode }) {
   const pay = salaryLabel(job.salary_min, job.salary_max, job.salary_period, (p) => t(`job.per.${p}`));
   const where = job.work_setup === "remote" ? t("job.setup.remote") : [job.psgc_cities?.name, job.psgc_provinces?.name].filter(Boolean).join(", ");
   return (
@@ -47,6 +48,7 @@ export function JobCard({ job, t }: { job: JobCardData; t: TFunction }) {
           <span className="rounded-full bg-muted px-2.5 py-1">{t(`job.cat.${job.category}`)}</span>
           <span className="rounded-full bg-muted px-2.5 py-1">{t(`job.setup.${job.work_setup}`)}</span>
         </p>
+        {extra}
       </Link>
     </li>
   );

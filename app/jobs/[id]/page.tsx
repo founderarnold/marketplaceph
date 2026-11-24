@@ -12,6 +12,10 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { ApplyPanel } from "@/components/jobs/apply-panel";
+import { ApplyReview } from "@/components/jobs2/apply-review";
+import { MatchReasons } from "@/components/jobs2/match-reasons";
+import { readiness, READINESS_FIELDS, type ReadinessInput } from "@/lib/jobs-readiness";
+import { matchReasons, type MatchProfile } from "@/lib/jobs-match";
 import { buttonClass } from "@/components/ui/button";
 import { timeAgo, todayPH } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -82,6 +86,18 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
     loadProfileLinks(supabase, job.owner_id),
   ]);
   const employerTx = await loadTxCounts(supabase, job.owner_id);
+  // Jobs 2.0 P5 (jobs2_matching): review-before-apply and match reasons for the signed-in member.
+  const matching = isOn("jobs2_matching") && !!userId && !isOwner;
+  const employerVerified = employerBadges.badges.includes("credible_employer");
+  let gaps: string[] = [];
+  let reasons: ReturnType<typeof matchReasons> = [];
+  if (matching) {
+    const { data: mp } = await supabase.from("job_profiles").select(`${READINESS_FIELDS.join(", ")}, job_types, expected_salary_min, expected_salary_max`).eq("user_id", userId!).maybeSingle();
+    if (mp) {
+      gaps = readiness(mp as unknown as ReadinessInput, docs).steps.flatMap((s) => s.missing).filter((m) => m !== "privacy_consent");
+      reasons = matchReasons(mp as unknown as MatchProfile, { ...job, employer_verified: employerVerified });
+    }
+  }
   const empRating = rating?.[0];
 
   return (
@@ -156,6 +172,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
 
       <aside className="h-fit space-y-3 rounded-2xl border border-border bg-white p-4 md:sticky md:top-24" aria-labelledby="apply-h">
         <h2 id="apply-h" className="text-lg font-bold text-brand-dark">{t("job.apply.title")}</h2>
+        {matching && reasons.length > 0 && <MatchReasons reasons={reasons} t={t} max={5} />}
         {isOwner ? (
           <Link href={`/jobs/employer/${job.id}`} className={buttonClass("primary", "md", "w-full")}>{t("job.emp.view_applicants")}</Link>
         ) : !open ? (
@@ -176,7 +193,12 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
             <Link href={`/jobs/profile?next=/jobs/${job.id}`} className={buttonClass("accent", "lg", "w-full")}>{t("job.apply.make_profile")}</Link>
           </>
         ) : (
-          <ApplyPanel postId={job.id} docs={docs} requested={job.requirement_docs} />
+          matching ? (
+            <ApplyReview postId={job.id} title={job.title} company={job.company_name} verified={employerVerified} docs={docs} requested={job.requirement_docs}
+              gaps={gaps} resumeHref={isOn("jobs2_resume_builder") ? "/jobs/profile/resume" : null} />
+          ) : (
+            <ApplyPanel postId={job.id} docs={docs} requested={job.requirement_docs} />
+          )
         )}
       </aside>
     </article>
