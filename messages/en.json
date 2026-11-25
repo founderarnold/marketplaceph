@@ -2767,5 +2767,8 @@
   "comp.saved.applied_note": "You already applied. See its status, messages and next step above.",
   "comp.saved.closed_note": "This job is no longer taking applications.",
   "comp.saved.see_app": "See my application",
-  "comp.saved.buttons_note": "Tip: after you apply, each job above gets these buttons: Message employer, Follow-up, Re-apply and Share job to a friend. A number beside a job means the employer sent you a new message."
+  "comp.saved.buttons_note": "Tip: after you apply, each job above gets these buttons: Message employer, Follow-up, Re-apply and Share job to a friend. A number beside a job means the employer sent you a new message.",
+  "job.edit.save_publish": "Save & Publish",
+  "job.edit.saved_published": "Saved and published. Job seekers can now see and apply to this post.",
+  "job.admin.no_location": "Location not set"
 }

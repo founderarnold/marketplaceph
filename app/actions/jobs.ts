@@ -11,7 +11,7 @@ import { isFullAdmin } from "@/lib/roles";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { recordJobEvent } from "@/app/actions/jobs2";
 
-export type JobFormState = { error?: string; values?: Record<string, string>; ok?: boolean; id?: string } | undefined;
+export type JobFormState = { error?: string; values?: Record<string, string>; ok?: boolean; id?: string; published?: boolean } | undefined;
 export type JobResult = { ok: boolean; error?: string; id?: string };
 
 async function requireUser(next = "/jobs") {
@@ -281,9 +281,13 @@ export async function adminUpdateJobPost(_prev: JobFormState, fd: FormData): Pro
   const extras = postExtras(fd);
   const { error } = await ctx.supabase.from("job_posts").update({ ...row, requirement_docs: docs, ...extras, ...(extras.hiring_tags.includes("filled") && post.status === "active" ? { status: "closed" } : {}) }).eq("id", id);
   if (error) return { error: friendly(error.message), values };
+  // "Save & Publish": after saving, publish the same way as the Publish button (placeholders cleaned first).
+  const publish = fd.get("publish") === "1" && post.status !== "active" && !extras.hiring_tags.includes("filled");
+  const pub = publish ? await publishOne(ctx.supabase, id) : null;
   revalidatePath("/admin");
   revalidatePath("/jobs", "layout");
-  return { ok: true, id, values };
+  if (pub && !pub.ok) return { error: pub.error ?? "failed", values, id };
+  return { ok: true, id, values, published: !!pub || (fd.get("publish") === "1" && post.status === "active" && !extras.hiring_tags.includes("filled")) };
 }
 
 /**
@@ -373,9 +377,16 @@ export async function updateMyJobPost(_prev: JobFormState, fd: FormData): Promis
     .select("id");
   if (error) return { error: friendly(error.message), values };
   if (!updated?.length) return { error: "forbidden", values };
+  // "Save & Publish": open the post to applicants right after saving (the database still checks the 25-open-posts limit).
+  let published = false;
+  if (fd.get("publish") === "1" && post.status !== "active" && !postExtras(fd).hiring_tags.includes("filled")) {
+    const { error: pubError } = await supabase.from("job_posts").update({ status: "active" }).eq("id", id).eq("owner_id", userId);
+    if (pubError) { revalidatePath("/jobs", "layout"); return { error: friendly(pubError.message), values, id }; }
+    published = true;
+  } else if (fd.get("publish") === "1" && post.status === "active" && !postExtras(fd).hiring_tags.includes("filled")) published = true;
   revalidatePath("/jobs", "layout");
   revalidatePath(`/jobs/${id}`);
-  return { ok: true, id, values };
+  return { ok: true, id, values, published };
 }
 
 /* ───────────── Posting tools: duplicate, filled, saved jobs ───────────── */
