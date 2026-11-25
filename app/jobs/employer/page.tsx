@@ -61,7 +61,8 @@ async function EmployerDashboardContent() {
                     <Users size={15} aria-hidden /> {t("job.emp.applicants_n", { n: c.total })}{c.fresh > 0 && <span className="rounded-full bg-accent px-2 text-xs font-bold text-brand-dark">{t("job.emp.new_n", { n: c.fresh })}</span>}
                   </Link>
                   <PostStatusButtons id={p.id} status={p.status} />
-                  <Link href={`/jobs/${p.id}`} className="text-brand underline">{t("job.emp.preview")}</Link>
+                  {p.status !== "removed" && <Link href={`/jobs/employer/${p.id}/edit`} className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 font-semibold text-brand-dark">{t("job.edit.button")}</Link>}
+                  <Link href={`/jobs/${p.id}`} className="inline-flex min-h-11 items-center text-brand underline">{t("job.emp.preview")}</Link>
                 </div>
               </li>
             );

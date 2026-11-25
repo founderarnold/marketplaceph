@@ -242,6 +242,15 @@ export async function moderateJobPost(id: string, status: "removed" | "active"):
   return error ? { ok: false, error: friendly(error.message) } : { ok: true };
 }
 
+
+/** Optional fields a form may leave out entirely (e.g. no province for NCR cities, no licence for employers). */
+const OPTIONAL_POST_FIELDS = ["agency_license_no", "region_code", "province_code", "city_code", "qualifications", "salary_min", "salary_max", "salary_period", "deadline"] as const;
+const withOptionalBlanks = (raw: Record<string, FormDataEntryValue>) => {
+  const out: Record<string, unknown> = { ...raw };
+  for (const k of OPTIONAL_POST_FIELDS) if (out[k] === undefined) out[k] = "";
+  return out;
+};
+
 /* ───────────── Admin: edit and publish job posts (starter drafts) ───────────── */
 /** Full admins only (admin, founder, webmaster). The database allows wording changes only while a post is hidden. */
 async function requireFullAdmin(next: string) {
@@ -257,12 +266,11 @@ export async function adminUpdateJobPost(_prev: JobFormState, fd: FormData): Pro
   const values = Object.fromEntries(Object.entries(raw).filter(([, v]) => typeof v === "string")) as Record<string, string>;
   const ctx = await requireFullAdmin("/admin?tab=jobs");
   if (!ctx) return { error: "forbidden", values };
-  const parsed = adminPostSchema.safeParse(raw);
+  const parsed = adminPostSchema.safeParse(withOptionalBlanks(raw));
   if (!parsed.success) return { error: "invalid", values };
   const { id, ...row } = parsed.data;
   const { data: post } = await ctx.supabase.from("job_posts").select("status").eq("id", id).maybeSingle();
-  if (!post) return { error: "invalid", values };
-  if (post.status !== "hidden") return { error: "not_draft", values };
+  if (!post || post.status === "removed") return { error: "invalid", values };
   const docs = fd.getAll("requirement_docs").map(String).filter((d) => (DOC_KINDS as readonly string[]).includes(d));
   const { error } = await ctx.supabase.from("job_posts").update({ ...row, requirement_docs: docs }).eq("id", id);
   if (error) return { error: friendly(error.message), values };
@@ -328,4 +336,37 @@ export async function adminPublishAllDrafts(): Promise<JobResult & { published?:
   revalidatePath("/admin");
   revalidatePath("/jobs", "layout");
   return { ok: failed === 0, published, failed };
+}
+
+/* ───────────── Employers / agencies: edit their own post (published or not) ───────────── */
+const ownerPostSchema = postObject.omit({ poster_type: true }).extend({ id: z.uuid() }).refine(salaryOrder, { path: ["salary_max"] });
+
+/**
+ * The post owner edits their own job post. RLS allows only owner_id = auth.uid(), the query is also limited to the
+ * owner, the anti-fee / agency-licence trigger (job_posts_guard) still checks the new text, and applications are
+ * untouched (they reference the post by id).
+ */
+export async function updateMyJobPost(_prev: JobFormState, fd: FormData): Promise<JobFormState> {
+  const raw = Object.fromEntries(fd);
+  const values = Object.fromEntries(Object.entries(raw).filter(([, v]) => typeof v === "string")) as Record<string, string>;
+  const parsed = ownerPostSchema.safeParse(withOptionalBlanks(raw));
+  if (!parsed.success) return { error: "invalid", values };
+  const { supabase, userId } = await requireUser(`/jobs/employer/${parsed.data.id}/edit`);
+  const { id, ...row } = parsed.data;
+  const { data: post } = await supabase.from("job_posts").select("owner_id, status, poster_type").eq("id", id).maybeSingle();
+  if (!post || post.owner_id !== userId) return { error: "forbidden", values };
+  if (post.status === "removed") return { error: "removed", values };
+  if (post.poster_type !== "agency") row.agency_license_no = null;
+  const docs = fd.getAll("requirement_docs").map(String).filter((d) => (DOC_KINDS as readonly string[]).includes(d));
+  const { data: updated, error } = await supabase
+    .from("job_posts")
+    .update({ ...row, requirement_docs: docs })
+    .eq("id", id)
+    .eq("owner_id", userId)
+    .select("id");
+  if (error) return { error: friendly(error.message), values };
+  if (!updated?.length) return { error: "forbidden", values };
+  revalidatePath("/jobs", "layout");
+  revalidatePath(`/jobs/${id}`);
+  return { ok: true, id, values };
 }
