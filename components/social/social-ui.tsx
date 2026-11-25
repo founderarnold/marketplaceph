@@ -1,9 +1,9 @@
-import { BadgeCheck, Bike, Briefcase, CalendarCheck, CheckCircle2, ShieldCheck, Users } from "lucide-react";
+import { BadgeCheck, Bike, Briefcase, CalendarCheck, CheckCircle2, ShieldCheck, UserCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { TFunction } from "@/lib/i18n/shared";
 import type { FriendInfo } from "@/lib/social-data";
 
-const icons = { verified_buyer: ShieldCheck, good_applicant: BadgeCheck, credible_employer: Briefcase, years_verified: CalendarCheck, verified_rider: Bike } as const;
+const icons = { verified_buyer: ShieldCheck, good_applicant: BadgeCheck, credible_employer: Briefcase, years_verified: CalendarCheck, verified_rider: Bike, verified_professional: UserCheck } as const;
 
 /** Admin-approved badges ("Verified buyer", "Good applicant", "Credible employer", "Verified 10+ years in business"). */
 export function ApprovedBadges({ badges, yearsSince, t }: { badges: string[]; yearsSince?: number | null; t: TFunction }) {

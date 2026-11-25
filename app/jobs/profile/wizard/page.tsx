@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import type { WizardStep } from "@/app/actions/jobs2";
 import { DocumentsManager } from "@/components/jobs/documents-manager";
 import { PageSkeleton } from "@/components/layout/page-skeleton";
+import { ProEdgeTips } from "@/components/jobs/pro-verify";
 import { ProfileWizard, type WizardProfile } from "@/components/jobs2/profile-wizard";
 import { getLocations } from "@/lib/data";
 import { isOn } from "@/lib/flags";
@@ -36,6 +37,7 @@ async function Wizard({ searchParams }: { searchParams: Promise<Record<string, s
         <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{t("job3.steps_title")}</h1>
         <p className="text-muted-foreground">{t("job4.sub")}</p>
       </header>
+      <ProEdgeTips t={t} />
       <ProfileWizard step={step} profile={profile as unknown as WizardProfile | null} defaultName={me?.display_name ?? ""} locations={locations}
         resumeHref={isOn("jobs2_resume_builder") ? "/jobs/profile/resume" : null}
         documents={<DocumentsManager userId={userId} docs={docs ?? []} />} />

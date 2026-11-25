@@ -84,7 +84,7 @@ const STEP_SCHEMAS = {
     full_name: z.string().trim().min(2).max(80),
     desired_roles: opt(200), phone: opt(20), contact_email: z.preprocess((v) => (v === "" ? null : v), z.email().max(120).nullable().optional()),
     region_code: code, province_code: code, city_code: code,
-    job_types: z.array(z.enum(EMPLOYMENT_TYPES)).max(6).optional(),
+    job_types: z.array(z.enum(EMPLOYMENT_TYPES)).max(EMPLOYMENT_TYPES.length).optional(),
     open_to_work: z.boolean().optional(),
   }),
   2: z.object({ skills: z.array(z.string().trim().min(1).max(40)).max(20), education_level: z.enum(EDUCATION_LEVELS).nullable().optional() }),

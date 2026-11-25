@@ -12,6 +12,7 @@ export type JobCardData = {
   poster_type: string;
   category: string;
   employment_type: string;
+  slug?: string | null;
   work_setup: string;
   salary_min: number | string | null;
   salary_max: number | string | null;
@@ -42,7 +43,7 @@ export function JobCard({ job, t, extra, logo }: { job: JobCardData; t: TFunctio
   const where = job.work_setup === "remote" ? t("job.setup.remote") : [job.psgc_cities?.name, job.psgc_provinces?.name].filter(Boolean).join(", ");
   return (
     <li>
-      <Link href={`/jobs/${job.id}`} className="block rounded-2xl border border-border bg-white p-4 transition-colors hover:border-brand hover:bg-brand-soft/40">
+      <Link href={`/jobs/${job.slug || job.id}`} className="block rounded-2xl border border-border bg-white p-4 transition-colors hover:border-brand hover:bg-brand-soft/40">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="flex min-w-0 items-start gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,6 +76,6 @@ export function JobCard({ job, t, extra, logo }: { job: JobCardData; t: TFunctio
 }
 
 export const JOB_CARD_SELECT = `
-  id, title, company_name, poster_type, category, employment_type, work_setup, salary_min, salary_max, salary_period, vacancies, created_at, hiring_tags, logo_url,
+  id, slug, title, company_name, poster_type, category, employment_type, work_setup, salary_min, salary_max, salary_period, vacancies, created_at, hiring_tags, logo_url,
   psgc_cities ( name ), psgc_provinces ( name )
 ` as const;

@@ -1,4 +1,4 @@
-import { Briefcase, CalendarClock, MapPin, ShieldAlert, Users } from "lucide-react";
+import { Briefcase, CalendarClock, MapPin, MessageCircle, ShieldAlert, UserCheck, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignInButton } from "@/components/auth/auth-modal";
@@ -8,7 +8,7 @@ import { FriendButton } from "@/components/social/friend-button";
 import { ApprovedBadges, FriendStats, TxStats } from "@/components/social/social-ui";
 import { Stars } from "@/components/trust/trust-ui";
 import { loadFriendInfo, loadTxCounts, loadUserBadges } from "@/lib/social-data";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { ApplyPanel } from "@/components/jobs/apply-panel";
@@ -23,7 +23,7 @@ import { matchReasons, type MatchProfile } from "@/lib/jobs-match";
 import { buttonClass } from "@/components/ui/button";
 import { timeAgo, todayPH } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
-import { salaryLabel } from "@/lib/jobs";
+import { JOB_SLUG, jobPath, salaryLabel } from "@/lib/jobs";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { JobsTracker } from "@/components/jobs2/tracker";
 import { QuickApply, type BasicProfile } from "@/components/jobs/quick-apply";
@@ -31,39 +31,62 @@ import { ApplicantTips } from "@/components/jobs/applicant-tips";
 import { getLocations } from "@/lib/data";
 import { isOn } from "@/lib/flags";
 
+/** An address part is either a post id (old links) or a readable slug. */
+function jobKey(key: string): { col: "id" | "slug"; val: string } | null {
+  if (z.uuid().safeParse(key).success) return { col: "id", val: key };
+  return JOB_SLUG.test(key) && key.length <= 100 ? { col: "slug", val: key } : null;
+}
+
 export async function generateMetadata({ params }: PageProps<"/jobs/[id]">): Promise<Metadata> {
   if (!isOn("jobs2_landing")) return { title: "Job details" };
   const { id } = await params;
-  if (!z.uuid().safeParse(id).success) return { title: "Job details" };
   // Public, cookie-less read: only active posts are visible to anon, so drafts never leak into metadata.
-  const { data } = await createPublicClient().from("job_posts").select("title, company_name, description").eq("id", id).eq("status", "active").maybeSingle();
-  if (!data) return { title: "Job details", alternates: { canonical: `/jobs/${id}` } };
+  const k = jobKey(id);
+  if (!k) return { title: "Job details" };
+  const pub = createPublicClient();
+  const sel = "id, slug, title, company_name, description, work_setup, psgc_cities ( name ), psgc_provinces ( name )";
+  let { data } = await pub.from("job_posts").select(sel).eq("status", "active").eq(k.col, k.val).maybeSingle();
+  if (!data && k.col === "slug") ({ data } = await pub.from("job_posts").select(sel).eq("status", "active").contains("old_slugs", [k.val]).limit(1).maybeSingle());
+  if (!data) return { title: "Job details" };
+  const path = jobPath(data);
+  const place = data.work_setup === "remote" ? "Remote" : [data.psgc_cities?.name, data.psgc_provinces?.name].filter(Boolean).join(", ");
+  const title = `${data.title} at ${data.company_name}`;
+  const description = data.description.replace(/\s+/g, " ").slice(0, 155);
   return {
-    title: `${data.title} at ${data.company_name}`,
-    description: data.description.replace(/\s+/g, " ").slice(0, 155),
-    alternates: { canonical: `/jobs/${id}` },
+    title,
+    description,
+    alternates: { canonical: path },
+    // What Messenger / Facebook show under a shared link: "Hiring: Marketing Manager · San Fernando, Pampanga".
+    openGraph: { title: `Hiring: ${data.title}${place ? ` · ${place}` : ""}`, description: `${data.company_name} · ${description}`, url: path, type: "website" },
   };
 }
 
 export default function JobPage(props: PageProps<"/jobs/[id]">) {
   return (
     <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-muted" />}>
-      <Job params={props.params} />
+      <Job params={props.params} searchParams={props.searchParams} />
     </Suspense>
   );
 }
 
-async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
-  const { id } = await params;
-  if (!z.uuid().safeParse(id).success) notFound();
+async function Job({ params, searchParams }: Pick<PageProps<"/jobs/[id]">, "params" | "searchParams">) {
+  const { id: key } = await params;
   const { t } = await getT();
   const supabase = await createClient();
-  const { data: job } = await supabase
-    .from("job_posts")
-    .select("*, psgc_cities ( name ), psgc_provinces ( name ), psgc_regions ( short_name )")
-    .eq("id", id)
-    .maybeSingle();
+  const k = jobKey(key);
+  if (!k) notFound();
+  const sel = "*, psgc_cities ( name ), psgc_provinces ( name ), psgc_regions ( short_name )";
+  let { data: job } = await supabase.from("job_posts").select(sel).eq(k.col, k.val).maybeSingle();
+  // A slug the post had before its title or city changed (links already shared keep working).
+  if (!job && k.col === "slug") ({ data: job } = await supabase.from("job_posts").select(sel).contains("old_slugs", [k.val]).limit(1).maybeSingle());
   if (!job) notFound();
+  // Old /jobs/<id> links and links made before a title change open the readable address (tracking tags kept).
+  if (job.slug && key !== job.slug) {
+    const sp = new URLSearchParams();
+    for (const [k, v] of Object.entries(await searchParams)) for (const x of Array.isArray(v) ? v : v ? [v] : []) sp.append(k, x);
+    permanentRedirect(`${jobPath(job)}${sp.size ? `?${sp}` : ""}`);
+  }
+  const id = job.id;
 
   const { data: claims } = await supabase.auth.getClaims();
   const userId = (claims?.claims?.sub as string | undefined) ?? null;
@@ -72,17 +95,20 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
   const pay = salaryLabel(job.salary_min, job.salary_max, job.salary_period, (p) => t(`job.per.${p}`));
   const where = job.work_setup === "remote" ? t("job.setup.remote") : [job.psgc_cities?.name, job.psgc_provinces?.name, job.psgc_regions?.short_name].filter(Boolean).join(", ");
 
-  let application: { status: string; created_at: string } | null = null;
+  let application: { id: string; status: string; created_at: string } | null = null;
+  let isPro = false;
   let profileReady = false;
   let basic: BasicProfile | null = null;
   let docs: { id: string; kind: string; title: string | null }[] = [];
   if (userId && !isOwner) {
-    const [{ data: app }, { data: prof }, { data: d }] = await Promise.all([
-      supabase.from("job_applications").select("status, created_at").eq("post_id", id).eq("applicant_id", userId).maybeSingle(),
+    const [{ data: app }, { data: prof }, { data: d }, { data: pro }] = await Promise.all([
+      supabase.from("job_applications").select("id, status, created_at").eq("post_id", id).eq("applicant_id", userId).maybeSingle(),
       supabase.from("job_profiles").select("consent_at, full_name, phone, contact_email, desired_roles, region_code, province_code, city_code").eq("user_id", userId).maybeSingle(),
       supabase.from("job_documents").select("id, kind, title").eq("user_id", userId).order("created_at"),
+      supabase.from("user_badges").select("badge").eq("user_id", userId).eq("badge", "verified_professional").maybeSingle(),
     ]);
     application = app;
+    isPro = !!pro;
     profileReady = !!prof?.consent_at;
     basic = prof;
     docs = d ?? [];
@@ -105,7 +131,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
   const logoPath = job.logo_url ?? store?.logo_url ?? null;
   const similar = (similarRaw ?? []) as unknown as JobCardData[];
   const isSaved = !!savedRes.data;
-  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketplaceph.com"}/jobs/${job.id}`;
+  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketplaceph.com"}${jobPath(job)}`;
   // Jobs 2.0 P5 (jobs2_matching): review-before-apply and match reasons for the signed-in member.
   const matching = isOn("jobs2_matching") && !!userId && !isOwner;
   const employerVerified = employerBadges.badges.includes("credible_employer");
@@ -125,7 +151,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
     ? await Promise.all([getLocations(), supabase.from("profiles").select("display_name").eq("id", userId!).maybeSingle()])
     : [null, { data: null }];
   const profileLink = (
-    <Link href={`/jobs/profile?next=/jobs/${job.id}`} className={buttonClass("outline", "md", "w-full")}>{basic ? t("comp.update_profile") : t("job.apply.make_profile")}</Link>
+    <Link href={`/jobs/profile?next=${jobPath(job)}`} className={buttonClass("outline", "md", "w-full")}>{basic ? t("comp.update_profile") : t("job.apply.make_profile")}</Link>
   );
 
   return (
@@ -164,7 +190,7 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {job.creative_url && <img src={imageUrl(job.creative_url, "store-assets")} alt={t("job.tools.creative")} className="max-h-[28rem] w-full rounded-2xl border border-border bg-white object-contain" loading="lazy" />}
-        <ShareJob url={shareUrl} title={`${job.title} · ${job.company_name}`} />
+        <ShareJob url={shareUrl} title={`${job.title} · ${job.company_name}`} text={t("job.share.text", { title: job.title, company: job.company_name, where: where || t("job.setup.remote") })} />
         <section aria-labelledby="jd-desc">
           <h2 id="jd-desc" className="mb-1 font-bold text-brand-dark">{t("job.about_job")}</h2>
           <p className="whitespace-pre-line leading-relaxed">{job.description}</p>
@@ -228,17 +254,25 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
         ) : application ? (
           <div className="space-y-2">
             <p className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">✓ {t("job.apply.done", { status: t(`job.status.${application.status}`) })}</p>
+            <Link href={`/jobs/messages/${application.id}`} className={buttonClass("primary", "md", "w-full gap-2")}><MessageCircle size={16} aria-hidden /> {t("sendp.message_employer")}</Link>
+            <p className="text-xs text-muted-foreground">{t("sendp.message_hint")}</p>
             <Link href="/jobs/applications" className={buttonClass("outline", "md", "w-full")}>{t("job.nav.applications")}</Link>
             {profileLink}
           </div>
         ) : !profileReady ? (
           <>
-            <QuickApply next={`/jobs/${job.id}`} locations={locations!} profile={basic} defaultName={me?.display_name ?? ""} jobTitle={job.title} />
+            <QuickApply next={jobPath(job)} locations={locations!} profile={basic} defaultName={me?.display_name ?? ""} jobTitle={job.title} />
             {profileLink}
           </>
         ) : (
           <div id="apply" className="space-y-3">
-          <p className="rounded-xl bg-success-soft p-2 text-sm font-semibold text-success">{t("comp.apply.step2")}</p>
+          <div className="space-y-1 rounded-xl bg-success-soft p-3 text-sm text-success">
+            <p className="flex items-center gap-1.5 font-bold"><UserCheck size={16} aria-hidden /> {t("sendp.ready")}</p>
+            <p className="text-foreground">{t("sendp.what")}</p>
+            {isPro
+              ? <p className="font-semibold">✓ {t("sendp.pro_shown")}</p>
+              : <Link href="/jobs/profile#verify" className="inline-flex min-h-11 items-center font-semibold text-brand underline">{t("sendp.get_verified")}</Link>}
+          </div>
           {matching ? (
             <ApplyReview postId={job.id} title={job.title} company={job.company_name} verified={employerVerified} docs={docs} requested={job.requirement_docs}
               gaps={gaps} resumeHref={isOn("jobs2_resume_builder") ? "/jobs/profile/resume" : null} />

@@ -10,6 +10,9 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { isOn } from "@/lib/flags";
 import { ApplicantTips } from "@/components/jobs/applicant-tips";
+import { loadProStatus, ProEdgeTips, ProVerifyCard } from "@/components/jobs/pro-verify";
+import { proChecklist } from "@/lib/jobs-verify";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const metadata: Metadata = { title: "My job profile" };
 
@@ -26,6 +29,8 @@ async function JobProfilePageContent() {
     supabase.from("profiles").select("display_name").eq("id", userId).maybeSingle(),
     getLocations(),
   ]);
+  const pro = await loadProStatus(supabase as unknown as SupabaseClient, userId);
+  const checks = proChecklist(profile, docs ?? []);
 
   return (
     <div className="space-y-5">
@@ -37,8 +42,10 @@ async function JobProfilePageContent() {
         {isOn("jobs2_resume_builder") && <p className="text-sm"><Link href="/jobs/profile/resume" className="font-semibold text-brand underline">{t("job4.make_resume")}</Link></p>}
       </header>
       <ApplicantTips t={t} />
+      {pro.status !== "have" && <ProEdgeTips t={t} />}
       <JobProfileForm profile={profile as JobProfile | null} locations={locations} defaultName={me?.display_name ?? ""} />
       <DocumentsManager userId={userId} docs={docs ?? []} />
+      <ProVerifyCard t={t} checks={checks.items} complete={checks.complete} status={pro.status} reviewerNote={pro.reviewerNote} />
     </div>
   );
 }

@@ -97,20 +97,28 @@ export function JobExtrasFields({ userId, tags = [], logo = null, creative = nul
 }
 
 /** Share a job: phone share sheet when available, plus Facebook, Messenger and copy link (with UTM tags). */
-export function ShareJob({ url, title }: { url: string; title: string }) {
+/**
+ * Share buttons for a job. The link is the readable job address (title and city, e.g.
+ * marketplaceph.com/jobs/marketing-manager-san-fernando-pampanga) with nothing added, so it looks safe in Messenger
+ * and other chats. Only the Facebook post (where the address is hidden behind a preview card) carries a tracking tag.
+ */
+export function ShareJob({ url, title, text }: { url: string; title: string; text?: string }) {
   const { t } = useT();
   const [copied, setCopied] = useState(false);
-  const withUtm = (src: string) => `${url}?utm_source=${src}&utm_medium=share&utm_campaign=job_share`;
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
   const btn = "inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-white px-3 text-sm font-semibold hover:bg-muted";
+  const fb = `${url}?utm_source=facebook&utm_medium=share&utm_campaign=job_share`;
   return (
-    <div className="flex flex-wrap gap-2" aria-label={t("job.tools.share")}>
-      {canShare && <button type="button" className={btn} onClick={() => navigator.share({ title, url: withUtm("native") }).catch(() => {})}><Share2 size={16} aria-hidden /> {t("job.tools.share")}</button>}
-      <a className={btn} target="_blank" rel="noopener" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(withUtm("facebook"))}`}>Facebook</a>
-      <a className={btn} target="_blank" rel="noopener" href={`fb-messenger://share/?link=${encodeURIComponent(withUtm("messenger"))}`}><MessageCircle size={16} aria-hidden /> Messenger</a>
-      <button type="button" className={btn} onClick={() => navigator.clipboard?.writeText(withUtm("copy")).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}>
-        <Link2 size={16} aria-hidden /> {copied ? t("job.tools.copied") : t("job.tools.copy_link")}
-      </button>
+    <div className="space-y-1.5">
+      <div className="flex flex-wrap gap-2" aria-label={t("job.tools.share")}>
+        {canShare && <button type="button" className={btn} onClick={() => navigator.share({ title, text: text ?? title, url }).catch(() => {})}><Share2 size={16} aria-hidden /> {t("job.tools.share")}</button>}
+        <a className={btn} target="_blank" rel="noopener" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fb)}`}>Facebook</a>
+        <a className={btn} target="_blank" rel="noopener" href={`fb-messenger://share/?link=${encodeURIComponent(url)}`}><MessageCircle size={16} aria-hidden /> Messenger</a>
+        <button type="button" className={btn} onClick={() => navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); })}>
+          <Link2 size={16} aria-hidden /> {copied ? t("job.tools.copied") : t("job.tools.copy_link")}
+        </button>
+      </div>
+      <p className="break-all text-xs text-muted-foreground"><span className="sr-only">{t("job.share.link_label")} </span>{url.replace(/^https?:\/\/(www\.)?/, "")}</p>
     </div>
   );
 }

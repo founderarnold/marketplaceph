@@ -4,7 +4,7 @@ import { recordJobEvent } from "@/app/actions/jobs2";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { BADGES } from "@/lib/social";
+import { BADGES, REMOVABLE_BADGES } from "@/lib/social";
 
 /* Suki friends, public updates, Q&A comments, job reviews and badge requests.
    Every rule (who may do what, daily limits, banned words) is enforced by the database; these only validate input. */
@@ -118,7 +118,7 @@ export async function decideBadge(requestId: string, approve: boolean, note: str
 }
 
 export async function removeBadge(userId: string, badge: string): Promise<R> {
-  const p = z.object({ u: uuid, b: z.enum(BADGES) }).safeParse({ u: userId, b: badge });
+  const p = z.object({ u: uuid, b: z.enum(REMOVABLE_BADGES) }).safeParse({ u: userId, b: badge });
   if (!p.success) return { ok: false, error: "invalid" };
   const { supabase } = await ctx();
   const { error } = await supabase.rpc("revoke_badge", { p_user: p.data.u, p_badge: p.data.b });

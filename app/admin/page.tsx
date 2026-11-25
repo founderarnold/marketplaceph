@@ -11,6 +11,7 @@ import { JobsAdmin } from "@/app/admin/jobs";
 import { Plans } from "@/app/admin/plans";
 import { BadgesAdmin } from "@/app/admin/badges";
 import { RidersAdmin } from "@/app/admin/riders";
+import { ProsAdmin } from "@/app/admin/pros";
 import { ALL_ROLES, isFullAdmin, isStaff } from "@/lib/roles";
 import { purgeExpiredDocuments, reviewVerification } from "@/app/actions/verification";
 import { DocButton } from "@/components/admin/doc-button";
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false } };
 
-const TABS = ["cases", "appeals", "disputes", "badges", "riders", "plans", "jobs", "verification", "watchlist", "listings", "stores", "users", "categories", "banned", "audit"] as const;
+const TABS = ["cases", "appeals", "disputes", "badges", "pros", "riders", "plans", "jobs", "verification", "watchlist", "listings", "stores", "users", "categories", "banned", "audit"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AdminPage(props: PageProps<"/admin">) {
@@ -66,6 +67,7 @@ async function Admin({ searchParams }: Pick<PageProps<"/admin">, "searchParams">
       {tab === "appeals" && <Appeals isAdmin={isAdmin} />}
       {tab === "disputes" && <Disputes isAdmin={isAdmin} />}
       {tab === "badges" && <BadgesAdmin isAdmin={isAdmin} />}
+      {tab === "pros" && <ProsAdmin isAdmin={isAdmin} />}
       {tab === "riders" && <RidersAdmin isAdmin={isAdmin} show={sp.show === "all" ? "all" : "pending"} />}
       {tab === "plans" && <Plans isAdmin={isAdmin} />}
       {tab === "jobs" && <JobsAdmin canEdit={isAdmin} show={sp.show === "drafts" ? "drafts" : "all"} />}

@@ -11,7 +11,7 @@ export async function BadgesAdmin({ isAdmin }: { isAdmin: boolean }) {
   if (!isAdmin) return <p className={card}>{t("adminb.full_admin_only")}</p>;
   const supabase = await createClient();
   const [{ data: reqs }, { data: holders }, { data: pins }] = await Promise.all([
-    supabase.from("badge_requests").select("id, user_id, badge, note, created_at").eq("status", "pending").order("created_at").limit(100),
+    supabase.from("badge_requests").select("id, user_id, badge, note, created_at").eq("status", "pending").neq("badge", "verified_professional").order("created_at").limit(100),
     supabase.from("user_badges").select("user_id, badge, granted_at").order("granted_at", { ascending: false }).limit(200),
     supabase.from("featured_pins").select("user_id, kind, until, created_at").order("created_at", { ascending: false }),
   ]);
