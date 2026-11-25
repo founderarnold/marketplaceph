@@ -19,8 +19,26 @@ export const APPLICATION_STATUSES = ["submitted", "viewed", "shortlisted", "inte
 export const EMPLOYER_STATUSES = ["viewed", "shortlisted", "interview", "rejected", "hired"] as const;
 export const POST_STATUSES = ["active", "closed", "hidden", "removed"] as const;
 /** Hiring badges employers and admins can set. "filled" (Hired / position filled) also closes the post. */
-export const HIRING_TAGS = ["urgent", "few_slots", "wait_list", "seasonal", "filled"] as const;
+export const HIRING_TAGS = ["urgent", "few_slots", "wait_list", "seasonal", "on_call", "filled"] as const;
 export type HiringTag = (typeof HIRING_TAGS)[number];
+/**
+ * Quick "kind of work" checkboxes on Find jobs. A job shows when it matches ANY ticked box:
+ * Work from home = work setup Remote, Part-time = employment type Part-time, Seasonal and On-call = hiring tags.
+ */
+export const JOB_KIND_FILTERS = ["wfh", "part_time", "seasonal", "on_call"] as const;
+export type JobKindFilter = (typeof JOB_KIND_FILTERS)[number];
+export const JOB_KIND_CONDITION: Record<JobKindFilter, string> = {
+  wfh: "work_setup.eq.remote",
+  part_time: "employment_type.eq.part_time",
+  seasonal: "hiring_tags.cs.{seasonal}",
+  on_call: "hiring_tags.cs.{on_call}",
+};
+/** Ticked kinds from the address bar (unknown values dropped, no duplicates). */
+export function parseKinds(v: string | string[] | undefined): JobKindFilter[] {
+  const list = Array.isArray(v) ? v : v ? [v] : [];
+  return JOB_KIND_FILTERS.filter((k) => list.includes(k));
+}
+
 /** Public image path in the store-assets bucket: "<uploader id>/<uuid>.webp" (matches the database check). */
 export const JOB_IMAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/;
 

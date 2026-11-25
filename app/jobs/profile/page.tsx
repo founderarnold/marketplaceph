@@ -9,6 +9,7 @@ import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { isOn } from "@/lib/flags";
+import { ApplicantTips } from "@/components/jobs/applicant-tips";
 
 export const metadata: Metadata = { title: "My job profile" };
 
@@ -29,12 +30,13 @@ async function JobProfilePageContent() {
   return (
     <div className="space-y-5">
       <header className="space-y-1">
-        <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{t("job.pf.title")}</h1>
+        <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{profile ? t("comp.update_profile") : t("job.pf.title")}</h1>
         <p className="text-muted-foreground">{t("job.pf.sub")}</p>
         {!profile && <p className="rounded-xl bg-accent-soft p-3 text-sm font-semibold text-accent-strong">{t("job.pf.start")}</p>}
         {isOn("jobs2_profile_wizard") && <p className="text-sm"><Link href="/jobs/profile/wizard" className="font-semibold text-brand underline">{t("job4.try_wizard")}</Link></p>}
         {isOn("jobs2_resume_builder") && <p className="text-sm"><Link href="/jobs/profile/resume" className="font-semibold text-brand underline">{t("job4.make_resume")}</Link></p>}
       </header>
+      <ApplicantTips t={t} />
       <JobProfileForm profile={profile as JobProfile | null} locations={locations} defaultName={me?.display_name ?? ""} />
       <DocumentsManager userId={userId} docs={docs ?? []} />
     </div>

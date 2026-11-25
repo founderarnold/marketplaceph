@@ -26,6 +26,9 @@ import { getT } from "@/lib/i18n/server";
 import { salaryLabel } from "@/lib/jobs";
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { JobsTracker } from "@/components/jobs2/tracker";
+import { QuickApply, type BasicProfile } from "@/components/jobs/quick-apply";
+import { ApplicantTips } from "@/components/jobs/applicant-tips";
+import { getLocations } from "@/lib/data";
 import { isOn } from "@/lib/flags";
 
 export async function generateMetadata({ params }: PageProps<"/jobs/[id]">): Promise<Metadata> {
@@ -71,15 +74,17 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
 
   let application: { status: string; created_at: string } | null = null;
   let profileReady = false;
+  let basic: BasicProfile | null = null;
   let docs: { id: string; kind: string; title: string | null }[] = [];
   if (userId && !isOwner) {
     const [{ data: app }, { data: prof }, { data: d }] = await Promise.all([
       supabase.from("job_applications").select("status, created_at").eq("post_id", id).eq("applicant_id", userId).maybeSingle(),
-      supabase.from("job_profiles").select("consent_at").eq("user_id", userId).maybeSingle(),
+      supabase.from("job_profiles").select("consent_at, full_name, phone, contact_email, desired_roles, region_code, province_code, city_code").eq("user_id", userId).maybeSingle(),
       supabase.from("job_documents").select("id, kind, title").eq("user_id", userId).order("created_at"),
     ]);
     application = app;
     profileReady = !!prof?.consent_at;
+    basic = prof;
     docs = d ?? [];
   }
 
@@ -114,6 +119,14 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
     }
   }
   const empRating = rating?.[0];
+  // "Apply Now" step 1 needs the location list and the member's name only when the basic profile is not ready yet.
+  const needBasics = !!userId && !isOwner && open && !application && !profileReady;
+  const [locations, { data: me }] = needBasics
+    ? await Promise.all([getLocations(), supabase.from("profiles").select("display_name").eq("id", userId!).maybeSingle()])
+    : [null, { data: null }];
+  const profileLink = (
+    <Link href={`/jobs/profile?next=/jobs/${job.id}`} className={buttonClass("outline", "md", "w-full")}>{basic ? t("comp.update_profile") : t("job.apply.make_profile")}</Link>
+  );
 
   return (
     <article className="grid gap-5 md:grid-cols-[1fr_20rem]">
@@ -209,28 +222,34 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
           <p className="text-sm text-muted-foreground">{(job.hiring_tags ?? []).includes("filled") ? t("job.tag.filled") : t("job.closed")}</p>
         ) : !userId ? (
           <>
+            <SignInButton className={buttonClass("accent", "lg", "w-full")}>{t("comp.btn.apply")}</SignInButton>
             <p className="text-sm text-muted-foreground">{t("job.apply.login")}</p>
-            <SignInButton className={buttonClass("accent", "lg", "w-full")}>{t("job.apply.login_btn")}</SignInButton>
           </>
         ) : application ? (
           <div className="space-y-2">
             <p className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">✓ {t("job.apply.done", { status: t(`job.status.${application.status}`) })}</p>
             <Link href="/jobs/applications" className={buttonClass("outline", "md", "w-full")}>{t("job.nav.applications")}</Link>
+            {profileLink}
           </div>
         ) : !profileReady ? (
           <>
-            <p className="text-sm text-muted-foreground">{t("job.apply.need_profile")}</p>
-            <Link href={`/jobs/profile?next=/jobs/${job.id}`} className={buttonClass("accent", "lg", "w-full")}>{t("job.apply.make_profile")}</Link>
+            <QuickApply next={`/jobs/${job.id}`} locations={locations!} profile={basic} defaultName={me?.display_name ?? ""} jobTitle={job.title} />
+            {profileLink}
           </>
         ) : (
-          matching ? (
+          <div id="apply" className="space-y-3">
+          <p className="rounded-xl bg-success-soft p-2 text-sm font-semibold text-success">{t("comp.apply.step2")}</p>
+          {matching ? (
             <ApplyReview postId={job.id} title={job.title} company={job.company_name} verified={employerVerified} docs={docs} requested={job.requirement_docs}
               gaps={gaps} resumeHref={isOn("jobs2_resume_builder") ? "/jobs/profile/resume" : null} />
           ) : (
             <ApplyPanel postId={job.id} docs={docs} requested={job.requirement_docs} />
-          )
+          )}
+          {profileLink}
+          </div>
         )}
         {userId && !isOwner && <SaveJobButton id={job.id} saved={isSaved} />}
+        {!isOwner && <ApplicantTips t={t} compact />}
       </aside>
       {similar.length > 0 && (
         <section aria-labelledby="similar-h" className="space-y-2 md:col-span-2">
