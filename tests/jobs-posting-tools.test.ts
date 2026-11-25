@@ -12,7 +12,9 @@ const F = fil as Record<string, string>;
 describe("posting tools", () => {
   const sql = read("supabase/migrations/20261125000006_jobs_posting_tools.sql");
   it("migration is additive, tags match the app, images use the public bucket path format, saved jobs are private", () => {
-    for (const k of HIRING_TAGS) expect(sql).toContain(`'${k}'`);
+    // 'on_call' was added later by 20261125000008 (applicant companion), which widens the same check.
+    const later = read("supabase/migrations/20261125000008_jobs_applicant_companion.sql");
+    for (const k of HIRING_TAGS) expect(sql + later).toContain(`'${k}'`);
     expect(sql).not.toMatch(/drop (table|column)|delete from|truncate/i);
     expect(sql).toMatch(/create policy saved_jobs_read on public\.saved_jobs for select using \(user_id = auth\.uid\(\)\)/);
     expect(JOB_IMAGE_PATH.test("1b0c1f6e-1111-4222-8333-944455556666/2b0c1f6e-1111-4222-8333-944455556666.webp")).toBe(true);

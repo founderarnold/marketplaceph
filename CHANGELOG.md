@@ -1,5 +1,12 @@
 # Changelog
 
+## Jobs applicant companion (25 Nov 2026)
+
+- Find jobs: Work from home, Part-time jobs, Seasonal hiring and On-call jobs checkboxes (a job shows when it matches any ticked box). New hiring tag "On-call job" for employers.
+- Job page: **Apply now** with two steps (basic information once, then send). "Make my profile" becomes "Update my profile" once a profile exists. Tips for first-time applicants and why a good profile helps.
+- My applications: what each status means, a step-by-step guide per job, new-message badge and latest employer message, working **Follow-up** (polite ready-made message in the job chat, every 3 days), **Re-apply** (withdrawn anytime; not selected after 14 days; once a week; max 3), **Share job to a friend**; saved jobs show applied / not applied with Apply now.
+- Migration 20261125000008_jobs_applicant_companion.sql (rollback in supabase/rollback/). Tests: tests/jobs-companion.test.ts.
+
 ## UX overhaul (branch ux-overhaul)
 
 ### Added

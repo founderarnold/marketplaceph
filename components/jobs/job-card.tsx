@@ -28,7 +28,7 @@ export type JobCardData = {
 /** Badge colours for hiring tags. */
 export const TAG_TONE: Record<string, string> = {
   urgent: "bg-danger-soft text-danger", few_slots: "bg-accent-soft text-accent-strong", wait_list: "bg-muted text-muted-foreground",
-  seasonal: "bg-brand-soft text-brand-dark", filled: "bg-success-soft text-success",
+  seasonal: "bg-brand-soft text-brand-dark", on_call: "bg-brand-soft text-brand-dark", filled: "bg-success-soft text-success",
 };
 
 export function HiringTags({ tags, t }: { tags?: string[] | null; t: TFunction }) {

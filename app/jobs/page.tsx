@@ -8,7 +8,9 @@ import { JOB_CARD_SELECT, JobCard, type JobCardData } from "@/components/jobs/jo
 import { buttonClass } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/field";
 import { getT } from "@/lib/i18n/server";
-import { EMPLOYMENT_TYPES, JOB_CATEGORIES, WORK_SETUPS } from "@/lib/jobs";
+import { EMPLOYMENT_TYPES, JOB_CATEGORIES, JOB_KIND_CONDITION, WORK_SETUPS, parseKinds } from "@/lib/jobs";
+import { JobKindFilters } from "@/components/jobs/kind-filters";
+import { ApplicantTips } from "@/components/jobs/applicant-tips";
 import { createClient } from "@/lib/supabase/server";
 import { NotifyMeForm } from "@/components/jobs2/notify-form";
 import { JobsTracker, TrackedLink } from "@/components/jobs2/tracker";
@@ -59,6 +61,8 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   const page = Math.max(1, Math.min(50, Number(first(sp.page)) || 1));
   const landing = isOn("jobs2_landing");
   const urgent = first(sp.tag) === "urgent";
+  // Work from home / Part-time / Seasonal / On-call: a job shows when it matches any ticked box.
+  const kinds = parseKinds(sp.kind);
   // Location search exists only with the Jobs 2.0 landing; without the flag the board behaves exactly as before.
   const loc = landing ? first(sp.loc).replace(/[%,()"]/g, " ").trim().slice(0, 60) : "";
 
@@ -75,6 +79,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   if (type) query = query.eq("employment_type", type);
   if (setup) query = query.eq("work_setup", setup);
   if (urgent) query = query.contains("hiring_tags", ["urgent"]);
+  if (kinds.length) query = query.or(kinds.map((k) => JOB_KIND_CONDITION[k]).join(","));
   if (loc) {
     if (REMOTE_WORDS.test(loc)) query = query.eq("work_setup", "remote");
     else {
@@ -90,7 +95,12 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   const { data, count } = await query.overrideTypes<JobCardData[], { merge: false }>();
   const jobs = data ?? [];
   const pages = Math.ceil((count ?? 0) / PAGE);
-  const qs = (n: number) => `/jobs?${new URLSearchParams({ ...(q && { q }), ...(loc && { loc }), ...(category && { category }), ...(type && { type }), ...(setup && { setup }), ...(urgent && { tag: "urgent" }), page: String(n) })}`;
+  const qs = (n: number) => {
+    const u = new URLSearchParams({ ...(q && { q }), ...(loc && { loc }), ...(category && { category }), ...(type && { type }), ...(setup && { setup }), ...(urgent && { tag: "urgent" }) });
+    for (const k of kinds) u.append("kind", k);
+    u.set("page", String(n));
+    return `/jobs?${u}`;
+  };
 
   // Store logos as a fallback for posts without their own logo.
   const logoOf = await loadStoreLogos(supabase, jobs.map((j) => j.id));
@@ -101,7 +111,8 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   if (landing) {
     const { data: claims } = await supabase.auth.getClaims();
     const signedIn = !!claims?.claims?.sub;
-    const searched = !!(q || loc || category || type || setup || urgent);
+    const searched = !!(q || loc || category || type || setup || urgent || kinds.length);
+    const { data: myProfile } = signedIn ? await supabase.from("job_profiles").select("user_id").eq("user_id", claims!.claims.sub as string).maybeSingle() : { data: null };
     return (
       <div className="space-y-4">
         <JobsTracker name={searched ? "job_search" : "jobs_landing_view"} capture={!searched}
@@ -139,14 +150,18 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
               </Select>
             </div>
           </details>
-          <label className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold">
-            <input type="checkbox" name="tag" value="urgent" defaultChecked={urgent} className="h-5 w-5 accent-[var(--brand)]" /> {t("job.tools.urgent_filter")}
-          </label>
+          <JobKindFilters urgent={urgent} kinds={kinds} t={t} />
           <div className="grid gap-2 min-[400px]:grid-cols-2">
             <button className={buttonClass("primary", "md", "w-full")}>{t("job2.explore")}</button>
-            <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("outline", "md", "w-full")}>{t("job2.build_profile")}</TrackedLink>
+            {myProfile ? (
+              <Link href="/jobs/profile" className={buttonClass("outline", "md", "w-full")}>{t("comp.update_profile")}</Link>
+            ) : (
+              <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("outline", "md", "w-full")}>{t("job2.build_profile")}</TrackedLink>
+            )}
           </div>
         </form>
+
+        <ApplicantTips t={t} />
 
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
           <li className="flex items-start gap-2 rounded-xl bg-brand-soft p-3 text-brand-dark"><ShieldCheck size={18} className="mt-0.5 shrink-0" aria-hidden /> {t("job2.free_note")}</li>
@@ -162,7 +177,11 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
               <p className="text-sm text-muted-foreground">{t("job2.zero_hint")}</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("primary", "md", "w-full sm:w-auto")}>{t("job2.build_profile")}</TrackedLink>
+              {myProfile ? (
+                <Link href="/jobs/profile" className={buttonClass("primary", "md", "w-full sm:w-auto")}>{t("comp.update_profile")}</Link>
+              ) : (
+                <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("primary", "md", "w-full sm:w-auto")}>{t("job2.build_profile")}</TrackedLink>
+              )}
               <NotifyMeForm q={q} loc={loc} category={category} signedIn={signedIn} back={qs(1)} />
             </div>
             <div>
@@ -220,6 +239,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
           </Select>
           <button className={buttonClass("primary", "md", "w-full")}>{t("job.search")}</button>
         </div>
+        <JobKindFilters urgent={urgent} kinds={kinds} t={t} showUrgent={false} />
       </form>
 
       <p className="text-sm text-muted-foreground" aria-live="polite">{t("job.results", { n: count ?? 0 })}</p>
