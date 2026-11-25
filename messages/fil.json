@@ -2767,5 +2767,8 @@
   "comp.saved.applied_note": "Nag-apply ka na. Tingnan sa itaas ang status, mensahe at susunod na hakbang.",
   "comp.saved.closed_note": "Hindi na tumatanggap ng application ang trabahong ito.",
   "comp.saved.see_app": "Tingnan ang application ko",
-  "comp.saved.buttons_note": "Tip: pagkatapos mag-apply, may mga button ang bawat trabaho sa itaas: Message employer, Follow-up, Mag-apply ulit at I-share sa kaibigan. Ang numero sa tabi ng trabaho ay bagong mensahe mula sa employer."
+  "comp.saved.buttons_note": "Tip: pagkatapos mag-apply, may mga button ang bawat trabaho sa itaas: Message employer, Follow-up, Mag-apply ulit at I-share sa kaibigan. Ang numero sa tabi ng trabaho ay bagong mensahe mula sa employer.",
+  "job.edit.save_publish": "I-save at I-publish",
+  "job.edit.saved_published": "Na-save at na-publish. Makikita na at maa-applyan ng mga naghahanap ng trabaho ang post na ito.",
+  "job.admin.no_location": "Walang nakalagay na lokasyon"
 }

@@ -192,3 +192,23 @@ describe("database: re-apply and follow-up", () => {
     await svc().from("job_profiles").update({ phone: before.phone, desired_roles: before.desired_roles }).eq("user_id", ids.seeker);
   });
 });
+
+describe("Save & Publish and admin job locations", () => {
+  it("both edit forms post a 'publish' flag; admin publish reuses publishOne; owner publish stays limited to the owner", () => {
+    expect(read("components/jobs/admin-post-form.tsx")).toMatch(/name="publish" value="1"/);
+    const a = read("app/actions/jobs.ts");
+    const admin = a.slice(a.indexOf("export async function adminUpdateJobPost"), a.indexOf("export async function adminSetJobPostStatus"));
+    expect(admin).toMatch(/publishOne\(ctx\.supabase, id\)/);
+    expect(admin).toMatch(/!extras\.hiring_tags\.includes\("filled"\)/);
+    const owner = a.slice(a.indexOf("export async function updateMyJobPost"));
+    expect(owner).toMatch(/update\(\{ status: "active" \}\)\.eq\("id", id\)\.eq\("owner_id", userId\)/);
+    expect(E["job.edit.save_publish"]).toBe("Save & Publish");
+    expect(F["job.edit.save_publish"]).toBeTruthy();
+  });
+  it("Admin > Jobs shows city and province (or region) for each post", () => {
+    const j = read("app/admin/jobs.tsx");
+    expect(j).toMatch(/psgc_cities \( name \), psgc_provinces \( name \)/);
+    expect(E["job.admin.no_location"]).toBeTruthy();
+    expect(F["job.admin.no_location"]).toBeTruthy();
+  });
+});

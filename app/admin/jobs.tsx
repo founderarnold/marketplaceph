@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import { ModerateButton, PublishAllDraftsButton, PublishButton } from "@/components/jobs/employer-actions";
 import { DuplicateButton } from "@/components/jobs2/posting-tools";
 import { HiringTags } from "@/components/jobs/job-card";
@@ -18,7 +19,7 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
   const supabase = await createClient();
   let query = supabase
     .from("job_posts")
-    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications, hiring_tags")
+    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications, hiring_tags, work_setup, psgc_cities ( name ), psgc_provinces ( name ), psgc_regions ( short_name )")
     .order("created_at", { ascending: false })
     .limit(show === "drafts" ? 200 : 60);
   if (show === "drafts") query = query.eq("status", "hidden");
@@ -50,6 +51,12 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
                 <Link href={`/jobs/${p.id}`} className="font-semibold text-brand underline">{p.title}</Link>
                 <span className="block text-xs text-muted-foreground">
                   {p.company_name} · {t(`job.poster.${p.poster_type}`)}{p.agency_license_no ? ` · ${p.agency_license_no}` : ""} · {timeAgo(p.created_at)}
+                </span>
+                {/* Where the job is: city and province (or region), so admins can see each post's deployment area at a glance. */}
+                <span className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-brand-dark">
+                  <MapPin size={13} className="shrink-0" aria-hidden />
+                  {[p.psgc_cities?.name, p.psgc_provinces?.name ?? p.psgc_regions?.short_name].filter(Boolean).join(", ") || t("job.admin.no_location")}
+                  {p.work_setup !== "onsite" && <> · {t(`job.setup.${p.work_setup}`)}</>}
                 </span>
               </span>
               <Badge tone={p.status === "active" ? "success" : p.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>

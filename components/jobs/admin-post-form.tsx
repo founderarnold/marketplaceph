@@ -104,9 +104,13 @@ export function AdminJobPostForm({ post, locations, mode = "admin", backHref, us
           {state.error === "invalid" ? t("job.post.invalid") : state.error === "removed" ? t("job.edit.removed") : state.error === "forbidden" ? (mode === "owner" ? t("job.edit.not_yours") : t("job.admin.forbidden")) : state.error === "failed" ? t("common.error") : state.error}
         </p>
       )}
-      {state?.ok && <p role="status" className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">{t("common.saved")}</p>}
+      {state?.ok && <p role="status" className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">{state.published ? t("job.edit.saved_published") : t("common.saved")}</p>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="submit" size="lg" disabled={locked || pending}>{t("common.save")}</Button>
+        {/* Saves, then opens the post to applicants (on a post that is already open it simply saves and keeps it open). */}
+        {!locked && (
+          <Button type="submit" name="publish" value="1" size="lg" variant="accent" disabled={pending}>{t("job.edit.save_publish")}</Button>
+        )}
         <Link href={backHref ?? "/admin?tab=jobs"} className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-6 font-semibold">{mode === "owner" ? t("job.edit.back") : t("job.admin.back")}</Link>
       </div>
     </form>
