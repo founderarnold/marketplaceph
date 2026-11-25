@@ -11,6 +11,8 @@ import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { AppTimeline } from "@/components/jobs2/app-timeline";
+import { JOB_CARD_SELECT, JobCard, type JobCardData } from "@/components/jobs/job-card";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { isOn } from "@/lib/flags";
 
 export const metadata: Metadata = { title: "My applications" };
@@ -31,6 +33,10 @@ async function MyApplicationsPageContent() {
   const hiredIds = (apps ?? []).filter((a) => a.status === "hired").map((a) => a.id);
   const { data: mine } = hiredIds.length ? await supabase.from("job_reviews").select("application_id").eq("reviewer_id", userId).in("application_id", hiredIds) : { data: [] };
   const timeline = isOn("jobs2_matching");
+  const { data: savedRows } = await (supabase as unknown as SupabaseClient).from("saved_jobs").select("post_id").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
+  const savedIds = ((savedRows ?? []) as { post_id: string }[]).map((r) => r.post_id);
+  const { data: savedJobsRaw } = savedIds.length ? await supabase.from("job_posts").select(JOB_CARD_SELECT).in("id", savedIds) : { data: [] };
+  const savedJobs = (savedJobsRaw ?? []) as unknown as JobCardData[];
   const reviewed = new Set((mine ?? []).map((r) => r.application_id));
 
   return (
@@ -65,6 +71,11 @@ async function MyApplicationsPageContent() {
           ))}
         </ul>
       )}
+      <section aria-labelledby="saved-h" className="space-y-2">
+        <h2 id="saved-h" className="text-xl font-bold text-brand-dark">{t("job.tools.saved_jobs")}</h2>
+        {savedJobs.length ? <ul className="space-y-3">{savedJobs.map((j) => <JobCard key={j.id} job={j} t={t} />)}</ul>
+          : <p className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">{t("job.tools.no_saved")}</p>}
+      </section>
     </div>
   );
 }

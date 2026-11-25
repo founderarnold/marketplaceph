@@ -25,7 +25,7 @@ async function EditJobPost({ params }: { params: Promise<{ id: string }> }) {
   const [{ data: post }, locations] = await Promise.all([
     supabase
       .from("job_posts")
-      .select("id, company_name, title, category, description, qualifications, employment_type, work_setup, region_code, province_code, city_code, salary_min, salary_max, salary_period, vacancies, deadline, requirement_docs, status")
+      .select("id, company_name, title, category, description, qualifications, employment_type, work_setup, region_code, province_code, city_code, salary_min, salary_max, salary_period, vacancies, deadline, requirement_docs, status, hiring_tags, logo_url, creative_url")
       .eq("id", id)
       .maybeSingle(),
     getLocations(),
@@ -40,7 +40,7 @@ async function EditJobPost({ params }: { params: Promise<{ id: string }> }) {
         {(post.status === "hidden" || post.status === "active") && <PublishButton id={post.id} status={post.status} />}
       </header>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.admin.edit_hint")}</p>
-      <AdminJobPostForm post={post as AdminPost} locations={locations} />
+      <AdminJobPostForm post={post as AdminPost} locations={locations} userId={me} />
     </div>
   );
 }

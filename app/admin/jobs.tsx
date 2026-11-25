@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ModerateButton, PublishAllDraftsButton, PublishButton } from "@/components/jobs/employer-actions";
+import { DuplicateButton } from "@/components/jobs2/posting-tools";
+import { HiringTags } from "@/components/jobs/job-card";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -16,7 +18,7 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
   const supabase = await createClient();
   let query = supabase
     .from("job_posts")
-    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications")
+    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications, hiring_tags")
     .order("created_at", { ascending: false })
     .limit(show === "drafts" ? 200 : 60);
   if (show === "drafts") query = query.eq("status", "hidden");
@@ -51,10 +53,12 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
                 </span>
               </span>
               <Badge tone={p.status === "active" ? "success" : p.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
+              <HiringTags tags={p.hiring_tags} t={t} />
               {needsFill && <Badge tone="accent">{t("job.admin.needs_fill")}</Badge>}
               {canEdit && p.status !== "removed" && (
                 <Link href={`/admin/job-post/${p.id}`} className="inline-flex min-h-11 items-center rounded-xl border border-border px-3 font-semibold">{t("job.admin.edit")}</Link>
               )}
+              {canEdit && p.status !== "removed" && <DuplicateButton id={p.id} admin />}
               {canEdit && (p.status === "hidden" || p.status === "active") && <PublishButton id={p.id} status={p.status} />}
               <ModerateButton id={p.id} removed={p.status === "removed"} />
             </li>

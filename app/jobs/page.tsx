@@ -58,6 +58,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   const setup = (WORK_SETUPS as readonly string[]).includes(first(sp.setup)) ? first(sp.setup) : "";
   const page = Math.max(1, Math.min(50, Number(first(sp.page)) || 1));
   const landing = isOn("jobs2_landing");
+  const urgent = first(sp.tag) === "urgent";
   // Location search exists only with the Jobs 2.0 landing; without the flag the board behaves exactly as before.
   const loc = landing ? first(sp.loc).replace(/[%,()"]/g, " ").trim().slice(0, 60) : "";
 
@@ -73,6 +74,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   if (category) query = query.eq("category", category);
   if (type) query = query.eq("employment_type", type);
   if (setup) query = query.eq("work_setup", setup);
+  if (urgent) query = query.contains("hiring_tags", ["urgent"]);
   if (loc) {
     if (REMOTE_WORDS.test(loc)) query = query.eq("work_setup", "remote");
     else {
@@ -88,7 +90,10 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   const { data, count } = await query.overrideTypes<JobCardData[], { merge: false }>();
   const jobs = data ?? [];
   const pages = Math.ceil((count ?? 0) / PAGE);
-  const qs = (n: number) => `/jobs?${new URLSearchParams({ ...(q && { q }), ...(loc && { loc }), ...(category && { category }), ...(type && { type }), ...(setup && { setup }), page: String(n) })}`;
+  const qs = (n: number) => `/jobs?${new URLSearchParams({ ...(q && { q }), ...(loc && { loc }), ...(category && { category }), ...(type && { type }), ...(setup && { setup }), ...(urgent && { tag: "urgent" }), page: String(n) })}`;
+
+  // Store logos as a fallback for posts without their own logo.
+  const logoOf = await loadStoreLogos(supabase, jobs.map((j) => j.id));
 
   // Jobs 2.0 P5 (jobs2_matching): explain why a job may fit the signed-in member. Order and results never change.
   const reasonsFor = await loadReasons(supabase, jobs.map((j) => j.id));
@@ -96,7 +101,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
   if (landing) {
     const { data: claims } = await supabase.auth.getClaims();
     const signedIn = !!claims?.claims?.sub;
-    const searched = !!(q || loc || category || type || setup);
+    const searched = !!(q || loc || category || type || setup || urgent);
     return (
       <div className="space-y-4">
         <JobsTracker name={searched ? "job_search" : "jobs_landing_view"} capture={!searched}
@@ -134,6 +139,9 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
               </Select>
             </div>
           </details>
+          <label className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 text-sm font-semibold">
+            <input type="checkbox" name="tag" value="urgent" defaultChecked={urgent} className="h-5 w-5 accent-[var(--brand)]" /> {t("job.tools.urgent_filter")}
+          </label>
           <div className="grid gap-2 min-[400px]:grid-cols-2">
             <button className={buttonClass("primary", "md", "w-full")}>{t("job2.explore")}</button>
             <TrackedLink event="signup_start" href={isOn("jobs2_sso_link") ? "/jobs/start" : "/jobs/profile"} className={buttonClass("outline", "md", "w-full")}>{t("job2.build_profile")}</TrackedLink>
@@ -171,7 +179,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
             </div>
           </section>
         ) : (
-          <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} extra={reasonsFor ? <MatchReasons reasons={reasonsFor(j)} t={t} /> : undefined} />)}</ul>
+          <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} logo={logoOf.get(j.id)} extra={reasonsFor ? <MatchReasons reasons={reasonsFor(j)} t={t} /> : undefined} />)}</ul>
         )}
 
         {pages > 1 && (
@@ -223,7 +231,7 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
           <Link href="/jobs/post" className={buttonClass("accent", "md")}>{t("job.nav.post")}</Link>
         </div>
       ) : (
-        <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} extra={reasonsFor ? <MatchReasons reasons={reasonsFor(j)} t={t} /> : undefined} />)}</ul>
+        <ul className="space-y-3">{jobs.map((j) => <JobCard key={j.id} job={j} t={t} logo={logoOf.get(j.id)} extra={reasonsFor ? <MatchReasons reasons={reasonsFor(j)} t={t} /> : undefined} />)}</ul>
       )}
 
       {pages > 1 && (
@@ -235,6 +243,20 @@ async function JobsPageContent({ searchParams }: PageProps<"/jobs">) {
       )}
     </div>
   );
+}
+
+/** post id -> owner's store logo, only for posts without their own logo. */
+async function loadStoreLogos(supabase: Awaited<ReturnType<typeof createClient>>, ids: string[]) {
+  const out = new Map<string, string>();
+  if (!ids.length) return out;
+  const { data: posts } = await supabase.from("job_posts").select("id, owner_id, logo_url").in("id", ids);
+  const need = (posts ?? []).filter((p) => !p.logo_url);
+  const owners = [...new Set(need.map((p) => p.owner_id))];
+  if (!owners.length) return out;
+  const { data: stores } = await supabase.from("stores").select("owner_id, logo_url").in("owner_id", owners).not("logo_url", "is", null);
+  const byOwner = new Map((stores ?? []).map((st) => [st.owner_id, st.logo_url as string]));
+  for (const p of need) { const l = byOwner.get(p.owner_id); if (l) out.set(p.id, l); }
+  return out;
 }
 
 /** Loads the member's job profile and the extra job fields needed for match reasons; null when off or signed out. */

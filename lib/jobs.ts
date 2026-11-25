@@ -18,6 +18,11 @@ export const DOC_KINDS = [
 export const APPLICATION_STATUSES = ["submitted", "viewed", "shortlisted", "interview", "rejected", "hired", "withdrawn"] as const;
 export const EMPLOYER_STATUSES = ["viewed", "shortlisted", "interview", "rejected", "hired"] as const;
 export const POST_STATUSES = ["active", "closed", "hidden", "removed"] as const;
+/** Hiring badges employers and admins can set. "filled" (Hired / position filled) also closes the post. */
+export const HIRING_TAGS = ["urgent", "few_slots", "wait_list", "seasonal", "filled"] as const;
+export type HiringTag = (typeof HIRING_TAGS)[number];
+/** Public image path in the store-assets bucket: "<uploader id>/<uuid>.webp" (matches the database check). */
+export const JOB_IMAGE_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/;
 
 /** Starter job drafts mark text the admin must replace with this; such posts cannot be published (see scripts/starter-jobs.mjs). */
 export const ADMIN_PLACEHOLDER = "[ADMIN TO FILL";
