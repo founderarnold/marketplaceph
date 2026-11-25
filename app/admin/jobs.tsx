@@ -52,7 +52,7 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
               </span>
               <Badge tone={p.status === "active" ? "success" : p.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
               {needsFill && <Badge tone="accent">{t("job.admin.needs_fill")}</Badge>}
-              {canEdit && p.status === "hidden" && (
+              {canEdit && p.status !== "removed" && (
                 <Link href={`/admin/job-post/${p.id}`} className="inline-flex min-h-11 items-center rounded-xl border border-border px-3 font-semibold">{t("job.admin.edit")}</Link>
               )}
               {canEdit && (p.status === "hidden" || p.status === "active") && <PublishButton id={p.id} status={p.status} />}

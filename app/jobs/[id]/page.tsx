@@ -175,7 +175,10 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
         {matching && reasons.length > 0 && <MatchReasons reasons={reasons} t={t} max={5} />}
         {isOn("jobs2_employer_pipeline") && !employerVerified && <p className="rounded-xl bg-muted p-2 text-xs text-muted-foreground">{t("job6.unverified_label")}</p>}
         {isOwner ? (
-          <Link href={`/jobs/employer/${job.id}`} className={buttonClass("primary", "md", "w-full")}>{t("job.emp.view_applicants")}</Link>
+          <div className="space-y-2">
+            <Link href={`/jobs/employer/${job.id}`} className={buttonClass("primary", "md", "w-full")}>{t("job.emp.view_applicants")}</Link>
+            {job.status !== "removed" && <Link href={`/jobs/employer/${job.id}/edit`} className={buttonClass("outline", "md", "w-full")}>{t("job.edit.button")}</Link>}
+          </div>
         ) : !open ? (
           <p className="text-sm text-muted-foreground">{t("job.closed")}</p>
         ) : !userId ? (

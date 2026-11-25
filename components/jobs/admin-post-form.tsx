@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { adminUpdateJobPost } from "@/app/actions/jobs";
+import { adminUpdateJobPost, updateMyJobPost } from "@/app/actions/jobs";
 import { LocationSelect } from "@/components/listing/location-select";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -16,27 +16,34 @@ export type AdminPost = {
   id: string; company_name: string; title: string; category: string; description: string; qualifications: string | null;
   employment_type: string; work_setup: string; region_code: string | null; province_code: string | null; city_code: string | null;
   salary_min: number | null; salary_max: number | null; salary_period: string | null; vacancies: number; deadline: string | null;
-  requirement_docs: string[]; status: string;
+  requirement_docs: string[]; status: string; poster_type?: string; agency_license_no?: string | null;
 };
 
-/** Admin → Jobs → Edit: the same fields as the employer form, for hidden drafts only (the database enforces this too). */
-export function AdminJobPostForm({ post, locations }: { post: AdminPost; locations: Locations }) {
+/**
+ * Edit a job post, published or hidden. `mode="admin"`: Admin → Jobs → Edit (full admins; every change is logged).
+ * `mode="owner"`: the employer / agency that posted it (only their own posts; the database checks this too).
+ */
+export function AdminJobPostForm({ post, locations, mode = "admin", backHref }: { post: AdminPost; locations: Locations; mode?: "admin" | "owner"; backHref?: string }) {
   const { t } = useT();
-  const [state, action, pending] = useActionState(adminUpdateJobPost, undefined);
+  const [state, action, pending] = useActionState(mode === "owner" ? updateMyJobPost : adminUpdateJobPost, undefined);
   const s = (v: unknown) => (v == null ? "" : String(v));
   const v: Record<string, string> = state?.values ?? Object.fromEntries(Object.entries(post).map(([k, x]) => [k, Array.isArray(x) ? "" : s(x)]));
-  const locked = post.status !== "hidden";
+  const locked = post.status === "removed";
   const placeholder = hasAdminPlaceholder(v.title, v.description, v.qualifications);
 
   return (
     <form action={action} className="space-y-4">
       <input type="hidden" name="id" value={post.id} />
-      {locked && <p role="status" className="rounded-xl bg-muted p-3 text-sm text-brand-dark">{t("job.admin.locked")}</p>}
+      {locked && <p role="status" className="rounded-xl bg-muted p-3 text-sm text-brand-dark">{t("job.edit.removed")}</p>}
+      {post.status === "active" && <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.edit.live_note")}</p>}
       {placeholder && <p role="status" className="rounded-xl bg-muted p-3 text-sm text-brand-dark">{t("job.admin.has_placeholder")}</p>}
       <fieldset disabled={locked || pending} className="space-y-4">
         <section className={section} aria-labelledby="ap-job">
           <h2 id="ap-job" className="font-bold text-brand-dark">{t("job.post.job")}</h2>
           <Field label={t("job.post.company")}><Input name="company_name" required minLength={2} maxLength={100} defaultValue={v.company_name} /></Field>
+          {mode === "owner" && post.poster_type === "agency" && (
+            <Field label={t("job.post.license")} hint={t("job.post.license_hint")}><Input name="agency_license_no" required minLength={3} maxLength={60} defaultValue={v.agency_license_no} /></Field>
+          )}
           <Field label={t("job.post.title")}><Input name="title" required minLength={3} maxLength={120} defaultValue={v.title} /></Field>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label={t("job.post.category")}>
@@ -90,13 +97,13 @@ export function AdminJobPostForm({ post, locations }: { post: AdminPost; locatio
 
       {state?.error && (
         <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm font-medium text-danger">
-          {state.error === "invalid" ? t("job.post.invalid") : state.error === "not_draft" ? t("job.admin.locked") : state.error === "forbidden" ? t("job.admin.forbidden") : state.error === "failed" ? t("common.error") : state.error}
+          {state.error === "invalid" ? t("job.post.invalid") : state.error === "removed" ? t("job.edit.removed") : state.error === "forbidden" ? (mode === "owner" ? t("job.edit.not_yours") : t("job.admin.forbidden")) : state.error === "failed" ? t("common.error") : state.error}
         </p>
       )}
       {state?.ok && <p role="status" className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">{t("common.saved")}</p>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="submit" size="lg" disabled={locked || pending}>{t("common.save")}</Button>
-        <Link href="/admin?tab=jobs&show=drafts" className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-6 font-semibold">{t("job.admin.back")}</Link>
+        <Link href={backHref ?? "/admin?tab=jobs"} className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-6 font-semibold">{mode === "owner" ? t("job.edit.back") : t("job.admin.back")}</Link>
       </div>
     </form>
   );

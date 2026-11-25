@@ -2590,5 +2590,12 @@
   "job.admin.publish_all": "I-publish lahat ng draft ({n})",
   "job.admin.confirm_publish_all": "I-publish na ang lahat ng {n} draft? Ang blangkong sahod at lokasyon ay lalabas na “pag-uusapan”. Puwede mong itago ulit ang kahit anong post mamaya.",
   "job.admin.published_all": "{n} job post ang na-publish.",
-  "job.admin.published_some": "{n} ang na-publish, {f} ang hindi. Pakisubukan ulit ang mga iyon."
+  "job.admin.published_some": "{n} ang na-publish, {f} ang hindi. Pakisubukan ulit ang mga iyon.",
+  "job.edit.button": "I-edit ang post",
+  "job.edit.title": "I-edit ang job post",
+  "job.edit.hint": "I-update ang mga detalye at i-save. Mananatili ang mga aplikante ng post mo. Hindi kailanman puwedeng maningil sa aplikante ang job post.",
+  "job.edit.live_note": "Live ang post na ito. Makikita agad ng mga naghahanap ng trabaho ang mga pagbabago pag-save mo.",
+  "job.edit.removed": "Inalis ng moderator ang post na ito at hindi na ito ma-e-edit.",
+  "job.edit.not_yours": "Ang sarili mong job post lang ang puwede mong i-edit.",
+  "job.edit.back": "Bumalik sa mga job post ko"
 }

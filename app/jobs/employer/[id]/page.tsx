@@ -91,7 +91,7 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
       {sp.posted && <p role="status" className="rounded-xl bg-success-soft p-3 font-semibold text-success">✓ {t("job.post.posted_ok")}</p>}
       <header>
         <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{post.title}</h1>
-        <p className="text-muted-foreground">{post.company_name} · {t("job.emp.applicants_n", { n: apps?.length ?? 0 })} · <Link href={`/jobs/${post.id}`} className="text-brand underline">{t("job.emp.preview")}</Link></p>
+        <p className="text-muted-foreground">{post.company_name} · {t("job.emp.applicants_n", { n: apps?.length ?? 0 })} · <Link href={`/jobs/${post.id}`} className="text-brand underline">{t("job.emp.preview")}</Link>{post.status !== "removed" && <> · <Link href={`/jobs/employer/${post.id}/edit`} className="font-semibold text-brand underline">{t("job.edit.button")}</Link></>}</p>
       </header>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.emp.privacy")}</p>
       <JobsTracker name="employer_viewed" props={{ job_id: post.id }} />

@@ -2590,5 +2590,12 @@
   "job.admin.publish_all": "Publish all drafts ({n})",
   "job.admin.confirm_publish_all": "Publish all {n} drafts now? Blank pay and location will show as “to be discussed”. You can unpublish any post later.",
   "job.admin.published_all": "{n} job post(s) published.",
-  "job.admin.published_some": "{n} published, {f} could not be published. Please try those again."
+  "job.admin.published_some": "{n} published, {f} could not be published. Please try those again.",
+  "job.edit.button": "Edit post",
+  "job.edit.title": "Edit job post",
+  "job.edit.hint": "Update the details and save. Your post keeps its applicants. Job posts can never ask applicants to pay any fee.",
+  "job.edit.live_note": "This post is live. Changes show to job seekers as soon as you save.",
+  "job.edit.removed": "This post was removed by a moderator and can't be edited.",
+  "job.edit.not_yours": "You can only edit your own job posts.",
+  "job.edit.back": "Back to my job posts"
 }
