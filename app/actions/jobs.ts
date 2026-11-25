@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   CIVIL_STATUSES, DOC_KINDS, DOC_MIME, EDUCATION_LEVELS, EMPLOYER_STATUSES, EMPLOYMENT_TYPES, JOB_CATEGORIES, MAX_DOC_BYTES, POSTER_TYPES,
-  SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, cleanAdminPlaceholders, hasAdminPlaceholder, splitList,
+  HIRING_TAGS, JOB_IMAGE_PATH, SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, cleanAdminPlaceholders, hasAdminPlaceholder, splitList,
 } from "@/lib/jobs";
 import { isFullAdmin } from "@/lib/roles";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
@@ -183,6 +183,12 @@ export async function setApplicationStatus(id: string, status: string, note: str
 }
 
 /* ───────────── Employer posts ───────────── */
+/** Hiring tags and public images from a post form (unknown tags and bad paths are dropped). */
+function postExtras(fd: FormData) {
+  const tags = [...new Set(fd.getAll("hiring_tags").map(String))].filter((x): x is (typeof HIRING_TAGS)[number] => (HIRING_TAGS as readonly string[]).includes(x));
+  const img = (k: string) => { const v = String(fd.get(k) ?? "").trim(); return JOB_IMAGE_PATH.test(v) ? v : null; };
+  return { hiring_tags: tags as string[], logo_url: img("logo_url"), creative_url: img("creative_url") };
+}
 const postObject = z
   .object({
     poster_type: z.enum(POSTER_TYPES),
@@ -216,7 +222,7 @@ export async function createJobPost(_prev: JobFormState, fd: FormData): Promise<
   const docs = fd.getAll("requirement_docs").map(String).filter((d) => (DOC_KINDS as readonly string[]).includes(d));
   const { data, error } = await supabase
     .from("job_posts")
-    .insert({ ...parsed.data, owner_id: userId, for_client: fd.get("for_client") === "on", requirement_docs: docs })
+    .insert({ ...parsed.data, owner_id: userId, for_client: fd.get("for_client") === "on", requirement_docs: docs, ...postExtras(fd) })
     .select("id")
     .single();
   if (error || !data) return { error: friendly(error?.message), values };
@@ -272,7 +278,8 @@ export async function adminUpdateJobPost(_prev: JobFormState, fd: FormData): Pro
   const { data: post } = await ctx.supabase.from("job_posts").select("status").eq("id", id).maybeSingle();
   if (!post || post.status === "removed") return { error: "invalid", values };
   const docs = fd.getAll("requirement_docs").map(String).filter((d) => (DOC_KINDS as readonly string[]).includes(d));
-  const { error } = await ctx.supabase.from("job_posts").update({ ...row, requirement_docs: docs }).eq("id", id);
+  const extras = postExtras(fd);
+  const { error } = await ctx.supabase.from("job_posts").update({ ...row, requirement_docs: docs, ...extras, ...(extras.hiring_tags.includes("filled") && post.status === "active" ? { status: "closed" } : {}) }).eq("id", id);
   if (error) return { error: friendly(error.message), values };
   revalidatePath("/admin");
   revalidatePath("/jobs", "layout");
@@ -360,7 +367,7 @@ export async function updateMyJobPost(_prev: JobFormState, fd: FormData): Promis
   const docs = fd.getAll("requirement_docs").map(String).filter((d) => (DOC_KINDS as readonly string[]).includes(d));
   const { data: updated, error } = await supabase
     .from("job_posts")
-    .update({ ...row, requirement_docs: docs })
+    .update({ ...row, requirement_docs: docs, ...postExtras(fd), ...(postExtras(fd).hiring_tags.includes("filled") && post.status === "active" ? { status: "closed" as const } : {}) })
     .eq("id", id)
     .eq("owner_id", userId)
     .select("id");
@@ -369,4 +376,62 @@ export async function updateMyJobPost(_prev: JobFormState, fd: FormData): Promis
   revalidatePath("/jobs", "layout");
   revalidatePath(`/jobs/${id}`);
   return { ok: true, id, values };
+}
+
+/* ───────────── Posting tools: duplicate, filled, saved jobs ───────────── */
+const COPY_FIELDS = "owner_id, poster_type, company_name, agency_license_no, for_client, title, category, description, qualifications, requirement_docs, employment_type, work_setup, region_code, province_code, city_code, salary_min, salary_max, salary_period, vacancies, deadline, hiring_tags, logo_url, creative_url, status";
+
+/**
+ * Copies a job post into a new HIDDEN draft with the same owner, so it can be revised (e.g. another branch's location)
+ * and published. Applications are never copied. Owners copy their own posts; full admins can copy any post and the
+ * copy keeps the original owner (inserted with the server key after the admin check, and recorded in audit_logs).
+ */
+export async function duplicateJobPost(id: string): Promise<JobResult> {
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: "invalid" };
+  const { supabase, userId } = await requireUser("/jobs/employer");
+  const { data: src } = await supabase.from("job_posts").select(COPY_FIELDS).eq("id", id).maybeSingle();
+  if (!src || src.status === "removed") return { ok: false, error: "invalid" };
+  const { owner_id, status: _s, ...fields } = src;
+  void _s;
+  const copy = { ...fields, owner_id, status: "hidden" as const, title: `${src.title} (copy)`.slice(0, 120), hiring_tags: (src.hiring_tags ?? []).filter((x) => x !== "filled") };
+  if (owner_id === userId) {
+    const { data, error } = await supabase.from("job_posts").insert(copy).select("id").single();
+    if (error || !data) return { ok: false, error: friendly(error?.message) };
+    revalidatePath("/jobs/employer");
+    return { ok: true, id: data.id };
+  }
+  const admin = await requireFullAdmin("/admin?tab=jobs");
+  if (!admin) return { ok: false, error: "forbidden" };
+  const service = createAdminClient();
+  const { data, error } = await service.from("job_posts").insert(copy).select("id").single();
+  if (error || !data) return { ok: false, error: friendly(error?.message) };
+  await service.from("audit_logs").insert({ actor_id: userId, action: "DUPLICATE", table_name: "job_posts", record_id: data.id, old_data: { source_id: id }, new_data: null });
+  revalidatePath("/admin");
+  return { ok: true, id: data.id };
+}
+
+/** "Hired / position filled": adds the Filled tag and closes the post (owner or admin). */
+export async function markJobFilled(id: string): Promise<JobResult> {
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: "invalid" };
+  const { supabase } = await requireUser("/jobs/employer");
+  const { data: post } = await supabase.from("job_posts").select("hiring_tags, status").eq("id", id).maybeSingle();
+  if (!post || post.status === "removed") return { ok: false, error: "invalid" };
+  const tags = [...new Set([...(post.hiring_tags ?? []), "filled"])];
+  const { error } = await supabase.from("job_posts").update({ hiring_tags: tags, status: "closed" }).eq("id", id);
+  revalidatePath("/jobs", "layout");
+  revalidatePath("/admin");
+  return error ? { ok: false, error: friendly(error.message) } : { ok: true };
+}
+
+/** Save or unsave a job for the signed-in job seeker (private list). */
+export async function toggleSavedJob(postId: string): Promise<JobResult> {
+  if (!z.uuid().safeParse(postId).success) return { ok: false, error: "invalid" };
+  const { supabase, userId } = await requireUser(`/jobs/${postId}`);
+  const db = supabase as unknown as import("@supabase/supabase-js").SupabaseClient;
+  const { data: row } = await db.from("saved_jobs").select("post_id").eq("user_id", userId).eq("post_id", postId).maybeSingle();
+  const { error } = row
+    ? await db.from("saved_jobs").delete().eq("user_id", userId).eq("post_id", postId)
+    : await db.from("saved_jobs").insert({ user_id: userId, post_id: postId });
+  revalidatePath("/jobs/applications");
+  return error ? { ok: false, error: /policy|row-level/i.test(error.message) ? "limit" : "failed" } : { ok: true };
 }

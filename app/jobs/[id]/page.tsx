@@ -12,6 +12,10 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { ApplyPanel } from "@/components/jobs/apply-panel";
+import { JOB_CARD_SELECT, JobCard, HiringTags, type JobCardData } from "@/components/jobs/job-card";
+import { DuplicateButton, SaveJobButton, ShareJob } from "@/components/jobs2/posting-tools";
+import { imageUrl } from "@/lib/images";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { ApplyReview } from "@/components/jobs2/apply-review";
 import { MatchReasons } from "@/components/jobs2/match-reasons";
 import { readiness, READINESS_FIELDS, type ReadinessInput } from "@/lib/jobs-readiness";
@@ -86,6 +90,17 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
     loadProfileLinks(supabase, job.owner_id),
   ]);
   const employerTx = await loadTxCounts(supabase, job.owner_id);
+  // Posting tools: logo (post logo, else the employer's store logo), saved state and similar jobs.
+  const [{ data: store }, { data: similarRaw }, savedRes] = await Promise.all([
+    job.logo_url ? Promise.resolve({ data: null as { logo_url: string | null } | null }) : supabase.from("stores").select("logo_url").eq("owner_id", job.owner_id).not("logo_url", "is", null).limit(1).maybeSingle(),
+    supabase.from("job_posts").select(JOB_CARD_SELECT).eq("status", "active").eq("category", job.category).neq("id", job.id)
+      .or(`deadline.is.null,deadline.gte.${todayPH()}`).order("created_at", { ascending: false }).limit(4),
+    userId && !isOwner ? (supabase as unknown as SupabaseClient).from("saved_jobs").select("post_id").eq("user_id", userId).eq("post_id", job.id).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  const logoPath = job.logo_url ?? store?.logo_url ?? null;
+  const similar = (similarRaw ?? []) as unknown as JobCardData[];
+  const isSaved = !!savedRes.data;
+  const shareUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketplaceph.com"}/jobs/${job.id}`;
   // Jobs 2.0 P5 (jobs2_matching): review-before-apply and match reasons for the signed-in member.
   const matching = isOn("jobs2_matching") && !!userId && !isOwner;
   const employerVerified = employerBadges.badges.includes("credible_employer");
@@ -106,7 +121,14 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
       <div className="space-y-4">
         {!open && <p className="rounded-xl bg-danger-soft p-3 text-sm font-semibold text-danger">{t("job.closed")}</p>}
         <header className="space-y-2">
-          <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{job.title}</h1>
+          <div className="flex items-start gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {logoPath && <img src={imageUrl(logoPath, "store-assets")} alt="" width={64} height={64} className="h-16 w-16 shrink-0 rounded-xl border border-border bg-white object-contain" />}
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{job.title}</h1>
+              {(job.hiring_tags?.length ?? 0) > 0 && <p className="flex flex-wrap gap-1.5"><HiringTags tags={job.hiring_tags} t={t} /></p>}
+            </div>
+          </div>
           <p className="text-lg font-semibold">
             {job.company_name}
             {job.poster_type === "agency" && <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-strong">{t("job.agency")}</span>}
@@ -127,6 +149,9 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
           <p className="text-xs text-muted-foreground">{t("job.posted", { when: timeAgo(job.created_at) })} · {t(`job.cat.${job.category}`)}</p>
         </header>
 
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {job.creative_url && <img src={imageUrl(job.creative_url, "store-assets")} alt={t("job.tools.creative")} className="max-h-[28rem] w-full rounded-2xl border border-border bg-white object-contain" loading="lazy" />}
+        <ShareJob url={shareUrl} title={`${job.title} · ${job.company_name}`} />
         <section aria-labelledby="jd-desc">
           <h2 id="jd-desc" className="mb-1 font-bold text-brand-dark">{t("job.about_job")}</h2>
           <p className="whitespace-pre-line leading-relaxed">{job.description}</p>
@@ -178,9 +203,10 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
           <div className="space-y-2">
             <Link href={`/jobs/employer/${job.id}`} className={buttonClass("primary", "md", "w-full")}>{t("job.emp.view_applicants")}</Link>
             {job.status !== "removed" && <Link href={`/jobs/employer/${job.id}/edit`} className={buttonClass("outline", "md", "w-full")}>{t("job.edit.button")}</Link>}
+            {job.status !== "removed" && <DuplicateButton id={job.id} />}
           </div>
         ) : !open ? (
-          <p className="text-sm text-muted-foreground">{t("job.closed")}</p>
+          <p className="text-sm text-muted-foreground">{(job.hiring_tags ?? []).includes("filled") ? t("job.tag.filled") : t("job.closed")}</p>
         ) : !userId ? (
           <>
             <p className="text-sm text-muted-foreground">{t("job.apply.login")}</p>
@@ -204,7 +230,14 @@ async function Job({ params }: Pick<PageProps<"/jobs/[id]">, "params">) {
             <ApplyPanel postId={job.id} docs={docs} requested={job.requirement_docs} />
           )
         )}
+        {userId && !isOwner && <SaveJobButton id={job.id} saved={isSaved} />}
       </aside>
+      {similar.length > 0 && (
+        <section aria-labelledby="similar-h" className="space-y-2 md:col-span-2">
+          <h2 id="similar-h" className="text-lg font-bold text-brand-dark">{t("job.tools.similar")}</h2>
+          <ul className="grid gap-3 md:grid-cols-2">{similar.map((j) => <JobCard key={j.id} job={j} t={t} />)}</ul>
+        </section>
+      )}
     </article>
   );
 }

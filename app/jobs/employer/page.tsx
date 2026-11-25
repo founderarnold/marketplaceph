@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PostStatusButtons } from "@/components/jobs/employer-actions";
+import { DuplicateButton, MarkFilledButton } from "@/components/jobs2/posting-tools";
+import { HiringTags } from "@/components/jobs/job-card";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { timeAgo } from "@/lib/format";
@@ -21,7 +23,7 @@ async function EmployerDashboardContent() {
   if (!userId) redirect("/login?next=/jobs/employer");
 
   const [{ data: posts }, { data: apps }] = await Promise.all([
-    supabase.from("job_posts").select("id, title, company_name, status, vacancies, created_at, deadline").eq("owner_id", userId).neq("status", "removed").order("created_at", { ascending: false }),
+    supabase.from("job_posts").select("id, title, company_name, status, vacancies, created_at, deadline, hiring_tags").eq("owner_id", userId).neq("status", "removed").order("created_at", { ascending: false }),
     supabase.from("job_applications").select("post_id, status"),
   ]);
   const count = new Map<string, { total: number; fresh: number }>();
@@ -54,7 +56,10 @@ async function EmployerDashboardContent() {
                     <Link href={`/jobs/employer/${p.id}`} className="font-bold text-brand-dark hover:underline">{p.title}</Link>
                     <p className="text-sm text-muted-foreground">{p.company_name} · {timeAgo(p.created_at)}</p>
                   </div>
-                  <Badge tone={p.status === "active" ? "success" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <HiringTags tags={p.hiring_tags} t={t} />
+                    <Badge tone={p.status === "active" ? "success" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
+                  </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                   <Link href={`/jobs/employer/${p.id}`} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-soft px-3 font-semibold text-brand-dark">
@@ -62,6 +67,8 @@ async function EmployerDashboardContent() {
                   </Link>
                   <PostStatusButtons id={p.id} status={p.status} />
                   {p.status !== "removed" && <Link href={`/jobs/employer/${p.id}/edit`} className="inline-flex min-h-11 items-center rounded-lg border border-border px-3 font-semibold text-brand-dark">{t("job.edit.button")}</Link>}
+                  <DuplicateButton id={p.id} />
+                  {p.status === "active" && <MarkFilledButton id={p.id} />}
                   <Link href={`/jobs/${p.id}`} className="inline-flex min-h-11 items-center text-brand underline">{t("job.emp.preview")}</Link>
                 </div>
               </li>
