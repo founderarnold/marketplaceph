@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PageSkeleton } from "@/components/layout/page-skeleton";
 import { Suspense } from "react";
 import type { Metadata } from "next";
@@ -24,7 +25,14 @@ async function NewListingPageContent() {
     supabase.from("stores").select("id, region_code, province_code, city_code").eq("owner_id", userId).limit(1).maybeSingle(),
   ]);
 
-  if (!store) return <StoreSetupForm locations={locations} />;
+  if (!store) return (
+    <div className="space-y-4">
+      <Link href="/business/flame-import" className="flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-brand/30 bg-brand-soft p-4 text-sm font-semibold text-brand-dark">
+        <span>{t("fbiz.setup_offer")}</span><span aria-hidden>→</span>
+      </Link>
+      <StoreSetupForm locations={locations} />
+    </div>
+  );
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <ToolGuide toolKey="post" t={t} />
