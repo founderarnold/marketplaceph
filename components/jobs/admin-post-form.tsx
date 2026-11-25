@@ -32,6 +32,7 @@ export function AdminJobPostForm({ post, locations, mode = "admin", backHref, us
   const v: Record<string, string> = state?.values ?? Object.fromEntries(Object.entries(post).map(([k, x]) => [k, Array.isArray(x) ? "" : s(x)]));
   const locked = post.status === "removed";
   const placeholder = hasAdminPlaceholder(v.title, v.description, v.qualifications);
+  const showPublish = !locked && !state?.published && (mode === "owner" ? post.status === "hidden" || post.status === "closed" : post.status === "hidden");
 
   return (
     <form action={action} className="space-y-4">
@@ -101,12 +102,14 @@ export function AdminJobPostForm({ post, locations, mode = "admin", backHref, us
 
       {state?.error && (
         <p role="alert" className="rounded-xl bg-danger-soft p-3 text-sm font-medium text-danger">
-          {state.error === "invalid" ? t("job.post.invalid") : state.error === "removed" ? t("job.edit.removed") : state.error === "forbidden" ? (mode === "owner" ? t("job.edit.not_yours") : t("job.admin.forbidden")) : state.error === "failed" ? t("common.error") : state.error}
+          {state.error === "invalid" ? t("job.post.invalid") : state.error === "publish_failed" ? t("job.edit.publish_failed") : state.error === "removed" ? t("job.edit.removed") : state.error === "forbidden" ? (mode === "owner" ? t("job.edit.not_yours") : t("job.admin.forbidden")) : state.error === "failed" ? t("common.error") : state.error}
         </p>
       )}
-      {state?.ok && <p role="status" className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">{t("common.saved")}</p>}
+      {state?.ok && <p role="status" className="rounded-xl bg-success-soft p-3 text-sm font-semibold text-success">{state.published ? t("job.edit.saved_published") : t("common.saved")}</p>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="submit" size="lg" disabled={locked || pending}>{t("common.save")}</Button>
+        {/* Save the changes and make the post live in one step (shown while the post is not live yet). */}
+        {showPublish && <Button type="submit" name="intent" value="publish" size="lg" variant="outline" disabled={locked || pending}>{t("job.edit.save_publish")}</Button>}
         <Link href={backHref ?? "/admin?tab=jobs"} className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-6 font-semibold">{mode === "owner" ? t("job.edit.back") : t("job.admin.back")}</Link>
       </div>
     </form>

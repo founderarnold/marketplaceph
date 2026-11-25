@@ -11,7 +11,7 @@ import { isFullAdmin } from "@/lib/roles";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { recordJobEvent } from "@/app/actions/jobs2";
 
-export type JobFormState = { error?: string; values?: Record<string, string>; ok?: boolean; id?: string } | undefined;
+export type JobFormState = { error?: string; values?: Record<string, string>; ok?: boolean; id?: string; published?: boolean } | undefined;
 export type JobResult = { ok: boolean; error?: string; id?: string };
 
 async function requireUser(next = "/jobs") {
@@ -281,9 +281,17 @@ export async function adminUpdateJobPost(_prev: JobFormState, fd: FormData): Pro
   const extras = postExtras(fd);
   const { error } = await ctx.supabase.from("job_posts").update({ ...row, requirement_docs: docs, ...extras, ...(extras.hiring_tags.includes("filled") && post.status === "active" ? { status: "closed" } : {}) }).eq("id", id);
   if (error) return { error: friendly(error.message), values };
+  // "Save & Publish": make a hidden post live right after saving (same path as the Publish button).
+  let published = false;
+  if (fd.get("intent") === "publish" && post.status === "hidden") {
+    const res = await publishOne(ctx.supabase, id);
+    if (!res.ok) { revalidatePath("/admin"); return { error: "publish_failed", values }; }
+    published = true;
+  }
   revalidatePath("/admin");
+  revalidatePath(`/admin/job-post/${id}`);
   revalidatePath("/jobs", "layout");
-  return { ok: true, id, values };
+  return { ok: true, id, values, published };
 }
 
 /**
@@ -373,9 +381,17 @@ export async function updateMyJobPost(_prev: JobFormState, fd: FormData): Promis
     .select("id");
   if (error) return { error: friendly(error.message), values };
   if (!updated?.length) return { error: "forbidden", values };
+  // "Save & Publish": a hidden or closed post goes live again (not when it was just marked filled).
+  let published = false;
+  if (fd.get("intent") === "publish" && (post.status === "hidden" || post.status === "closed") && !postExtras(fd).hiring_tags.includes("filled")) {
+    const { error: pubError } = await supabase.from("job_posts").update({ status: "active" }).eq("id", id).eq("owner_id", userId);
+    if (pubError) { revalidatePath("/jobs", "layout"); return { error: "publish_failed", values }; }
+    published = true;
+  }
   revalidatePath("/jobs", "layout");
   revalidatePath(`/jobs/${id}`);
-  return { ok: true, id, values };
+  revalidatePath(`/jobs/employer/${id}/edit`);
+  return { ok: true, id, values, published };
 }
 
 /* ───────────── Posting tools: duplicate, filled, saved jobs ───────────── */

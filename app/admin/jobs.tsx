@@ -9,6 +9,12 @@ import { hasAdminPlaceholder } from "@/lib/jobs";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
+/** A joined PSGC row may come back as an object or a one-item array, depending on the generated types. */
+const placeName = (x: unknown): string | null => {
+  const row = Array.isArray(x) ? x[0] : x;
+  return row && typeof row === "object" && "name" in row && typeof row.name === "string" && row.name ? row.name : null;
+};
+
 /**
  * Admin → Jobs: newest posts first; moderators can remove a post (and restore it). Applicant data is never shown here.
  * Full admins can also edit hidden drafts (e.g. the starter posts) and publish or unpublish them.
@@ -18,7 +24,7 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
   const supabase = await createClient();
   let query = supabase
     .from("job_posts")
-    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications, hiring_tags")
+    .select("id, title, company_name, poster_type, agency_license_no, status, created_at, owner_id, description, qualifications, hiring_tags, region:psgc_regions(name), province:psgc_provinces(name), city:psgc_cities(name)")
     .order("created_at", { ascending: false })
     .limit(show === "drafts" ? 200 : 60);
   if (show === "drafts") query = query.eq("status", "hidden");
@@ -44,12 +50,14 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
       <ul className="space-y-2">
         {posts?.map((p) => {
           const needsFill = p.status === "hidden" && hasAdminPlaceholder(p.title, p.description, p.qualifications);
+          // Where the job is (deployment / assignment): "City, Province", or "City, Region" for places with no province (NCR).
+          const place = [placeName(p.city), placeName(p.province) ?? placeName(p.region)].filter(Boolean).join(", ");
           return (
             <li key={p.id} className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-white p-3 text-sm">
               <span className="min-w-0 flex-1 basis-56">
                 <Link href={`/jobs/${p.id}`} className="font-semibold text-brand underline">{p.title}</Link>
                 <span className="block text-xs text-muted-foreground">
-                  {p.company_name} · {t(`job.poster.${p.poster_type}`)}{p.agency_license_no ? ` · ${p.agency_license_no}` : ""} · {timeAgo(p.created_at)}
+                  {p.company_name} · {t(`job.poster.${p.poster_type}`)}{p.agency_license_no ? ` · ${p.agency_license_no}` : ""} · {place ? <span className="font-semibold text-brand-dark">{place}</span> : t("job.admin.no_location")} · {timeAgo(p.created_at)}
                 </span>
               </span>
               <Badge tone={p.status === "active" ? "success" : p.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${p.status}`)}</Badge>
