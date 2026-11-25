@@ -24,7 +24,7 @@ async function EditMyPost({ params }: { params: Promise<{ id: string }> }) {
   const [{ data: post }, locations] = await Promise.all([
     supabase
       .from("job_posts")
-      .select("id, owner_id, poster_type, agency_license_no, company_name, title, category, description, qualifications, employment_type, work_setup, region_code, province_code, city_code, salary_min, salary_max, salary_period, vacancies, deadline, requirement_docs, status")
+      .select("id, owner_id, poster_type, agency_license_no, company_name, title, category, description, qualifications, employment_type, work_setup, region_code, province_code, city_code, salary_min, salary_max, salary_period, vacancies, deadline, requirement_docs, status, hiring_tags, logo_url, creative_url")
       .eq("id", id)
       .maybeSingle(),
     getLocations(),
@@ -39,7 +39,7 @@ async function EditMyPost({ params }: { params: Promise<{ id: string }> }) {
         <Badge tone={post.status === "active" ? "success" : post.status === "removed" ? "danger" : "neutral"}>{t(`job.poststatus.${post.status}`)}</Badge>
       </header>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.edit.hint")}</p>
-      <AdminJobPostForm post={post as AdminPost} locations={locations} mode="owner" backHref="/jobs/employer" />
+      <AdminJobPostForm post={post as AdminPost} locations={locations} mode="owner" backHref="/jobs/employer" userId={me} />
     </div>
   );
 }

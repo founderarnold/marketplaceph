@@ -1,25 +1,38 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { createJobPost } from "@/app/actions/jobs";
 import { LocationSelect } from "@/components/listing/location-select";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import type { Locations } from "@/lib/data";
 import { useT } from "@/lib/i18n/client";
+import { JobExtrasFields } from "@/components/jobs2/posting-tools";
+import { JOB_TEMPLATES } from "@/lib/job-templates";
 import { DOC_KINDS, EMPLOYMENT_TYPES, JOB_CATEGORIES, SALARY_PERIODS, WORK_SETUPS } from "@/lib/jobs";
 
 const section = "space-y-3 rounded-2xl border border-border bg-white p-4";
 const DEFAULT_DOCS = ["resume", "photo_2x2"];
 
-export function JobPostForm({ locations, defaultCompany }: { locations: Locations; defaultCompany: string }) {
+export function JobPostForm({ locations, defaultCompany, userId }: { locations: Locations; defaultCompany: string; userId: string }) {
   const { t } = useT();
+  const formRef = useRef<HTMLFormElement>(null);
+  /** Fills the job fields from a ready-made template; the employer then edits them. */
+  const applyTemplate = (key: string) => {
+    const tpl = JOB_TEMPLATES.find((x) => x.key === key);
+    const f = formRef.current;
+    if (!tpl || !f) return;
+    for (const [name, value] of Object.entries({ title: tpl.title, description: tpl.description, qualifications: tpl.qualifications, category: tpl.category, employment_type: tpl.employment_type, work_setup: tpl.work_setup })) {
+      const el = f.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      if (el) el.value = value;
+    }
+  };
   const [state, action, pending] = useActionState(createJobPost, undefined);
   const v = state?.values ?? {};
   const [type, setType] = useState(v.poster_type ?? "employer");
 
   return (
-    <form action={action} className="space-y-4">
+    <form ref={formRef} action={action} className="space-y-4">
       <section className={section} aria-labelledby="jp-who">
         <h2 id="jp-who" className="font-bold text-brand-dark">{t("job.post.who")}</h2>
         <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t("job.post.who")}>
@@ -41,6 +54,12 @@ export function JobPostForm({ locations, defaultCompany }: { locations: Location
 
       <section className={section} aria-labelledby="jp-job">
         <h2 id="jp-job" className="font-bold text-brand-dark">{t("job.post.job")}</h2>
+        <Field label={t("job.tools.template")} hint={t("job.tools.template_hint")}>
+          <Select defaultValue="" onChange={(e) => applyTemplate(e.target.value)} aria-label={t("job.tools.template")}>
+            <option value="">{t("job.tools.template_none")}</option>
+            {JOB_TEMPLATES.map((tpl) => <option key={tpl.key} value={tpl.key}>{tpl.title}</option>)}
+          </Select>
+        </Field>
         <Field label={t("job.post.title")}><Input name="title" required minLength={3} maxLength={120} placeholder={t("job.post.title_ph")} defaultValue={v.title} /></Field>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label={t("job.post.category")}>
@@ -80,6 +99,8 @@ export function JobPostForm({ locations, defaultCompany }: { locations: Location
         </div>
         <Field label={t("job.post.deadline")} hint={t("job.post.deadline_hint")}><Input name="deadline" type="date" defaultValue={v.deadline} /></Field>
       </section>
+
+      <JobExtrasFields userId={userId} />
 
       <section className={section} aria-labelledby="jp-docs">
         <h2 id="jp-docs" className="font-bold text-brand-dark">{t("job.post.docs")}</h2>

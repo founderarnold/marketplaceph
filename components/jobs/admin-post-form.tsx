@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { JobExtrasFields } from "@/components/jobs2/posting-tools";
 import { adminUpdateJobPost, updateMyJobPost } from "@/app/actions/jobs";
 import { LocationSelect } from "@/components/listing/location-select";
 import { Button } from "@/components/ui/button";
@@ -17,13 +18,14 @@ export type AdminPost = {
   employment_type: string; work_setup: string; region_code: string | null; province_code: string | null; city_code: string | null;
   salary_min: number | null; salary_max: number | null; salary_period: string | null; vacancies: number; deadline: string | null;
   requirement_docs: string[]; status: string; poster_type?: string; agency_license_no?: string | null;
+  hiring_tags?: string[] | null; logo_url?: string | null; creative_url?: string | null;
 };
 
 /**
  * Edit a job post, published or hidden. `mode="admin"`: Admin → Jobs → Edit (full admins; every change is logged).
  * `mode="owner"`: the employer / agency that posted it (only their own posts; the database checks this too).
  */
-export function AdminJobPostForm({ post, locations, mode = "admin", backHref }: { post: AdminPost; locations: Locations; mode?: "admin" | "owner"; backHref?: string }) {
+export function AdminJobPostForm({ post, locations, mode = "admin", backHref, userId }: { post: AdminPost; locations: Locations; mode?: "admin" | "owner"; backHref?: string; userId: string }) {
   const { t } = useT();
   const [state, action, pending] = useActionState(mode === "owner" ? updateMyJobPost : adminUpdateJobPost, undefined);
   const s = (v: unknown) => (v == null ? "" : String(v));
@@ -82,6 +84,8 @@ export function AdminJobPostForm({ post, locations, mode = "admin", backHref }: 
           </div>
           <Field label={t("job.post.deadline")} hint={t("job.post.deadline_hint")}><Input name="deadline" type="date" defaultValue={v.deadline} /></Field>
         </section>
+
+        <JobExtrasFields userId={userId} tags={post.hiring_tags ?? []} logo={post.logo_url ?? null} creative={post.creative_url ?? null} />
 
         <section className={section} aria-labelledby="ap-docs">
           <h2 id="ap-docs" className="font-bold text-brand-dark">{t("job.post.docs")}</h2>

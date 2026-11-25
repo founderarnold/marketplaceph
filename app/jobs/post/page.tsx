@@ -27,7 +27,7 @@ async function PostJobPageContent() {
         <p className="flex items-start gap-2 rounded-xl bg-brand-soft p-3 text-sm text-brand-dark"><ShieldCheck size={18} className="mt-0.5 shrink-0" aria-hidden /> {t("job.post.free_note")}</p>
       </header>
       <ToolGuide toolKey="hiring" t={t} />
-      <JobPostForm locations={locations} defaultCompany={store?.name ?? ""} />
+      <JobPostForm locations={locations} defaultCompany={store?.name ?? ""} userId={userId} />
     </div>
   );
 }
