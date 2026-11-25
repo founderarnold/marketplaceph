@@ -53,6 +53,7 @@ export async function BusinessHome({ userId, feed }: { userId: string; feed: Bus
     { href: "/favorites", icon: Heart, label: t("nav.saved") },
     { href: "/check", icon: ShieldCheck, label: t("nav.check") },
     { href: "/business/plan", icon: BadgeCheck, label: t("biz.nav.plan") },
+    { href: "/business/flame-import", icon: Store, label: t("fbiz.shortcut") },
   ];
 
   const storeCard = store ? (
