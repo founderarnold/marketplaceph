@@ -1,4 +1,4 @@
-import { GraduationCap, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { GraduationCap, Mail, MapPin, MessageCircle, Phone, UserCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -43,7 +43,7 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
   const userId = claims?.claims?.sub as string | undefined;
   if (!userId) redirect(`/login?next=/jobs/employer/${id}`);
 
-  const { data: post } = await supabase.from("job_posts").select("id, title, company_name, status, vacancies, owner_id").eq("id", id).maybeSingle();
+  const { data: post } = await supabase.from("job_posts").select("id, slug, title, company_name, status, vacancies, owner_id").eq("id", id).maybeSingle();
   if (!post || post.owner_id !== userId) notFound();
 
   const { data: apps } = await supabase
@@ -91,7 +91,7 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
       {sp.posted && <p role="status" className="rounded-xl bg-success-soft p-3 font-semibold text-success">✓ {t("job.post.posted_ok")}</p>}
       <header>
         <h1 className="text-2xl font-extrabold text-brand-dark md:text-3xl">{post.title}</h1>
-        <p className="text-muted-foreground">{post.company_name} · {t("job.emp.applicants_n", { n: apps?.length ?? 0 })} · <Link href={`/jobs/${post.id}`} className="text-brand underline">{t("job.emp.preview")}</Link>{post.status !== "removed" && <> · <Link href={`/jobs/employer/${post.id}/edit`} className="font-semibold text-brand underline">{t("job.edit.button")}</Link></>}</p>
+        <p className="text-muted-foreground">{post.company_name} · {t("job.emp.applicants_n", { n: apps?.length ?? 0 })} · <Link href={`/jobs/${post.slug || post.id}`} className="text-brand underline">{t("job.emp.preview")}</Link>{post.status !== "removed" && <> · <Link href={`/jobs/employer/${post.id}/edit`} className="font-semibold text-brand underline">{t("job.edit.button")}</Link></>}</p>
       </header>
       <p className="rounded-xl bg-brand-soft p-3 text-sm text-brand-dark">{t("job.emp.privacy")}</p>
       <JobsTracker name="employer_viewed" props={{ job_id: post.id }} />
@@ -124,6 +124,9 @@ async function ApplicantList({ params, searchParams }: Pick<PageProps<"/jobs/emp
                       <ApprovedBadges badges={badgesOf(a.applicant_id)} t={t} />
                       {(() => { const rt = ratingOf(a.applicant_id); return rt ? <span className="inline-flex items-center gap-1 font-semibold">{rt.avg.toFixed(1)} <Stars value={rt.avg} size={12} /> ({rt.n})</span> : null; })()}
                     </div>
+                    {badgesOf(a.applicant_id).includes("verified_professional") && (
+                      <p className="mt-1 flex items-start gap-1.5 rounded-lg bg-success-soft px-2 py-1 text-xs font-semibold text-success"><UserCheck size={14} className="mt-0.5 shrink-0" aria-hidden /> {t("pro.employer_note")}</p>
+                    )}
                     <TxStats counts={txOf(a.applicant_id)} t={t} className="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground" />
                     <ProfileLinks links={linksOf(a.applicant_id)} t={t} className="mt-2" />
                     {p?.headline && <p className="text-sm text-muted-foreground">{p.headline}</p>}

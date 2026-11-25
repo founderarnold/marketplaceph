@@ -4,7 +4,7 @@ export const JOB_CATEGORIES = [
   "manufacturing", "agriculture", "it_tech", "education", "healthcare", "security_cleaning", "household_domestic", "creative_media",
   "finance_accounting", "other",
 ] as const;
-export const EMPLOYMENT_TYPES = ["full_time", "part_time", "contract", "project", "internship", "freelance"] as const;
+export const EMPLOYMENT_TYPES = ["full_time", "part_time", "contract", "project", "internship", "freelance", "commission"] as const;
 export const WORK_SETUPS = ["onsite", "remote", "hybrid"] as const;
 export const SALARY_PERIODS = ["hour", "day", "month", "project"] as const;
 export const EDUCATION_LEVELS = ["elementary", "high_school", "senior_high", "vocational", "college_undergrad", "college_grad", "postgrad"] as const;
@@ -107,3 +107,8 @@ export function ageFrom(birthdate: string | null | undefined, now = Date.now()):
   if (Number.isNaN(b)) return null;
   return Math.floor((now - b) / (365.25 * 86_400_000));
 }
+
+/** Readable job link slug ("marketing-manager-san-fernando-pampanga"); made by the database from the title and city. */
+export const JOB_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+/** The page address of a job: its readable slug when it has one, else its id (old links redirect to the slug). */
+export const jobPath = (j: { id: string; slug?: string | null }) => `/jobs/${j.slug || j.id}`;
