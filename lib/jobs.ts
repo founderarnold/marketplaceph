@@ -23,6 +23,34 @@ export const POST_STATUSES = ["active", "closed", "hidden", "removed"] as const;
 export const ADMIN_PLACEHOLDER = "[ADMIN TO FILL";
 export const hasAdminPlaceholder = (...texts: (string | null | undefined)[]) => texts.some((x) => !!x && x.includes(ADMIN_PLACEHOLDER));
 
+/** Applicant-friendly wording used when a draft is published with details still blank. */
+export const PUBLISH_DEFAULTS = {
+  pay: "Salary: to be discussed during the interview",
+  commission: "Commission-based; details discussed during the interview",
+  location: "Location to be confirmed by the employer",
+} as const;
+
+/**
+ * Replaces every "[ADMIN TO FILL …]" note with clean wording so no placeholder is ever shown publicly.
+ * Pay / Earnings / Location lines get the defaults above; any other note is removed. Everything else
+ * (no-fee notice, PRC note, partner labels) is kept as written.
+ */
+export function cleanAdminPlaceholders(text: string | null | undefined): string | null {
+  if (text == null) return null;
+  if (!text.includes(ADMIN_PLACEHOLDER)) return text;
+  const note = /\[ADMIN TO FILL[^\]]*\]/g;
+  const lines = text.split("\n").flatMap((line) => {
+    if (!line.includes(ADMIN_PLACEHOLDER)) return [line];
+    const label = line.trim().toLowerCase();
+    if (label.startsWith("pay range:") || label.startsWith("pay:") || label.startsWith("salary:")) return [PUBLISH_DEFAULTS.pay];
+    if (label.startsWith("earnings:") || label.startsWith("commission:")) return [PUBLISH_DEFAULTS.commission];
+    if (label.startsWith("location:")) return [PUBLISH_DEFAULTS.location];
+    const rest = line.replace(note, "").replace(/\s{2,}/g, " ").trimEnd();
+    return rest.trim() === "" || /:\s*$/.test(rest) ? [] : [rest];
+  });
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 export const MAX_DOC_BYTES = 5 * 1024 * 1024;
 export const DOC_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
 

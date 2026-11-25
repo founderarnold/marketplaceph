@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   CIVIL_STATUSES, DOC_KINDS, DOC_MIME, EDUCATION_LEVELS, EMPLOYER_STATUSES, EMPLOYMENT_TYPES, JOB_CATEGORIES, MAX_DOC_BYTES, POSTER_TYPES,
-  SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, hasAdminPlaceholder, splitList,
+  SALARY_PERIODS, SEX_OPTIONS, WORK_SETUPS, cleanAdminPlaceholders, hasAdminPlaceholder, splitList,
 } from "@/lib/jobs";
 import { isFullAdmin } from "@/lib/roles";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
@@ -271,18 +271,61 @@ export async function adminUpdateJobPost(_prev: JobFormState, fd: FormData): Pro
   return { ok: true, id, values };
 }
 
-/** Publish (active) or unpublish (hidden) a post. A post with "[ADMIN TO FILL" text left in it cannot be published. */
+/**
+ * Publish (active) or unpublish (hidden) a post. Publishing always works: any "[ADMIN TO FILL …]" note left in a
+ * draft is first replaced with applicant-friendly wording (while the post is still hidden, which the database
+ * allows for full admins), so no placeholder is ever shown publicly. Empty pay fields stay empty.
+ */
 export async function adminSetJobPostStatus(id: string, status: "active" | "hidden"): Promise<JobResult> {
   if (!z.uuid().safeParse(id).success || !["active", "hidden"].includes(status)) return { ok: false, error: "invalid" };
   const ctx = await requireFullAdmin("/admin?tab=jobs");
   if (!ctx) return { ok: false, error: "forbidden" };
   if (status === "active") {
-    const { data: post } = await ctx.supabase.from("job_posts").select("title, description, qualifications, status").eq("id", id).maybeSingle();
-    if (!post || post.status === "removed") return { ok: false, error: "invalid" };
-    if (hasAdminPlaceholder(post.title, post.description, post.qualifications)) return { ok: false, error: "placeholder" };
+    const res = await publishOne(ctx.supabase, id);
+    revalidatePath("/admin");
+    revalidatePath("/jobs", "layout");
+    return res;
   }
   const { error } = await ctx.supabase.from("job_posts").update({ status }).eq("id", id);
   revalidatePath("/admin");
   revalidatePath("/jobs", "layout");
   return error ? { ok: false, error: friendly(error.message) } : { ok: true };
+}
+
+type Db = Awaited<ReturnType<typeof createClient>>;
+
+async function publishOne(supabase: Db, id: string): Promise<JobResult> {
+  const { data: post } = await supabase.from("job_posts").select("title, description, qualifications, status").eq("id", id).maybeSingle();
+  if (!post || post.status === "removed") return { ok: false, error: "invalid" };
+  if (post.status === "hidden" && hasAdminPlaceholder(post.title, post.description, post.qualifications)) {
+    const { error: cleanError } = await supabase
+      .from("job_posts")
+      .update({
+        title: cleanAdminPlaceholders(post.title) ?? post.title,
+        description: cleanAdminPlaceholders(post.description) ?? post.description,
+        qualifications: cleanAdminPlaceholders(post.qualifications),
+      })
+      .eq("id", id);
+    if (cleanError) return { ok: false, error: friendly(cleanError.message) };
+  }
+  const { error } = await supabase.from("job_posts").update({ status: "active" }).eq("id", id);
+  return error ? { ok: false, error: friendly(error.message) } : { ok: true };
+}
+
+/** Publishes every starter draft (hidden posts that still carry "[ADMIN TO FILL …]" notes) in one go. */
+export async function adminPublishAllDrafts(): Promise<JobResult & { published?: number; failed?: number }> {
+  const ctx = await requireFullAdmin("/admin?tab=jobs");
+  if (!ctx) return { ok: false, error: "forbidden" };
+  // Only starter drafts: posts an employer hid on purpose (no placeholder notes) are never re-opened here.
+  const { data: drafts } = await ctx.supabase.from("job_posts").select("id").eq("status", "hidden").like("description", "%[ADMIN TO FILL%").limit(200);
+  let published = 0;
+  let failed = 0;
+  for (const d of drafts ?? []) {
+    const r = await publishOne(ctx.supabase, d.id);
+    if (r.ok) published++;
+    else failed++;
+  }
+  revalidatePath("/admin");
+  revalidatePath("/jobs", "layout");
+  return { ok: failed === 0, published, failed };
 }

@@ -32,7 +32,7 @@ export function AdminJobPostForm({ post, locations }: { post: AdminPost; locatio
     <form action={action} className="space-y-4">
       <input type="hidden" name="id" value={post.id} />
       {locked && <p role="status" className="rounded-xl bg-muted p-3 text-sm text-brand-dark">{t("job.admin.locked")}</p>}
-      {placeholder && <p role="status" className="rounded-xl bg-accent-soft p-3 text-sm font-semibold text-brand-dark">{t("job.admin.has_placeholder")}</p>}
+      {placeholder && <p role="status" className="rounded-xl bg-muted p-3 text-sm text-brand-dark">{t("job.admin.has_placeholder")}</p>}
       <fieldset disabled={locked || pending} className="space-y-4">
         <section className={section} aria-labelledby="ap-job">
           <h2 id="ap-job" className="font-bold text-brand-dark">{t("job.post.job")}</h2>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ModerateButton, PublishButton } from "@/components/jobs/employer-actions";
+import { ModerateButton, PublishAllDraftsButton, PublishButton } from "@/components/jobs/employer-actions";
 import { Badge } from "@/components/ui/badge";
 import { timeAgo } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
@@ -34,6 +34,9 @@ export async function JobsAdmin({ canEdit = false, show = "all" }: { canEdit?: b
             </Link>
           ))}
         </nav>
+      )}
+      {canEdit && show === "drafts" && (
+        <PublishAllDraftsButton count={(posts ?? []).filter((p) => hasAdminPlaceholder(p.title, p.description, p.qualifications)).length} />
       )}
       {!posts?.length && <p className="rounded-2xl bg-muted p-4 text-center text-muted-foreground">{t("admin.none")}</p>}
       <ul className="space-y-2">

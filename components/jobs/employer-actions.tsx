@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { adminSetJobPostStatus, confirmHire, moderateJobPost, setApplicationStatus, setPostStatus, withdrawApplication, type JobResult } from "@/app/actions/jobs";
+import { adminPublishAllDrafts, adminSetJobPostStatus, confirmHire, moderateJobPost, setApplicationStatus, setPostStatus, withdrawApplication, type JobResult } from "@/app/actions/jobs";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n/client";
 import { EMPLOYER_STATUSES } from "@/lib/jobs";
@@ -98,7 +98,7 @@ export function PublishButton({ id, status }: { id: string; status: string }) {
   const { t } = useT();
   const { pending, error, run } = useRun();
   const publish = status !== "active";
-  const message = error === "placeholder" ? t("job.admin.need_fill") : error === "forbidden" ? t("job.admin.forbidden") : error;
+  const message = error === "forbidden" ? t("job.admin.forbidden") : error;
   return (
     <span className="inline-flex flex-wrap items-center gap-1.5">
       <Button size="md" variant={publish ? "primary" : "outline"} disabled={pending}
@@ -106,6 +106,28 @@ export function PublishButton({ id, status }: { id: string; status: string }) {
         {publish ? t("job.admin.publish") : t("job.admin.unpublish")}
       </Button>
       {message && <span role="alert" className="text-xs text-danger">{message}</span>}
+    </span>
+  );
+}
+
+/** Full admins: publish every starter draft at once (blank details become "to be discussed"). */
+export function PublishAllDraftsButton({ count }: { count: number }) {
+  const { t } = useT();
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [msg, setMsg] = useState<string | null>(null);
+  if (count === 0) return null;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <Button size="md" disabled={pending} onClick={() => {
+        if (!confirm(t("job.admin.confirm_publish_all", { n: count }))) return;
+        start(async () => {
+          const r = await adminPublishAllDrafts();
+          setMsg(r.ok ? t("job.admin.published_all", { n: r.published ?? 0 }) : r.error === "forbidden" ? t("job.admin.forbidden") : t("job.admin.published_some", { n: r.published ?? 0, f: r.failed ?? 0 }));
+          router.refresh();
+        });
+      }}>{t("job.admin.publish_all", { n: count })}</Button>
+      {msg && <span role="status" className="text-sm font-semibold text-brand-dark">{msg}</span>}
     </span>
   );
 }
